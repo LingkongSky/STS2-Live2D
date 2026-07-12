@@ -2,6 +2,22 @@ namespace Live2D.Scripts.Configuration;
 
 public static class Live2DConfigMigration
 {
+    public static List<Live2DModelConfig> RemoveUnavailableModels(
+        Live2DSettings settings,
+        Func<Live2DModelConfig, bool> isAvailable)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        ArgumentNullException.ThrowIfNull(isAvailable);
+        var removed = settings.Models.Where(model => !isAvailable(model)).ToList();
+        if (removed.Count == 0)
+            return removed;
+        var removedIds = removed.Select(model => model.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        settings.Models.RemoveAll(model => removedIds.Contains(model.Id));
+        for (var index = 0; index < settings.Models.Count; index++)
+            settings.Models[index].DisplayOrder = index;
+        return removed;
+    }
+
     public static void NormalizeInPlace(Live2DSettings settings)
     {
         var storedSchemaVersion = settings.SchemaVersion;

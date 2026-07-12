@@ -24,6 +24,7 @@ public static class Live2DConfigStore
             autoCreateIfMissing: true);
         _initialized = true;
         Normalize();
+        PruneMissingModels();
     }
 
     public static Live2DSettings Get() => RitsuLibFramework.GetDataStore(Entry.ModId).Get<Live2DSettings>(SettingsKey);
@@ -46,6 +47,32 @@ public static class Live2DConfigStore
     {
         RitsuLibFramework.GetDataStore(Entry.ModId).Save(SettingsKey);
         Live2D.Scripts.Runtime.Live2DRuntimeManager.RefreshAll();
+    }
+
+    public static int PruneMissingModels()
+    {
+        var store = RitsuLibFramework.GetDataStore(Entry.ModId);
+        List<(Live2DModelConfig Model, string Reason)> unavailable = [];
+        store.Modify<Live2DSettings>(SettingsKey, settings =>
+        {
+            var reasons = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var removed = Live2DConfigMigration.RemoveUnavailableModels(settings, model =>
+            {
+                var available = Live2DModelRepository.IsManagedModelAvailable(model, out var reason);
+                if (!available)
+                    reasons[model.Id] = reason;
+                return available;
+            });
+            unavailable = removed.Select(model =>
+                (model, reasons.GetValueOrDefault(model.Id, "managed model files are unavailable"))).ToList();
+        });
+
+        if (unavailable.Count == 0)
+            return 0;
+        store.Save(SettingsKey);
+        foreach (var (model, reason) in unavailable)
+            Entry.Logger.Warn($"[{Entry.ModId}] Removed stale model configuration '{model.DisplayName}' ({model.Id}): {reason}.");
+        return unavailable.Count;
     }
 
     private static void Normalize()

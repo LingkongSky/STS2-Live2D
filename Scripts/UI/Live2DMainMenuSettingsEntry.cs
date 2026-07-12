@@ -67,7 +67,10 @@ public static class Live2DMainMenuSettingsEntry
             button.Connect(
                 NClickableControl.SignalName.Focused,
                 Callable.From<NMainMenuTextButton>(focused =>
-                    Callable.From(() => MainMenuButtonFocused.Invoke(mainMenu, [focused])).CallDeferred()));
+                    Callable.From(() =>
+                    {
+                        MainMenuButtonFocused.Invoke(mainMenu, [focused]);
+                    }).CallDeferred()));
         }
 
         if (MainMenuButtonUnfocused != null)
@@ -75,7 +78,9 @@ public static class Live2DMainMenuSettingsEntry
             button.Connect(
                 NClickableControl.SignalName.Unfocused,
                 Callable.From<NMainMenuTextButton>(unfocused =>
-                    MainMenuButtonUnfocused.Invoke(mainMenu, [unfocused])));
+                {
+                    MainMenuButtonUnfocused.Invoke(mainMenu, [unfocused]);
+                }));
         }
     }
 }

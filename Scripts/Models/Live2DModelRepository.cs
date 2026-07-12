@@ -52,6 +52,26 @@ public static class Live2DModelRepository
         return fullPath;
     }
 
+    public static bool IsManagedModelAvailable(Live2DModelConfig model, out string reason)
+    {
+        try
+        {
+            var path = GetAbsoluteModelPath(model);
+            if (File.Exists(path))
+            {
+                reason = "";
+                return true;
+            }
+            reason = $"entry file is missing: {path}";
+            return false;
+        }
+        catch (Exception ex) when (ex is InvalidDataException or ArgumentException or NotSupportedException)
+        {
+            reason = $"managed path is invalid: {ex.Message}";
+            return false;
+        }
+    }
+
     public static void DeleteFiles(string modelId)
     {
         var directory = Path.GetFullPath(Path.Combine(ModelsDirectory, modelId));

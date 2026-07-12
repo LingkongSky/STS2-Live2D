@@ -26,6 +26,27 @@ public static class Live2DPackService
             includeGlobalConfig);
     }
 
+    public static void ExportModel(string destinationPath, string modelId, bool includeGlobalConfig = true)
+    {
+        if (!destinationPath.EndsWith(".live2dpack", StringComparison.OrdinalIgnoreCase))
+            destinationPath += ".live2dpack";
+        var current = Live2DConfigStore.Get();
+        var model = current.Models.FirstOrDefault(value => value.Id == modelId)
+                    ?? throw new InvalidOperationException($"Model configuration does not exist: {modelId}");
+        var packageSettings = new Live2DSettings
+        {
+            SchemaVersion = current.SchemaVersion,
+            Global = current.Global,
+            Models = [model],
+        };
+        Live2DPackArchive.Write(
+            destinationPath,
+            packageSettings,
+            Live2DModelRepository.ModelsDirectory,
+            includeGlobalConfig,
+            model.DisplayName);
+    }
+
     public static Live2DPackImportSummary Import(
         string packagePath,
         GlobalConfigImportMode globalMode = GlobalConfigImportMode.KeepLocal)

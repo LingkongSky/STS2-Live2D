@@ -13,6 +13,7 @@ public static class Live2DSettingsUi
 {
     private const string ModelDetailPageId = "model_detail";
     private static string? _selectedModelId;
+    private static Action? _rebuildModelList;
     private static ModSettingsText Text(string key, string fallback) => Live2DLocalization.Text(key, fallback);
     private static string L(string key, string fallback) => Live2DLocalization.Get(key, fallback);
     private static string F(string key, string fallback, params object?[] args)
@@ -106,6 +107,12 @@ public static class Live2DSettingsUi
 
     private static Control CreateModelManager(IModSettingsUiActionHost uiHost)
     {
+        var removedMissingModels = Live2DConfigStore.PruneMissingModels();
+        if (removedMissingModels > 0)
+        {
+            Live2DRuntimeManager.RefreshAll();
+            Live2DHotkeyManager.Refresh();
+        }
         var root = new VBoxContainer
         {
             SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
@@ -120,14 +127,42 @@ public static class Live2DSettingsUi
             SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
         };
         summaryText.AddThemeFontSizeOverride("font_size", 20);
-        summaryText.AddThemeColorOverride("font_color", new Color(0.95f, 0.82f, 0.5f));
+        summaryText.AddThemeColorOverride("font_color", new Color(0.55f, 0.8f, 1f));
         summary.AddChild(summaryText);
-        root.AddChild(WrapCard(summary, new Color(0.72f, 0.55f, 0.25f)));
+        root.AddChild(WrapCard(summary, new Color(0.22f, 0.55f, 0.9f)));
+
+        var modelList = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        modelList.AddThemeConstantOverride("separation", 14);
+        Action rebuildModelList = null!;
+        rebuildModelList = () =>
+        {
+            if (!GodotObject.IsInstanceValid(modelList))
+                return;
+            foreach (var child in modelList.GetChildren())
+            {
+                modelList.RemoveChild(child);
+                child.QueueFree();
+            }
+
+            var latestSettings = Live2DConfigStore.Get();
+            summaryText.Text = F("models.summary", "{0} models", latestSettings.Models.Count);
+            if (latestSettings.Models.Count == 0)
+            {
+                modelList.AddChild(CreateEmptyModelCard());
+            }
+            else
+            {
+                foreach (var model in latestSettings.Models.OrderBy(value => value.DisplayOrder))
+                    modelList.AddChild(CreateModelRow(model, uiHost, rebuildModelList));
+            }
+            Entry.Logger.Info($"[{Entry.ModId}] Rebuilt model list in place: {latestSettings.Models.Count} model(s).");
+        };
+        _rebuildModelList = rebuildModelList;
 
         var modelToolbar = new HBoxContainer();
         modelToolbar.AddChild(CreateToolbarLabel(L("models.toolbar_models", "Models")));
         var addButton = new Button { Text = L("button.add_model", "+ Add Live2D Model") };
-        addButton.Pressed += () => ShowImportDialog(uiHost);
+        addButton.Pressed += () => ShowImportDialog(uiHost, rebuildModelList);
         modelToolbar.AddChild(addButton);
 
         var openFolderButton = new Button { Text = L("button.open_folder", "Open Model Folder") };
@@ -138,12 +173,13 @@ public static class Live2DSettingsUi
         var packageToolbar = new HBoxContainer();
         packageToolbar.AddChild(CreateToolbarLabel(L("models.toolbar_packages", "Packages")));
         var importButton = new Button { Text = L("button.import_pack", "Import Package") };
-        importButton.Pressed += () => ShowPackImportDialog(uiHost, GlobalConfigImportMode.KeepLocal);
+        importButton.Pressed += () => ShowPackImportDialog(uiHost, rebuildModelList, GlobalConfigImportMode.KeepLocal);
         importButton.TooltipText = L("tooltip.import_pack", "Import models while keeping local global defaults.");
         packageToolbar.AddChild(importButton);
 
         var importGlobalButton = new Button { Text = L("button.import_replace_global", "Import and Replace Global") };
-        importGlobalButton.Pressed += () => ShowPackImportDialog(uiHost, GlobalConfigImportMode.ReplaceWithPackage);
+        importGlobalButton.Pressed += () =>
+            ShowPackImportDialog(uiHost, rebuildModelList, GlobalConfigImportMode.ReplaceWithPackage);
         importGlobalButton.TooltipText = L("tooltip.import_replace_global", "Replace global defaults when included.");
         packageToolbar.AddChild(importGlobalButton);
 
@@ -151,21 +187,8 @@ public static class Live2DSettingsUi
         exportButton.Pressed += ShowPackExportDialog;
         packageToolbar.AddChild(exportButton);
         root.AddChild(WrapCard(packageToolbar));
-
-        if (settings.Models.Count == 0)
-        {
-            root.AddChild(CreateEmptyModelCard());
-            return root;
-        }
-
-        foreach (var model in settings.Models.OrderBy(value => value.DisplayOrder))
-            root.AddChild(CreateModelRow(model, uiHost, () =>
-            {
-                var remaining = Live2DConfigStore.Get().Models.Count;
-                summaryText.Text = F("models.summary", "{0} models", remaining);
-                if (remaining == 0)
-                    root.AddChild(CreateEmptyModelCard());
-            }));
+        root.AddChild(modelList);
+        rebuildModelList();
         return root;
     }
 
@@ -378,6 +401,13 @@ public static class Live2DSettingsUi
             NavigateToPage(configure, ModelDetailPageId);
         };
         titleRow.AddChild(configure);
+        var exportModel = new Button
+        {
+            Text = L("button.export_model_pack", "Export Package"),
+            CustomMinimumSize = new Vector2(140f, 0f),
+        };
+        exportModel.Pressed += () => ShowModelPackExportDialog(model.Id, model.DisplayName);
+        titleRow.AddChild(exportModel);
         card.AddChild(titleRow);
 
         var actions = new HBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
@@ -429,9 +459,35 @@ public static class Live2DSettingsUi
         details.AddThemeConstantOverride("separation", 12);
         var header = new HBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
         var identity = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
-        var name = new Label { Text = model.DisplayName };
-        name.AddThemeFontSizeOverride("font_size", 24);
-        identity.AddChild(name);
+        identity.AddChild(new Label { Text = L("field.model_name", "Model Name") });
+        var renameRow = new HBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        var nameInput = new LineEdit
+        {
+            Text = model.DisplayName,
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+        };
+        renameRow.AddChild(nameInput);
+        var rename = new Button { Text = L("button.rename", "Rename") };
+        Action commitRename = () =>
+        {
+            var newName = nameInput.Text.Trim();
+            if (newName.Length == 0)
+            {
+                nameInput.Text = model.DisplayName;
+                return;
+            }
+            if (newName == model.DisplayName)
+                return;
+            ModifyModel(model.Id, target => target.DisplayName = newName);
+            model.DisplayName = newName;
+            nameInput.Text = newName;
+            _rebuildModelList?.Invoke();
+            Entry.Logger.Info($"[{Entry.ModId}] Renamed model {model.Id} to '{newName}'.");
+        };
+        rename.Pressed += commitRename;
+        nameInput.TextSubmitted += _ => commitRename();
+        renameRow.AddChild(rename);
+        identity.AddChild(renameRow);
         identity.AddChild(new Label
         {
             Text = F("model.path", "Resource: {0}", model.ModelRelativePath),
@@ -730,7 +786,7 @@ public static class Live2DSettingsUi
         grid.AddChild(input);
     }
 
-    private static void ShowImportDialog(IModSettingsUiActionHost uiHost)
+    private static void ShowImportDialog(IModSettingsUiActionHost uiHost, Action rebuildModelList)
     {
         if (Engine.GetMainLoop() is not SceneTree tree)
             return;
@@ -750,6 +806,7 @@ public static class Live2DSettingsUi
                 var model = Live2DConfigStore.ImportModel(path);
                 Live2DHotkeyManager.Refresh();
                 Entry.Logger.Info($"[{Entry.ModId}] Imported model '{model.DisplayName}' ({model.Id}).");
+                rebuildModelList();
                 uiHost.RequestRefreshAfterDataModelBatchChange();
             }
             catch (Exception ex)
@@ -794,7 +851,48 @@ public static class Live2DSettingsUi
         dialog.PopupCentered();
     }
 
-    private static void ShowPackImportDialog(IModSettingsUiActionHost uiHost, GlobalConfigImportMode mode)
+    private static void ShowModelPackExportDialog(string modelId, string displayName)
+    {
+        if (Engine.GetMainLoop() is not SceneTree tree)
+            return;
+        var dialog = new FileDialog
+        {
+            Title = F("dialog.export_model_pack", "Export Package — {0}", displayName),
+            FileMode = FileDialog.FileModeEnum.SaveFile,
+            Access = FileDialog.AccessEnum.Filesystem,
+            CurrentFile = $"{SanitizeFileName(displayName)}-{DateTime.Now:yyyyMMdd-HHmm}.live2dpack",
+            Size = new Vector2I(900, 620),
+        };
+        dialog.AddFilter("*.live2dpack", "Live2D Package");
+        dialog.FileSelected += path =>
+        {
+            try
+            {
+                Live2DPackService.ExportModel(path, modelId, includeGlobalConfig: true);
+                Entry.Logger.Info($"[{Entry.ModId}] Exported package for model {modelId}: {path}");
+            }
+            catch (Exception ex)
+            {
+                Entry.Logger.Error($"[{Entry.ModId}] Failed to export package for model {modelId} to '{path}': {ex}");
+            }
+            dialog.QueueFree();
+        };
+        dialog.Canceled += dialog.QueueFree;
+        tree.Root.AddChild(dialog);
+        dialog.PopupCentered();
+    }
+
+    private static string SanitizeFileName(string value)
+    {
+        var invalid = Path.GetInvalidFileNameChars().ToHashSet();
+        var result = new string(value.Select(character => invalid.Contains(character) ? '_' : character).ToArray()).Trim();
+        return result.Length == 0 ? "Live2D-Model" : result;
+    }
+
+    private static void ShowPackImportDialog(
+        IModSettingsUiActionHost uiHost,
+        Action rebuildModelList,
+        GlobalConfigImportMode mode)
     {
         if (Engine.GetMainLoop() is not SceneTree tree)
             return;
@@ -816,7 +914,8 @@ public static class Live2DSettingsUi
                 Entry.Logger.Info(
                     $"[{Entry.ModId}] Imported package '{path}': imported={summary.ImportedModels}, " +
                     $"duplicates={summary.SkippedDuplicates}, replacedGlobal={summary.ReplacedGlobalConfig}.");
-                uiHost.RequestRefresh();
+                rebuildModelList();
+                uiHost.RequestRefreshAfterDataModelBatchChange();
             }
             catch (Exception ex)
             {
