@@ -1,0 +1,17 @@
+.godot/
+.vs/
+bin/
+obj/
+Tests/bin/
+Tests/obj/
+Tools/**/bin/
+Tools/**/obj/
+*.user
+*.pdb
+runtime-*.log
+.tools/
+Tests/
+*.pck
+*.uid
+examples/
+Tools/

@@ -1,0 +1,15 @@
+﻿{
+  "id": "Live2D",
+  "name": "Live2D",
+  "author": "凌空",
+  "description": "A Live2D MOD.",
+  "version": "0.0.1",
+  "min_game_version": "0.107.1",
+  "has_pck": true,
+  "has_dll": true,
+  "affects_gameplay": false,
+  "dependencies": [{ 
+    "id": "STS2-RitsuLib",
+    "min_version": "v0.4.56"
+  }]
+}

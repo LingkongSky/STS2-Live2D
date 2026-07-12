@@ -1,0 +1,47 @@
+<Project Sdk="Godot.NET.Sdk/4.5.1">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>true</ImplicitUsings>
+    <LangVersion>12.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Sts2Dir Condition="'$(Sts2Dir)' == ''">C:\SteamLibrary\steamapps\common\Slay the Spire 2</Sts2Dir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Tests\**\*.cs" />
+    <Compile Remove="Tools\**\*.cs" />
+    <EmbeddedResource Remove="Tools\**\*" />
+    <None Remove="Tools\**\*" />
+    <Content Remove="Tools\**\*" />
+    <Reference Include="sts2">
+      <HintPath>$(Sts2Dir)\data_sts2_windows_x86_64\sts2.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <PackageReference Include="STS2.RitsuLib" Version="0.4.56" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <GdCubismAddonFiles Include="addons\gd_cubism\**\*"
+                        Exclude="addons\gd_cubism\cs\**\*;addons\gd_cubism\res\**\*;addons\gd_cubism\**\*.uid;addons\gd_cubism\**\*.lib;addons\gd_cubism\**\*.exp;addons\gd_cubism\bin\.gitignore" />
+    <ModResourceFiles Include="resources\**\*" />
+    <EmbeddedResource Include="Live2D\localization\*.json"
+                      LogicalName="Live2D.Localization.%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <Target Name="CopyMod" AfterTargets="Build">
+    <PropertyGroup>
+      <ModOutputDir>$(Sts2Dir)\mods\Live2D</ModOutputDir>
+    </PropertyGroup>
+    <MakeDir Directories="$(ModOutputDir)" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ModOutputDir)" />
+    <Copy SourceFiles="Live2D.json" DestinationFolder="$(ModOutputDir)" />
+    <Copy SourceFiles="Live2D.pck" DestinationFolder="$(ModOutputDir)" Condition="Exists('Live2D.pck')" />
+    <Copy SourceFiles="@(ModResourceFiles)"
+          DestinationFiles="@(ModResourceFiles->'$(ModOutputDir)\resources\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(GdCubismAddonFiles)"
+          DestinationFiles="@(GdCubismAddonFiles->'$(ModOutputDir)\addons\gd_cubism\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+  </Target>
+</Project>
