@@ -21,10 +21,11 @@ public sealed partial class Live2DPreviewEditor : CanvasLayer
     private SpinBox _offsetY = null!;
     private HSlider _scale = null!;
     private HSlider _rotation = null!;
-    private Label _scaleValue = null!;
-    private Label _rotationValue = null!;
+    private SpinBox _scaleInput = null!;
+    private SpinBox _rotationInput = null!;
     private Live2DSceneKind _currentScene;
     private Vector2 _previewViewportSize = Live2DLayout.ReferenceViewportSize;
+    // 同步滑条和数字输入框时，阻止 ValueChanged 事件反向写回草稿。
     private bool _updatingControls;
 
     public static void Show(string modelId, IModSettingsUiActionHost uiHost)
@@ -184,10 +185,15 @@ public sealed partial class Live2DPreviewEditor : CanvasLayer
         inspector.AddChild(CreateField(L("field.offset_x", "Horizontal Offset"), _offsetX));
         inspector.AddChild(CreateField(L("field.offset_y", "Vertical Offset"), _offsetY));
 
-        (_scale, _scaleValue) = CreateSlider(0.01, 4, 0.01, value => ChangeScale((float)value));
-        inspector.AddChild(CreateField(L("field.scale", "Scale"), CreateSliderRow(_scale, _scaleValue)));
-        (_rotation, _rotationValue) = CreateSlider(-180, 180, 1, value => ChangeRotation((float)value));
-        inspector.AddChild(CreateField(L("field.rotation", "Rotation"), CreateSliderRow(_rotation, _rotationValue)));
+        (_scale, _scaleInput) = CreateSlider(0.01, 4, 0.01, value => ChangeScale((float)value));
+        inspector.AddChild(CreateField(L("field.scale", "Scale"), CreateSliderRow(_scale, _scaleInput)));
+        (_rotation, _rotationInput) = CreateSlider(
+            -180,
+            180,
+            1,
+            value => ChangeRotation((float)value),
+            "°");
+        inspector.AddChild(CreateField(L("field.rotation", "Rotation"), CreateSliderRow(_rotation, _rotationInput)));
 
         inspector.AddChild(new Label
         {
@@ -197,13 +203,10 @@ public sealed partial class Live2DPreviewEditor : CanvasLayer
         });
         content.AddChild(inspectorPanel);
 
-        var footer = new HBoxContainer();
-        footer.AddChild(new Label
+        var footer = new HBoxContainer
         {
-            Text = L("preview.save_hint", "Only adjusted fields become model-specific overrides."),
-            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
-            Modulate = new Color(0.75f, 0.78f, 0.84f),
-        });
+            Alignment = BoxContainer.AlignmentMode.End,
+        };
         var cancel = new Button { Text = L("button.cancel", "Cancel"), CustomMinimumSize = new Vector2(130f, 44f) };
         cancel.Pressed += Close;
         footer.AddChild(cancel);
@@ -339,8 +342,8 @@ public sealed partial class Live2DPreviewEditor : CanvasLayer
         _offsetY.Value = draft.OffsetY;
         _scale.Value = draft.Scale;
         _rotation.Value = draft.RotationDegrees;
-        _scaleValue.Text = draft.Scale.ToString("0.00");
-        _rotationValue.Text = $"{draft.RotationDegrees:0}°";
+        _scaleInput.Value = draft.Scale;
+        _rotationInput.Value = draft.RotationDegrees;
         _updatingControls = false;
     }
 
@@ -395,11 +398,12 @@ public sealed partial class Live2DPreviewEditor : CanvasLayer
         return input;
     }
 
-    private static (HSlider Slider, Label Value) CreateSlider(
+    private static (HSlider Slider, SpinBox Input) CreateSlider(
         double min,
         double max,
         double step,
-        Action<double> changed)
+        Action<double> changed,
+        string suffix = "")
     {
         var slider = new HSlider
         {
@@ -408,15 +412,25 @@ public sealed partial class Live2DPreviewEditor : CanvasLayer
             Step = step,
             SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
         };
+        var input = new SpinBox
+        {
+            MinValue = min,
+            MaxValue = max,
+            Step = step,
+            Suffix = suffix,
+            CustomMinimumSize = new Vector2(105f, 0f),
+            SizeFlagsHorizontal = Control.SizeFlags.ShrinkEnd,
+        };
         slider.ValueChanged += value => changed(value);
-        return (slider, new Label { CustomMinimumSize = new Vector2(58f, 0f), HorizontalAlignment = HorizontalAlignment.Right });
+        input.ValueChanged += value => changed(value);
+        return (slider, input);
     }
 
-    private static Control CreateSliderRow(HSlider slider, Label value)
+    private static Control CreateSliderRow(HSlider slider, SpinBox input)
     {
         var row = new HBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
         row.AddChild(slider);
-        row.AddChild(value);
+        row.AddChild(input);
         return row;
     }
 

@@ -12,6 +12,7 @@ namespace Live2D.Scripts.UI;
 public static class Live2DSettingsUi
 {
     private const string ModelDetailPageId = "model_detail";
+    private const float ModelDetailsTabsMinimumHeight = 680f;
     private static string? _selectedModelId;
     private static Action? _rebuildModelList;
     private static ModSettingsText Text(string key, string fallback) => Live2DLocalization.Text(key, fallback);
@@ -61,8 +62,12 @@ public static class Live2DSettingsUi
                 .WithSortOrder(10)
                 .AddSection("master", section => section
                     .WithTitle(Text("global.master_title", "Master Controls"))
-                    .WithDescription(Text("global.master_description", "The global shortcut is the only master visibility control."))
-                    .AddCustom("global_hotkeys", Text("global.hotkeys_title", "Global Hotkeys"), CreateGlobalHotkeys))
+                    .AddCustom("global_hotkeys", Text("global.hotkeys_title", "Global Hotkeys"),
+                        _ => CreateGlobalHotkeys()))
+                .AddSection("global_packages", section => section
+                    .WithTitle(Text("global.packages_title", "Global Configuration Package"))
+                    .AddCustom("global_package_manager", Text("global.packages_title", "Global Configuration Package"),
+                        CreateGlobalPackageManager))
                 .AddSection("main_menu", section => section
                     .WithTitle(Text("global.main_menu_title", "Main Menu Defaults"))
                     .WithDescription(Text("global.scene_description", "Defaults inherited by models without scene-specific overrides."))
@@ -79,7 +84,8 @@ public static class Live2DSettingsUi
                     .WithTitle(Text("global.playback_title", "Playback and Rendering"))
                     .WithDescription(Text("global.playback_description", "Shared animation, physics, and mask defaults."))
                     .Collapsible(true)
-                    .AddCustom("playback_editor", Text("global.playback_title", "Playback and Rendering"), CreateGlobalPlaybackEditor)),
+                    .AddCustom("playback_editor", Text("global.playback_title", "Playback and Rendering"),
+                        _ => CreateGlobalPlaybackEditor())),
             "global");
 
         RitsuLibFramework.RegisterModSettings(
@@ -173,15 +179,9 @@ public static class Live2DSettingsUi
         var packageToolbar = new HBoxContainer();
         packageToolbar.AddChild(CreateToolbarLabel(L("models.toolbar_packages", "Packages")));
         var importButton = new Button { Text = L("button.import_pack", "Import Package") };
-        importButton.Pressed += () => ShowPackImportDialog(uiHost, rebuildModelList, GlobalConfigImportMode.KeepLocal);
+        importButton.Pressed += () => ShowPackImportDialog(uiHost, rebuildModelList);
         importButton.TooltipText = L("tooltip.import_pack", "Import models while keeping local global defaults.");
         packageToolbar.AddChild(importButton);
-
-        var importGlobalButton = new Button { Text = L("button.import_replace_global", "Import and Replace Global") };
-        importGlobalButton.Pressed += () =>
-            ShowPackImportDialog(uiHost, rebuildModelList, GlobalConfigImportMode.ReplaceWithPackage);
-        importGlobalButton.TooltipText = L("tooltip.import_replace_global", "Replace global defaults when included.");
-        packageToolbar.AddChild(importGlobalButton);
 
         var exportButton = new Button { Text = L("button.export_pack", "Export Package") };
         exportButton.Pressed += ShowPackExportDialog;
@@ -232,31 +232,78 @@ public static class Live2DSettingsUi
         return panel;
     }
 
-    private static Control CreateGlobalHotkeys(IModSettingsUiActionHost uiHost)
+    private static Control CreateGlobalHotkeys()
     {
-        var global = Live2DConfigStore.Get().Global;
-        var root = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
-        var hotkeyGrid = new GridContainer { Columns = 2, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
-        hotkeyGrid.AddChild(new Label
+        var row = new HBoxContainer
         {
-            Text = L("global.toggle_visibility_hotkey", "Toggle All Live2D Visibility"),
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+            Alignment = BoxContainer.AlignmentMode.Center,
+        };
+        row.AddThemeConstantOverride("separation", 16);
+
+        row.AddChild(new Label
+        {
+            Text = L("global.toggle_visibility_hotkey", "Enable / Disable All Live2D"),
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+            SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
+            VerticalAlignment = VerticalAlignment.Center,
         });
-        var visibilityHotkey = new ModSettingsKeyBindingControl(
-            global.Hotkeys.ToggleVisibility,
+
+        var hotkey = new ModSettingsKeyBindingControl(
+            Live2DConfigStore.Get().Global.Hotkeys.ToggleVisibility,
             allowModifierCombos: true,
             allowModifierOnly: false,
             distinguishModifierSides: false,
             onChanged: value => ModifyGlobalHotkey(target => target.ToggleVisibility = NormalizeHotkey(value)),
             allowActionBindings: false)
         {
+            CustomMinimumSize = new Vector2(600f, 0f),
+            SizeFlagsHorizontal = Control.SizeFlags.ShrinkEnd,
             TooltipText = L("global.toggle_visibility_hotkey_tip", "Hide all Live2D models, or restore their configured visibility."),
         };
-        hotkeyGrid.AddChild(visibilityHotkey);
-        root.AddChild(hotkeyGrid);
-        return root;
+        HideKeyBindingHint(hotkey);
+        row.AddChild(hotkey);
+        return row;
     }
 
-    private static Control CreateGlobalPlaybackEditor(IModSettingsUiActionHost uiHost)
+    private static Control CreateGlobalPackageManager(IModSettingsUiActionHost uiHost)
+    {
+        var toolbar = new HBoxContainer
+        {
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+            Alignment = BoxContainer.AlignmentMode.Center,
+        };
+        toolbar.AddThemeConstantOverride("separation", 12);
+
+        toolbar.AddChild(CreateActionButton(
+            L("button.import_global_config", "Import Global Configuration"),
+            () => ShowGlobalImportDialog(uiHost)));
+        toolbar.AddChild(CreateActionButton(
+            L("button.export_global_config", "Export Global Configuration"),
+            ShowGlobalExportDialog));
+        return toolbar;
+    }
+
+    private static Button CreateActionButton(string text, Action pressed)
+    {
+        var button = new Button
+        {
+            Text = text,
+            CustomMinimumSize = new Vector2(260f, 0f),
+        };
+        button.Pressed += pressed;
+        return button;
+    }
+
+    private static void HideKeyBindingHint(ModSettingsKeyBindingControl control)
+    {
+        // RitsuLib 暂未提供隐藏录制说明的公开接口，只隐藏直属提示标签，不影响按键捕获逻辑。
+        foreach (var hint in control.GetChildren().OfType<Label>())
+            hint.Hide();
+        control.CustomMinimumSize = new Vector2(control.CustomMinimumSize.X, 0f);
+    }
+
+    private static Control CreateGlobalPlaybackEditor()
     {
         var global = Live2DConfigStore.Get().Global;
         var root = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
@@ -455,7 +502,12 @@ public static class Live2DSettingsUi
                 CustomMinimumSize = new Vector2(0f, 240f),
             };
 
-        var details = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        // 详情页、标签容器和滚动区必须逐层允许扩展，快捷键列表才能占用页面剩余高度。
+        var details = new VBoxContainer
+        {
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+            SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+        };
         details.AddThemeConstantOverride("separation", 12);
         var header = new HBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
         var identity = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
@@ -502,8 +554,10 @@ public static class Live2DSettingsUi
         var settings = Live2DConfigStore.Get();
         var tabs = new TabContainer
         {
-            CustomMinimumSize = new Vector2(0f, 520f),
+            // RitsuLib 的页面栈按最小高度布局，需在这里为详情列表预留完整的纵向空间。
+            CustomMinimumSize = new Vector2(0f, ModelDetailsTabsMinimumHeight),
             SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+            SizeFlagsVertical = Control.SizeFlags.ExpandFill,
         };
         tabs.AddChild(CreateModelTab(
             SceneName(Live2DSceneKind.MainMenu),
@@ -594,15 +648,13 @@ public static class Live2DSettingsUi
                 onChanged: value => UpdateActionBinding(model.Id, action,
                     target => target.KeyBinding = NormalizeHotkey(value)),
                 allowActionBindings: false);
-            card.AddChild(keyControl);
+            HideKeyBindingHint(keyControl);
 
-            if (binding != null && duplicateBindings.Contains(binding.KeyBinding))
-                card.AddChild(new Label
-                {
-                    Text = L("action.conflict", "⚠ Duplicate hotkey; multiple actions will play."),
-                });
-
-            var options = new HBoxContainer();
+            var options = new HBoxContainer
+            {
+                SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+                SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
+            };
             options.AddChild(CreateBindingToggle(SceneName(Live2DSceneKind.MainMenu), binding?.MainMenu ?? true,
                 value => UpdateActionBinding(model.Id, action, target => target.MainMenu = value)));
             options.AddChild(CreateBindingToggle(SceneName(Live2DSceneKind.InGame), binding?.InGame ?? true,
@@ -612,7 +664,19 @@ public static class Live2DSettingsUi
                 options.AddChild(CreateBindingToggle(L("field.loop", "Loop"), binding?.Loop ?? false,
                     value => UpdateActionBinding(model.Id, action, target => target.Loop = value)));
             }
-            card.AddChild(options);
+
+            var actionRow = new HBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+            actionRow.AddThemeConstantOverride("separation", 16);
+            actionRow.AddChild(options);
+            actionRow.AddChild(keyControl);
+            card.AddChild(actionRow);
+
+            if (binding != null && duplicateBindings.Contains(binding.KeyBinding))
+                card.AddChild(new Label
+                {
+                    Text = L("action.conflict", "⚠ Duplicate hotkey; multiple actions will play."),
+                });
+
             root.AddChild(WrapCard(card));
         }
         return root;
@@ -788,98 +852,107 @@ public static class Live2DSettingsUi
 
     private static void ShowImportDialog(IModSettingsUiActionHost uiHost, Action rebuildModelList)
     {
-        if (Engine.GetMainLoop() is not SceneTree tree)
-            return;
-
-        var dialog = new FileDialog
-        {
-            Title = L("dialog.select_model", "Select a Live2D .model3.json File"),
-            FileMode = FileDialog.FileModeEnum.OpenFile,
-            Access = FileDialog.AccessEnum.Filesystem,
-            Size = new Vector2I(900, 620),
-        };
-        dialog.AddFilter("*.model3.json", "Live2D Model");
-        dialog.FileSelected += path =>
-        {
-            try
+        ShowNativeFileDialog(
+            L("dialog.select_model", "Select a Live2D .model3.json File"),
+            FileDialog.FileModeEnum.OpenFile,
+            "*.model3.json",
+            "Live2D Model",
+            path =>
             {
-                var model = Live2DConfigStore.ImportModel(path);
-                Live2DHotkeyManager.Refresh();
-                Entry.Logger.Info($"[{Entry.ModId}] Imported model '{model.DisplayName}' ({model.Id}).");
-                rebuildModelList();
-                uiHost.RequestRefreshAfterDataModelBatchChange();
-            }
-            catch (Exception ex)
-            {
-                Entry.Logger.Error($"[{Entry.ModId}] Failed to import model '{path}': {ex}");
-            }
-            dialog.QueueFree();
-        };
-        dialog.Canceled += dialog.QueueFree;
-        tree.Root.AddChild(dialog);
-        dialog.PopupCentered();
+                try
+                {
+                    var model = Live2DConfigStore.ImportModel(path);
+                    Live2DHotkeyManager.Refresh();
+                    Entry.Logger.Info($"[{Entry.ModId}] Imported model '{model.DisplayName}' ({model.Id}).");
+                    rebuildModelList();
+                    uiHost.RequestRefreshAfterDataModelBatchChange();
+                }
+                catch (Exception ex)
+                {
+                    Entry.Logger.Error($"[{Entry.ModId}] Failed to import model '{path}': {ex}");
+                }
+            });
     }
 
     private static void ShowPackExportDialog()
     {
-        if (Engine.GetMainLoop() is not SceneTree tree)
-            return;
-        var dialog = new FileDialog
-        {
-            Title = L("dialog.export_pack", "Export Live2D Package"),
-            FileMode = FileDialog.FileModeEnum.SaveFile,
-            Access = FileDialog.AccessEnum.Filesystem,
-            CurrentFile = $"Live2D-{DateTime.Now:yyyyMMdd-HHmm}.live2dpack",
-            Size = new Vector2I(900, 620),
-        };
-        dialog.AddFilter("*.live2dpack", "Live2D Package");
-        dialog.FileSelected += path =>
-        {
-            try
+        ShowPackageDialog(
+            L("dialog.export_pack", "Export Live2D Package"),
+            FileDialog.FileModeEnum.SaveFile,
+            $"Live2D-{DateTime.Now:yyyyMMdd-HHmm}.live2dpack",
+            path =>
             {
-                Live2DPackService.ExportAll(path, includeGlobalConfig: true);
-                Entry.Logger.Info($"[{Entry.ModId}] Exported Live2D package: {path}");
-            }
-            catch (Exception ex)
+                try
+                {
+                    Live2DPackService.ExportAll(path);
+                    Entry.Logger.Info($"[{Entry.ModId}] Exported Live2D package: {path}");
+                }
+                catch (Exception ex)
+                {
+                    Entry.Logger.Error($"[{Entry.ModId}] Failed to export package '{path}': {ex}");
+                }
+            });
+    }
+
+    private static void ShowGlobalExportDialog()
+    {
+        ShowPackageDialog(
+            L("dialog.export_global_config", "Export Global Configuration"),
+            FileDialog.FileModeEnum.SaveFile,
+            $"Live2D-Global-{DateTime.Now:yyyyMMdd-HHmm}.live2dpack",
+            path =>
             {
-                Entry.Logger.Error($"[{Entry.ModId}] Failed to export package '{path}': {ex}");
-            }
-            dialog.QueueFree();
-        };
-        dialog.Canceled += dialog.QueueFree;
-        tree.Root.AddChild(dialog);
-        dialog.PopupCentered();
+                try
+                {
+                    Live2DPackService.ExportGlobal(path);
+                    Entry.Logger.Info($"[{Entry.ModId}] Exported global configuration package: {path}");
+                }
+                catch (Exception ex)
+                {
+                    Entry.Logger.Error($"[{Entry.ModId}] Failed to export global configuration to '{path}': {ex}");
+                }
+            });
+    }
+
+    private static void ShowGlobalImportDialog(IModSettingsUiActionHost uiHost)
+    {
+        ShowPackageDialog(
+            L("dialog.import_global_config", "Import Global Configuration"),
+            FileDialog.FileModeEnum.OpenFile,
+            null,
+            path =>
+            {
+                try
+                {
+                    Live2DPackService.ImportGlobal(path);
+                    uiHost.RequestRefresh();
+                    Entry.Logger.Info($"[{Entry.ModId}] Imported global configuration package: {path}");
+                }
+                catch (Exception ex)
+                {
+                    Entry.Logger.Error($"[{Entry.ModId}] Failed to import global configuration from '{path}': {ex}");
+                }
+            });
     }
 
     private static void ShowModelPackExportDialog(string modelId, string displayName)
     {
-        if (Engine.GetMainLoop() is not SceneTree tree)
-            return;
-        var dialog = new FileDialog
-        {
-            Title = F("dialog.export_model_pack", "Export Package — {0}", displayName),
-            FileMode = FileDialog.FileModeEnum.SaveFile,
-            Access = FileDialog.AccessEnum.Filesystem,
-            CurrentFile = $"{SanitizeFileName(displayName)}-{DateTime.Now:yyyyMMdd-HHmm}.live2dpack",
-            Size = new Vector2I(900, 620),
-        };
-        dialog.AddFilter("*.live2dpack", "Live2D Package");
-        dialog.FileSelected += path =>
-        {
-            try
+        ShowPackageDialog(
+            F("dialog.export_model_pack", "Export Package — {0}", displayName),
+            FileDialog.FileModeEnum.SaveFile,
+            $"{SanitizeFileName(displayName)}-{DateTime.Now:yyyyMMdd-HHmm}.live2dpack",
+            path =>
             {
-                Live2DPackService.ExportModel(path, modelId, includeGlobalConfig: true);
-                Entry.Logger.Info($"[{Entry.ModId}] Exported package for model {modelId}: {path}");
-            }
-            catch (Exception ex)
-            {
-                Entry.Logger.Error($"[{Entry.ModId}] Failed to export package for model {modelId} to '{path}': {ex}");
-            }
-            dialog.QueueFree();
-        };
-        dialog.Canceled += dialog.QueueFree;
-        tree.Root.AddChild(dialog);
-        dialog.PopupCentered();
+                try
+                {
+                    Live2DPackService.ExportModel(path, modelId);
+                    Entry.Logger.Info($"[{Entry.ModId}] Exported package for model {modelId}: {path}");
+                }
+                catch (Exception ex)
+                {
+                    Entry.Logger.Error($"[{Entry.ModId}] Failed to export package for model {modelId} to '{path}': {ex}");
+                }
+            });
     }
 
     private static string SanitizeFileName(string value)
@@ -891,37 +964,73 @@ public static class Live2DSettingsUi
 
     private static void ShowPackImportDialog(
         IModSettingsUiActionHost uiHost,
-        Action rebuildModelList,
-        GlobalConfigImportMode mode)
+        Action rebuildModelList)
+    {
+        ShowPackageDialog(
+            L("dialog.import_keep", "Import Live2D Package"),
+            FileDialog.FileModeEnum.OpenFile,
+            null,
+            path =>
+            {
+                try
+                {
+                    var summary = Live2DPackService.Import(path);
+                    Entry.Logger.Info(
+                        $"[{Entry.ModId}] Imported package '{path}': imported={summary.ImportedModels}, " +
+                        $"duplicates={summary.SkippedDuplicates}.");
+                    rebuildModelList();
+                    uiHost.RequestRefreshAfterDataModelBatchChange();
+                }
+                catch (Exception ex)
+                {
+                    Entry.Logger.Error($"[{Entry.ModId}] Failed to import package '{path}': {ex}");
+                }
+            });
+    }
+
+    private static void ShowPackageDialog(
+        string title,
+        FileDialog.FileModeEnum mode,
+        string? currentFile,
+        Action<string> selected)
+    {
+        ShowNativeFileDialog(title, mode, "*.live2dpack", "Live2D Package", selected, currentFile);
+    }
+
+    private static void ShowNativeFileDialog(
+        string title,
+        FileDialog.FileModeEnum mode,
+        string filter,
+        string filterName,
+        Action<string> selected,
+        string? currentFile = null)
     {
         if (Engine.GetMainLoop() is not SceneTree tree)
             return;
+
+        // 使用系统原生窗口，让标题、按钮和路径区域自动跟随操作系统语言。
         var dialog = new FileDialog
         {
-            Title = mode == GlobalConfigImportMode.KeepLocal
-                ? L("dialog.import_keep", "Import Live2D Package (Keep Local Global Configuration)")
-                : L("dialog.import_replace", "Import Live2D Package (Replace Global Configuration)"),
-            FileMode = FileDialog.FileModeEnum.OpenFile,
+            ModeOverridesTitle = false,
+            UseNativeDialog = true,
+            Title = title,
+            FileMode = mode,
             Access = FileDialog.AccessEnum.Filesystem,
             Size = new Vector2I(900, 620),
         };
-        dialog.AddFilter("*.live2dpack", "Live2D Package");
+        if (!string.IsNullOrWhiteSpace(currentFile))
+            dialog.CurrentFile = currentFile;
+        dialog.AddFilter(filter, filterName);
         dialog.FileSelected += path =>
         {
             try
             {
-                var summary = Live2DPackService.Import(path, mode);
-                Entry.Logger.Info(
-                    $"[{Entry.ModId}] Imported package '{path}': imported={summary.ImportedModels}, " +
-                    $"duplicates={summary.SkippedDuplicates}, replacedGlobal={summary.ReplacedGlobalConfig}.");
-                rebuildModelList();
-                uiHost.RequestRefreshAfterDataModelBatchChange();
+                selected(path);
             }
-            catch (Exception ex)
+            finally
             {
-                Entry.Logger.Error($"[{Entry.ModId}] Failed to import package '{path}': {ex}");
+                dialog.QueueFree();
             }
-            dialog.QueueFree();
         };
         dialog.Canceled += dialog.QueueFree;
         tree.Root.AddChild(dialog);

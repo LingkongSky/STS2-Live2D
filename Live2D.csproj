@@ -18,7 +18,7 @@
       <HintPath>$(Sts2Dir)\data_sts2_windows_x86_64\sts2.dll</HintPath>
       <Private>false</Private>
     </Reference>
-    <PackageReference Include="STS2.RitsuLib" Version="0.4.56" />
+    <PackageReference Include="STS2.RitsuLib.Compat.0.107.1" Version="0.4.56" />
   </ItemGroup>
 
   <ItemGroup>

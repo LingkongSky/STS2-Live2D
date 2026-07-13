@@ -5,31 +5,21 @@ using STS2RitsuLib;
 
 namespace Live2D.Scripts.Packs;
 
-public enum GlobalConfigImportMode
-{
-    KeepLocal,
-    ReplaceWithPackage,
-}
-
-public sealed record Live2DPackImportSummary(int ImportedModels, int SkippedDuplicates, bool ReplacedGlobalConfig);
+public sealed record Live2DPackImportSummary(int ImportedModels, int SkippedDuplicates);
 
 public static class Live2DPackService
 {
-    public static void ExportAll(string destinationPath, bool includeGlobalConfig = true)
+    public static void ExportAll(string destinationPath)
     {
-        if (!destinationPath.EndsWith(".live2dpack", StringComparison.OrdinalIgnoreCase))
-            destinationPath += ".live2dpack";
         Live2DPackArchive.Write(
-            destinationPath,
+            EnsurePackageExtension(destinationPath),
             Live2DConfigStore.Get(),
             Live2DModelRepository.ModelsDirectory,
-            includeGlobalConfig);
+            includeGlobalConfig: false);
     }
 
-    public static void ExportModel(string destinationPath, string modelId, bool includeGlobalConfig = true)
+    public static void ExportModel(string destinationPath, string modelId)
     {
-        if (!destinationPath.EndsWith(".live2dpack", StringComparison.OrdinalIgnoreCase))
-            destinationPath += ".live2dpack";
         var current = Live2DConfigStore.Get();
         var model = current.Models.FirstOrDefault(value => value.Id == modelId)
                     ?? throw new InvalidOperationException($"Model configuration does not exist: {modelId}");
@@ -40,19 +30,56 @@ public static class Live2DPackService
             Models = [model],
         };
         Live2DPackArchive.Write(
-            destinationPath,
+            EnsurePackageExtension(destinationPath),
             packageSettings,
             Live2DModelRepository.ModelsDirectory,
-            includeGlobalConfig,
+            includeGlobalConfig: false,
             model.DisplayName);
     }
 
-    public static Live2DPackImportSummary Import(
-        string packagePath,
-        GlobalConfigImportMode globalMode = GlobalConfigImportMode.KeepLocal)
+    public static void ExportGlobal(string destinationPath)
     {
-        var staging = Path.Combine(Path.GetTempPath(), "Live2D", "pack-import-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(staging);
+        var current = Live2DConfigStore.Get();
+        var packageSettings = new Live2DSettings
+        {
+            SchemaVersion = current.SchemaVersion,
+            Global = current.Global,
+            // 全局配置包不携带模型，避免导入时意外覆盖或复制模型资源。
+            Models = [],
+        };
+        Live2DPackArchive.Write(
+            EnsurePackageExtension(destinationPath),
+            packageSettings,
+            Live2DModelRepository.ModelsDirectory,
+            includeGlobalConfig: true,
+            packageName: "Live2D Global Configuration");
+    }
+
+    public static void ImportGlobal(string packagePath)
+    {
+        var staging = CreateStagingDirectory("global-import");
+        try
+        {
+            var package = Live2DPackArchive.ReadToStaging(packagePath, staging);
+            if (package.Global == null)
+                throw new InvalidDataException("Package does not contain global Live2D configuration.");
+
+            var store = RitsuLibFramework.GetDataStore(Entry.ModId);
+            store.Modify<Live2DSettings>(Live2DConfigStore.SettingsKey,
+                settings => settings.Global = package.Global);
+            store.Save(Live2DConfigStore.SettingsKey);
+            Live2DRuntimeManager.RefreshAll();
+            Live2DHotkeyManager.Refresh();
+        }
+        finally
+        {
+            DeleteStagingDirectory(staging);
+        }
+    }
+
+    public static Live2DPackImportSummary Import(string packagePath)
+    {
+        var staging = CreateStagingDirectory("pack-import");
         var imported = new List<Live2DModelConfig>();
         try
         {
@@ -84,18 +111,14 @@ public static class Live2DPackService
                     knownHashes.Add(model.ContentHash);
             }
 
-            var replaceGlobal = globalMode == GlobalConfigImportMode.ReplaceWithPackage && package.Global != null;
             var store = RitsuLibFramework.GetDataStore(Entry.ModId);
-            store.Modify<Live2DSettings>(Live2DConfigStore.SettingsKey, settings =>
-            {
-                if (replaceGlobal)
-                    settings.Global = package.Global!;
-                settings.Models.AddRange(imported);
-            });
+            // 模型包只导入模型；全局配置统一由 ImportGlobal 处理。
+            store.Modify<Live2DSettings>(Live2DConfigStore.SettingsKey,
+                settings => settings.Models.AddRange(imported));
             store.Save(Live2DConfigStore.SettingsKey);
             Live2DRuntimeManager.RefreshAll();
             Live2DHotkeyManager.Refresh();
-            return new Live2DPackImportSummary(imported.Count, skipped, replaceGlobal);
+            return new Live2DPackImportSummary(imported.Count, skipped);
         }
         catch
         {
@@ -105,8 +128,27 @@ public static class Live2DPackService
         }
         finally
         {
-            if (Directory.Exists(staging))
-                Directory.Delete(staging, recursive: true);
+            DeleteStagingDirectory(staging);
         }
+    }
+
+    private static string EnsurePackageExtension(string path)
+    {
+        return path.EndsWith(".live2dpack", StringComparison.OrdinalIgnoreCase)
+            ? path
+            : path + ".live2dpack";
+    }
+
+    private static string CreateStagingDirectory(string prefix)
+    {
+        var path = Path.Combine(Path.GetTempPath(), "Live2D", $"{prefix}-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(path);
+        return path;
+    }
+
+    private static void DeleteStagingDirectory(string path)
+    {
+        if (Directory.Exists(path))
+            Directory.Delete(path, recursive: true);
     }
 }
