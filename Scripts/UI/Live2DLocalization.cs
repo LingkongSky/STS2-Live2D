@@ -4,7 +4,7 @@ using STS2RitsuLib.Utils;
 
 namespace Live2D.Scripts.UI;
 
-public static class Live2DLocalization
+internal static class Live2DLocalization
 {
     private static I18N? _instance;
 

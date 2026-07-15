@@ -4,7 +4,7 @@ using STS2RitsuLib.Utils.Persistence;
 
 namespace Live2D.Scripts.Configuration;
 
-public static class Live2DConfigStore
+internal static class Live2DConfigStore
 {
     public const string SettingsKey = "settings";
     private static bool _initialized;
@@ -56,7 +56,7 @@ public static class Live2DConfigStore
         store.Modify<Live2DSettings>(SettingsKey, settings =>
         {
             var reasons = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            var removed = Live2DConfigMigration.RemoveUnavailableModels(settings, model =>
+            var removed = Live2DConfigNormalizer.RemoveUnavailableModels(settings, model =>
             {
                 var available = Live2DModelRepository.IsManagedModelAvailable(model, out var reason);
                 if (!available)
@@ -78,7 +78,7 @@ public static class Live2DConfigStore
     private static void Normalize()
     {
         var store = RitsuLibFramework.GetDataStore(Entry.ModId);
-        store.Modify<Live2DSettings>(SettingsKey, Live2DConfigMigration.NormalizeInPlace);
+        store.Modify<Live2DSettings>(SettingsKey, Live2DConfigNormalizer.NormalizeInPlace);
         store.Save(SettingsKey);
     }
 }

@@ -1,0 +1,7 @@
+<Project>
+  <PropertyGroup>
+    <!-- Exposed so consumer build logic can detect the compile-time Live2D API package. -->
+    <Live2DApiReference>true</Live2DApiReference>
+    <Live2DRuntimeModId>Live2D</Live2DRuntimeModId>
+  </PropertyGroup>
+</Project>

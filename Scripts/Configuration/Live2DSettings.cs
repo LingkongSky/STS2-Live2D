@@ -1,14 +1,14 @@
-using System.Text.Json.Serialization;
+using Live2D.Api;
 
 namespace Live2D.Scripts.Configuration;
 
-public enum Live2DSceneKind
+internal enum Live2DSceneKind
 {
     MainMenu,
     InGame,
 }
 
-public enum AnchorPreset
+internal enum AnchorPreset
 {
     TopLeft,
     TopCenter,
@@ -21,40 +21,36 @@ public enum AnchorPreset
     BottomRight,
 }
 
-public enum Live2DActionKind
+internal enum Live2DActionKind
 {
     Motion,
     Expression,
 }
 
-public sealed class Live2DSettings
+internal sealed class Live2DSettings
 {
-    public const int CurrentSchemaVersion = 5;
+    public const int CurrentSchemaVersion = 6;
 
     public int SchemaVersion { get; set; } = CurrentSchemaVersion;
     public GlobalLive2DConfig Global { get; set; } = new();
     public List<Live2DModelConfig> Models { get; set; } = [];
 }
 
-public sealed class GlobalLive2DConfig
+internal sealed class GlobalLive2DConfig
 {
     public GlobalHotkeyConfig Hotkeys { get; set; } = new();
     public SceneDisplayConfig MainMenu { get; set; } = SceneDisplayConfig.CreateMainMenuDefault();
     public SceneDisplayConfig InGame { get; set; } = SceneDisplayConfig.CreateInGameDefault();
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public SceneDisplayConfig? Map { get; set; }
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public SceneDisplayConfig? Combat { get; set; }
     public PlaybackConfig Playback { get; set; } = new();
     public RenderingConfig Rendering { get; set; } = new();
 }
 
-public sealed class GlobalHotkeyConfig
+internal sealed class GlobalHotkeyConfig
 {
     public string ToggleVisibility { get; set; } = "";
 }
 
-public sealed class SceneDisplayConfig
+internal sealed class SceneDisplayConfig
 {
     public bool Visible { get; set; } = true;
     public AnchorPreset Anchor { get; set; } = AnchorPreset.BottomRight;
@@ -85,7 +81,7 @@ public sealed class SceneDisplayConfig
     };
 }
 
-public sealed class SceneDisplayOverrides
+internal sealed class SceneDisplayOverrides
 {
     public bool? Visible { get; set; }
     public AnchorPreset? Anchor { get; set; }
@@ -98,7 +94,7 @@ public sealed class SceneDisplayOverrides
     public bool? MouseInteraction { get; set; }
 }
 
-public sealed class PlaybackConfig
+internal sealed class PlaybackConfig
 {
     public float Speed { get; set; } = 1f;
     public bool EnablePhysics { get; set; } = true;
@@ -107,7 +103,7 @@ public sealed class PlaybackConfig
     public float ActionCooldownSeconds { get; set; } = 0.1f;
 }
 
-public sealed class PlaybackOverrides
+internal sealed class PlaybackOverrides
 {
     public float? Speed { get; set; }
     public bool? EnablePhysics { get; set; }
@@ -116,17 +112,49 @@ public sealed class PlaybackOverrides
     public float? ActionCooldownSeconds { get; set; }
 }
 
-public sealed class RenderingConfig
+internal sealed class RenderingConfig
 {
     public int MaskViewportSize { get; set; }
+    public Live2DBlendMode BlendMode { get; set; }
+    public FilterConfig Filter { get; set; } = new();
+    public CanvasMaskConfig Mask { get; set; } = new();
 }
 
-public sealed class RenderingOverrides
+internal sealed class RenderingOverrides
 {
     public int? MaskViewportSize { get; set; }
+    public Live2DBlendMode? BlendMode { get; set; }
+    public FilterConfig? Filter { get; set; }
+    public CanvasMaskConfig? Mask { get; set; }
 }
 
-public sealed class Live2DModelConfig
+internal sealed class FilterConfig
+{
+    public float TintR { get; set; } = 1f;
+    public float TintG { get; set; } = 1f;
+    public float TintB { get; set; } = 1f;
+    public float TintA { get; set; } = 1f;
+    public float Brightness { get; set; }
+    public float Contrast { get; set; } = 1f;
+    public float Saturation { get; set; } = 1f;
+    public float Grayscale { get; set; }
+    public float HueShiftDegrees { get; set; }
+    public float Invert { get; set; }
+    public float Gamma { get; set; } = 1f;
+}
+
+internal sealed class CanvasMaskConfig
+{
+    public Live2DMaskType Type { get; set; }
+    public float X { get; set; } = -500f;
+    public float Y { get; set; } = -500f;
+    public float Width { get; set; } = 1000f;
+    public float Height { get; set; } = 1000f;
+    public float CornerRadius { get; set; } = 32f;
+    public int SegmentsPerCorner { get; set; } = 12;
+}
+
+internal sealed class Live2DModelConfig
 {
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
     public string DisplayName { get; set; } = "Live2D Model";
@@ -140,19 +168,15 @@ public sealed class Live2DModelConfig
     public List<ActionBindingConfig> ActionBindings { get; set; } = [];
 }
 
-public sealed class Live2DModelOverrides
+internal sealed class Live2DModelOverrides
 {
     public SceneDisplayOverrides MainMenu { get; set; } = new();
     public SceneDisplayOverrides InGame { get; set; } = new();
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public SceneDisplayOverrides? Map { get; set; }
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public SceneDisplayOverrides? Combat { get; set; }
     public PlaybackOverrides Playback { get; set; } = new();
     public RenderingOverrides Rendering { get; set; } = new();
 }
 
-public sealed class Live2DActionDescriptor
+internal sealed class Live2DActionDescriptor
 {
     public Live2DActionKind Kind { get; set; }
     public string DisplayName { get; set; } = "";
@@ -161,7 +185,7 @@ public sealed class Live2DActionDescriptor
     public string ExpressionId { get; set; } = "";
 }
 
-public sealed class ActionBindingConfig
+internal sealed class ActionBindingConfig
 {
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
     public Live2DActionKind Kind { get; set; }
@@ -171,15 +195,17 @@ public sealed class ActionBindingConfig
     public string KeyBinding { get; set; } = "";
     public bool MainMenu { get; set; } = true;
     public bool InGame { get; set; } = true;
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public bool? Map { get; set; }
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public bool? Combat { get; set; }
     public bool Loop { get; set; }
 }
 
-public sealed record ResolvedLive2DConfig(
+internal sealed record ResolvedLive2DConfig(
     SceneDisplayConfig MainMenu,
     SceneDisplayConfig InGame,
     PlaybackConfig Playback,
-    RenderingConfig Rendering);
+    ResolvedRenderingConfig Rendering);
+
+internal sealed record ResolvedRenderingConfig(
+    int MaskViewportSize,
+    Live2DBlendMode BlendMode,
+    Live2DFilterSettings Filter,
+    Live2DMaskSettings Mask);

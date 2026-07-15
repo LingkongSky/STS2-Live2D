@@ -3,7 +3,7 @@ using Godot;
 
 namespace Live2D.Scripts.Runtime;
 
-public static class CubismExtensionLoader
+internal static class CubismExtensionLoader
 {
     private static readonly string[] ShaderResourcePaths =
     [

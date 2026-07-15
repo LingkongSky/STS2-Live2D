@@ -3,7 +3,7 @@ using Live2D.Scripts.Configuration;
 
 namespace Live2D.Scripts.Models;
 
-public static class Live2DModelRepository
+internal static class Live2DModelRepository
 {
     public static string ModelsDirectory => Path.Combine(OS.GetUserDataDir(), "mods", Entry.ModId, "models");
 

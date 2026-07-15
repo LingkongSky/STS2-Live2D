@@ -3,7 +3,7 @@ using STS2RitsuLib.RuntimeInput;
 
 namespace Live2D.Scripts.Runtime;
 
-public static class Live2DHotkeyManager
+internal static class Live2DHotkeyManager
 {
     private static readonly List<IRuntimeHotkeyHandle> Handles = [];
 

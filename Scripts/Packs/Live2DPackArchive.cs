@@ -4,7 +4,7 @@ using Live2D.Scripts.Configuration;
 
 namespace Live2D.Scripts.Packs;
 
-public sealed class Live2DPackManifest
+internal sealed class Live2DPackManifest
 {
     public const int CurrentFormatVersion = 1;
 
@@ -14,27 +14,28 @@ public sealed class Live2DPackManifest
     public string Author { get; set; } = "";
     public string Description { get; set; } = "";
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
-    public string MinimumModVersion { get; set; } = "0.0.1";
+    public string MinimumModVersion { get; set; } = Entry.ModVersion;
     public int SettingsSchemaVersion { get; set; } = Live2DSettings.CurrentSchemaVersion;
     public bool IncludesGlobalConfig { get; set; }
     public List<Live2DPackModelEntry> Models { get; set; } = [];
 }
 
-public sealed class Live2DPackModelEntry
+internal sealed class Live2DPackModelEntry
 {
     public string OriginalId { get; set; } = "";
+    public string ModelKey { get; set; } = "";
     public string DisplayName { get; set; } = "";
     public string EntryPath { get; set; } = "";
     public string ContentHash { get; set; } = "";
 }
 
-public sealed record Live2DPackReadResult(
+internal sealed record Live2DPackReadResult(
     Live2DPackManifest Manifest,
     GlobalLive2DConfig? Global,
     IReadOnlyList<Live2DModelConfig> Models,
     IReadOnlyDictionary<string, string> ExtractedEntryPaths);
 
-public static class Live2DPackArchive
+internal static class Live2DPackArchive
 {
     private const long MaximumEntryBytes = 512L * 1024 * 1024;
     private const long MaximumTotalBytes = 2L * 1024 * 1024 * 1024;
@@ -71,6 +72,7 @@ public static class Live2DPackArchive
             Models = settings.Models.Select(model => new Live2DPackModelEntry
             {
                 OriginalId = model.Id,
+                ModelKey = model.Id,
                 DisplayName = model.DisplayName,
                 EntryPath = $"models/{model.Id}/{Path.GetFileName(model.ModelRelativePath)}",
                 ContentHash = model.ContentHash,
@@ -164,9 +166,10 @@ public static class Live2DPackArchive
         var manifest = ReadJson<Live2DPackManifest>(GetRequired(entries, "manifest.json"));
         if (manifest.FormatVersion != Live2DPackManifest.CurrentFormatVersion)
             throw new InvalidDataException($"Unsupported Live2D package version: {manifest.FormatVersion}");
-        if (manifest.SettingsSchemaVersion > Live2DSettings.CurrentSchemaVersion)
+        if (manifest.SettingsSchemaVersion != Live2DSettings.CurrentSchemaVersion)
             throw new InvalidDataException(
-                $"Package settings schema {manifest.SettingsSchemaVersion} is newer than supported schema {Live2DSettings.CurrentSchemaVersion}.");
+                $"Unsupported package settings schema: {manifest.SettingsSchemaVersion}. " +
+                $"Expected {Live2DSettings.CurrentSchemaVersion}.");
 
         var models = ReadJson<List<Live2DModelConfig>>(GetRequired(entries, "settings/models.json"));
         var modelById = models.ToDictionary(model => model.Id, StringComparer.OrdinalIgnoreCase);
@@ -174,16 +177,16 @@ public static class Live2DPackArchive
         if (manifest.IncludesGlobalConfig)
             global = ReadJson<GlobalLive2DConfig>(GetRequired(entries, "settings/global.json"));
 
-        var migratedSettings = new Live2DSettings
+        var normalizedSettings = new Live2DSettings
         {
             SchemaVersion = manifest.SettingsSchemaVersion,
             Global = global ?? new GlobalLive2DConfig(),
             Models = models,
         };
-        Live2DConfigMigration.NormalizeInPlace(migratedSettings);
-        models = migratedSettings.Models;
+        Live2DConfigNormalizer.NormalizeInPlace(normalizedSettings);
+        models = normalizedSettings.Models;
         if (manifest.IncludesGlobalConfig)
-            global = migratedSettings.Global;
+            global = normalizedSettings.Global;
 
         var extractedEntries = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         foreach (var modelEntry in manifest.Models)

@@ -1,18 +1,60 @@
-.godot/
+# Operating system and editor state
+.DS_Store
+Thumbs.db
+Desktop.ini
 .vs/
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# .NET and Godot build output
+.godot/
 bin/
 obj/
-Tests/bin/
-Tests/obj/
-Tools/**/bin/
-Tools/**/obj/
-*.user
+TestResults/
+coverage/
 *.pdb
-runtime-*.log
-.tools/
-Tests/
-*.pck
 *.uid
-examples/
 Tools/
-resources
+
+# Documentation website dependencies and generated output
+node_modules/
+docs/.vitepress/cache/
+docs/.vitepress/dist/
+.vite/
+.eslintcache
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Local tools, logs and temporary files
+.tools/
+.cache/
+*.log
+*.tmp
+*.bak
+*.orig
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# Generated release and verification artifacts
+artifacts/
+*.nupkg
+*.snupkg
+*.pck
+
+# Large local-only model fixtures
+examples/
+
+# The native Cubism extension is a required runtime dependency. The generic
+# bin/ rule above must not hide its distributable Windows binary.
+!addons/gd_cubism/bin/
+!addons/gd_cubism/bin/.gitignore
+!addons/gd_cubism/bin/libgd_cubism.windows.release.x86_64.dll

@@ -6,7 +6,7 @@ using STS2RitsuLib.Settings;
 
 namespace Live2D.Scripts.UI;
 
-public static class Live2DMainMenuSettingsEntry
+internal static class Live2DMainMenuSettingsEntry
 {
     private const string ButtonNodeName = "Live2DSettingsButton";
     private static readonly MethodInfo? MainMenuButtonFocused = typeof(NMainMenu).GetMethod(

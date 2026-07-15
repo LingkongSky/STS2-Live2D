@@ -1,0 +1,107 @@
+# 公開 API リファレンス
+
+現在のランタイムは `Live2DApi.RuntimeVersion == "0.4.0"`、能力バージョンは `Live2DApi.RuntimeApiVersion == 4` です。
+安定した公開 API は `Live2D.Api` だけです。
+
+## スレッド規則
+
+| API | 呼び出し可能スレッド |
+| --- | --- |
+| `Post`、`InvokeAsync` | 任意 |
+| モデル検索、ハンドル ID、`Actions`、利用可能状態、非同期待機 | 任意 |
+| `QueueUpdate`、Parameter/Part Queue API | 任意 |
+| Pack のインポート、登録、作成、解除 | Godot メインスレッド |
+| `Snapshot`、`Apply`、`Set*`、再生、動的値の取得、`Destroy` | Godot メインスレッド |
+
+すべての API イベントは Godot メインスレッドで発生します。非同期待機後の継続処理はメインスレッドとは限りません。
+
+## Live2DApi
+
+### ランタイム状態と検索
+
+- `RuntimeApiVersion`、`RuntimeVersion`、`IsDispatcherReady`、`IsMainThread`。
+- `GetModels()` と所有者指定版は配列スナップショットを返します。
+- `GetModel` / `TryGetModel` はモデル ID とシーンで検索します。
+- `ModelAvailable` は任意モデルが初めて利用可能になった時に発生します。
+
+### ディスパッチ
+
+- `Post(Action)` は完了を待たず、例外をログへ記録します。
+- `InvokeAsync(Action)` と `InvokeAsync<T>(Func<T>)` は完了、例外、キャンセルを返します。
+- 一時停止中も動作し、1 フレーム最大 512 件を処理します。
+
+### Pack
+
+- `ImportPack(path/data)` はプレイヤーライブラリへ永続インポートします。
+- `RegisterPack(ownerModId, path/data)` は読み取り専用登録です。
+- OS、`res://`、`user://` パス、および `ReadOnlyMemory<byte>` に対応します。
+
+## ILive2DPackHandle
+
+`OwnerModId`、`PackId`、`Name`、`IsRegistered`、`Models` が ID とメタデータを公開します。`CreateModel` は再実行可能な
+ランタイムインスタンスを作成し、`Unregister` は Pack の全インスタンスを削除します。ID は 128 文字以内で制御文字を含められません。
+
+## ILive2DModelHandle
+
+### ID と利用可能状態
+
+`ModelId`、`OwnerModId`、`PackId`、`ModelKey`、`InstanceId`、`Scene` が安定 ID を構成します。`IsAvailable` は接続状態、
+`CanDestroy` は破棄権限を表します。
+
+- 利用可能状態イベントは継続監視向けです。
+- 2 つの非同期待機はキャンセル可能で、購読競合がありません。
+- `Snapshot` は変換、表示、再生、描画状態を返します。
+- `Destroy` は許可された Pack インスタンスを削除します。
+
+### 状態更新
+
+`Apply` は部分更新、`Update` は設定コールバック、`QueueUpdate` は任意スレッドから項目を統合します。
+
+| 項目 | 検証 |
+| --- | --- |
+| `Position` | 両成分が有限 |
+| `Scale` | 有限かつ 0 以外。負値は反転 |
+| `RotationDegrees` | 有限 |
+| `Opacity` | `0..1` に制限 |
+| `Visible` | ルート表示状態 |
+| `Layer` | Godot `ZIndex` |
+| `PlaybackSpeed` | 負値は 0 |
+| `PhysicsEnabled` / `PoseEnabled` | Cubism 動作 |
+| `MaskViewportSize` | 負値は 0 |
+| `BlendMode` | 定義済み列挙値 |
+| `Filter` | モデル全体の色フィルター |
+| `Mask` | モデルローカルのクリッピング |
+
+### 再生と動的値
+
+- `Actions`、`PlayAction`、`PlayMotion`、`StopMotion`、Expression、Motion イベント。
+- Parameter の取得、Try、設定、一括設定、キュー。
+- Part の取得、Try、不透明度設定、一括設定、キュー。
+
+不明 ID は `KeyNotFoundException` です。同期一括処理は全 ID を先に検証し、キューは大文字小文字を区別せず統合します。
+
+## 描画範囲
+
+| Filter | 範囲 / 既定値 |
+| --- | --- |
+| Tint | 有限 RGBA / 白 |
+| Brightness | `-1..1` / 0 |
+| Contrast | `0..4` / 1 |
+| Saturation | `0..4` / 1 |
+| Grayscale | `0..1` / 0 |
+| Hue shift | 有限角度 / 0 |
+| Invert | `0..1` / 0 |
+| Gamma | `0.01..10` / 1 |
+
+Mask は `None`、`Rectangle`、`Ellipse`、`RoundedRectangle`。有効時は正の幅・高さ、0 以上の角半径、`2..64` の分割数が必要です。
+
+## 主な例外
+
+| 例外 | 原因 |
+| --- | --- |
+| `ArgumentException` | 空、長すぎる、制御文字を含む ID |
+| `ArgumentOutOfRangeException` | 非有限値、不正な範囲・列挙値・Motion index |
+| `InvalidOperationException` | スレッド、利用不可、ID 競合、登録解除済み |
+| `KeyNotFoundException` | 不明な Parameter / Part |
+| `InvalidDataException` / `IOException` | Pack またはファイル障害 |
+| `OperationCanceledException` | 待機またはディスパッチのキャンセル |

@@ -3,7 +3,7 @@ using Live2D.Scripts.Configuration;
 
 namespace Live2D.Scripts.Runtime;
 
-public static class Live2DLayout
+internal static class Live2DLayout
 {
     public static readonly Vector2 ReferenceViewportSize = new(1920f, 1080f);
 

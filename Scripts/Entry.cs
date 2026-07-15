@@ -1,6 +1,8 @@
 using System.Reflection;
 using Godot;
+using Live2D.Api;
 using Live2D.Scripts.Configuration;
+using Live2D.Scripts.Packs;
 using Live2D.Scripts.Runtime;
 using Live2D.Scripts.UI;
 using MegaCrit.Sts2.Core.Modding;
@@ -19,10 +21,14 @@ namespace Live2D;
 public static class Entry
 {
     public const string ModId = "Live2D";
+    public const string ModVersion = "0.4.0";
     public static readonly MegaCrit.Sts2.Core.Logging.Logger Logger = RitsuLibFramework.CreateLogger(ModId);
 
     public static void Initialize()
     {
+        Live2DApi.InitializeDispatcher(exception =>
+            Logger.Error($"[{ModId}] Unhandled exception in a posted Live2D callback: {exception}"));
+        Live2DRegisteredPackRegistry.ConfigureLogging(message => Logger.Info(message));
         Live2DConfigStore.Initialize();
         Live2DSettingsUi.Register();
         if (!CubismExtensionLoader.EnsureLoaded())

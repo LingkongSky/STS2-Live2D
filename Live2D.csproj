@@ -5,31 +5,68 @@
     <LangVersion>12.0</LangVersion>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- NU5131 is a packages.config-only reference-group warning. This package is
+         intentionally ref-only and is smoke-tested through PackageReference. -->
+    <NoWarn>$(NoWarn);CS1591;NU5131</NoWarn>
     <Sts2Dir Condition="'$(Sts2Dir)' == ''">C:\SteamLibrary\steamapps\common\Slay the Spire 2</Sts2Dir>
+    <Sts2AssemblyPath Condition="'$(Sts2AssemblyPath)' == ''">$(Sts2Dir)\data_sts2_windows_x86_64\sts2.dll</Sts2AssemblyPath>
+    <Live2DCopyToGame Condition="'$(Live2DCopyToGame)' == ''">true</Live2DCopyToGame>
+  </PropertyGroup>
+
+  <PropertyGroup Label="NuGet package">
+    <IsPackable>true</IsPackable>
+    <PackageId>STS2.Live2D</PackageId>
+    <Version>0.4.0</Version>
+    <Authors>LingkongSky</Authors>
+    <Description>Public runtime API for integrating Live2D models into Slay the Spire 2 mods.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/LingkongSky/STS2-Live2D</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/LingkongSky/STS2-Live2D</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);PackLive2DCompileReference</TargetsForTfmSpecificContentInPackage>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Tests\**\*.cs" />
     <Compile Remove="Tools\**\*.cs" />
     <EmbeddedResource Remove="Tools\**\*" />
     <None Remove="Tools\**\*" />
     <Content Remove="Tools\**\*" />
     <Reference Include="sts2">
-      <HintPath>$(Sts2Dir)\data_sts2_windows_x86_64\sts2.dll</HintPath>
+      <HintPath>$(Sts2AssemblyPath)</HintPath>
       <Private>false</Private>
     </Reference>
-    <PackageReference Include="STS2.RitsuLib.Compat.0.107.1" Version="0.4.56" />
+    <PackageReference Include="STS2.RitsuLib.Compat.0.107.1" Version="0.4.56" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
     <GdCubismAddonFiles Include="addons\gd_cubism\**\*"
                         Exclude="addons\gd_cubism\cs\**\*;addons\gd_cubism\res\**\*;addons\gd_cubism\**\*.uid;addons\gd_cubism\**\*.lib;addons\gd_cubism\**\*.exp;addons\gd_cubism\bin\.gitignore" />
-    <ModResourceFiles Include="resources\**\*" />
     <EmbeddedResource Include="Live2D\localization\*.json"
                       LogicalName="Live2D.Localization.%(Filename)%(Extension)" />
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="docs\**\*.md" Pack="true" PackagePath="docs\%(RecursiveDir)%(Filename)%(Extension)" />
+    <None Include="buildTransitive\STS2.Live2D.targets"
+          Pack="true"
+          PackagePath="buildTransitive\$(PackageId).targets" />
   </ItemGroup>
 
-  <Target Name="CopyMod" AfterTargets="Build">
+  <Target Name="PackLive2DCompileReference">
+    <ItemGroup>
+      <!-- Compile-only assets: consuming mods must declare/install the Live2D runtime mod. -->
+      <TfmSpecificPackageFile Include="$(TargetPath)">
+        <PackagePath>ref/$(TargetFramework)/$(AssemblyName).dll</PackagePath>
+      </TfmSpecificPackageFile>
+      <TfmSpecificPackageFile Include="$(TargetDir)$(AssemblyName).xml"
+                              Condition="Exists('$(TargetDir)$(AssemblyName).xml')">
+        <PackagePath>ref/$(TargetFramework)/$(AssemblyName).xml</PackagePath>
+      </TfmSpecificPackageFile>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="CopyMod" AfterTargets="Build" Condition="'$(Live2DCopyToGame)' == 'true'">
     <PropertyGroup>
       <ModOutputDir>$(Sts2Dir)\mods\Live2D</ModOutputDir>
     </PropertyGroup>
@@ -37,9 +74,6 @@
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ModOutputDir)" />
     <Copy SourceFiles="Live2D.json" DestinationFolder="$(ModOutputDir)" />
     <Copy SourceFiles="Live2D.pck" DestinationFolder="$(ModOutputDir)" Condition="Exists('Live2D.pck')" />
-    <Copy SourceFiles="@(ModResourceFiles)"
-          DestinationFiles="@(ModResourceFiles->'$(ModOutputDir)\resources\%(RecursiveDir)%(Filename)%(Extension)')"
-          SkipUnchangedFiles="true" />
     <Copy SourceFiles="@(GdCubismAddonFiles)"
           DestinationFiles="@(GdCubismAddonFiles->'$(ModOutputDir)\addons\gd_cubism\%(RecursiveDir)%(Filename)%(Extension)')"
           SkipUnchangedFiles="true" />

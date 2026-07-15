@@ -1,12 +1,15 @@
 using Godot;
+using Live2D.Api;
 using Live2D.Scripts.Configuration;
+using Live2D.Scripts.Models;
+using Live2D.Scripts.Packs;
 using MegaCrit.Sts2.Core.Helpers;
 using MegaCrit.Sts2.Core.Nodes.CommonUi;
 using MegaCrit.Sts2.Core.Nodes.Screens.MainMenu;
 
 namespace Live2D.Scripts.Runtime;
 
-public static class Live2DRuntimeManager
+internal static class Live2DRuntimeManager
 {
     private const string HostNodeName = "Live2DModels";
     private const string ViewportWatcherNodeName = "Live2DViewportWatcher";
@@ -127,6 +130,7 @@ public static class Live2DRuntimeManager
         if (!GodotObject.IsInstanceValid(host) || !host.IsInsideTree())
             return;
 
+        Live2DApi.UnbindScene(scene);
         var oldRoot = host.GetNodeOrNull<Node2D>(HostNodeName);
         if (oldRoot != null)
         {
@@ -151,23 +155,50 @@ public static class Live2DRuntimeManager
         }
 
         var viewportSize = host.GetViewport()?.GetVisibleRect().Size ?? new Vector2(1920f, 1080f);
-        foreach (var model in settings.Models.OrderBy(value => value.DisplayOrder))
+        var apiScene = Live2DApi.ToApiScene(scene);
+        var definitions = new List<Live2DRuntimeModelDefinition>();
+        foreach (var model in settings.Models)
         {
+            try
+            {
+                definitions.Add(new Live2DRuntimeModelDefinition(
+                    new Live2DRuntimeModelIdentity(
+                        model.Id,
+                        Entry.ModId,
+                        null,
+                        model.Id,
+                        model.Id,
+                        apiScene),
+                    model,
+                    Live2DModelRepository.GetAbsoluteModelPath(model)));
+            }
+            catch (Exception ex)
+            {
+                Entry.Logger.Error(
+                    $"[{Entry.ModId}] Failed to resolve user model {model.Id} in {scene}: {ex}");
+            }
+        }
+        definitions.AddRange(Live2DRegisteredPackRegistry.GetDefinitions(apiScene));
+
+        foreach (var definition in definitions.OrderBy(value => value.Config.DisplayOrder))
+        {
+            var model = definition.Config;
             try
             {
                 var resolved = Live2DConfigResolver.Resolve(settings.Global, model.Overrides);
                 var sceneConfig = Live2DConfigResolver.ForScene(resolved, scene);
-                if (!sceneConfig.Visible)
-                    continue;
-
-                var instance = Live2DModelInstance.Create(model, resolved, sceneConfig, viewportSize);
+                var instance = Live2DModelInstance.Create(definition, resolved, sceneConfig, viewportSize);
                 container.AddChild(instance.Root);
                 created.Add(instance);
-                Entry.Logger.Info($"[{Entry.ModId}] Created model '{model.DisplayName}' ({model.Id}) in {scene}.");
+                Live2DApi.Bind(definition, instance);
+                Entry.Logger.Info(
+                    $"[{Entry.ModId}] Created model '{model.DisplayName}' " +
+                    $"({definition.Identity.OwnerModId}/{definition.Identity.InstanceId}) in {scene}.");
             }
             catch (Exception ex)
             {
-                Entry.Logger.Error($"[{Entry.ModId}] Failed to create model {model.Id} in {scene}: {ex}");
+                Entry.Logger.Error(
+                    $"[{Entry.ModId}] Failed to create model {definition.Identity.RuntimeId} in {scene}: {ex}");
             }
         }
 
@@ -186,45 +217,5 @@ public static class Live2DRuntimeManager
             host.AddChild(watcher);
         }
         watcher.Configure(scene, host);
-    }
-}
-
-internal sealed partial class Live2DViewportWatcher : Node
-{
-    private WeakReference<Node>? _host;
-    private Live2DSceneKind _scene;
-    private Vector2 _lastViewportSize;
-    private double _elapsed;
-
-    public Live2DViewportWatcher()
-    {
-        ProcessMode = ProcessModeEnum.Always;
-    }
-
-    public void Configure(Live2DSceneKind scene, Node host)
-    {
-        _scene = scene;
-        _host = new WeakReference<Node>(host);
-        _lastViewportSize = host.GetViewport()?.GetVisibleRect().Size ?? Live2DLayout.ReferenceViewportSize;
-    }
-
-    public override void _Process(double delta)
-    {
-        _elapsed += delta;
-        if (_elapsed < 0.25d)
-            return;
-        _elapsed = 0d;
-
-        if (_host == null || !_host.TryGetTarget(out var host) || !GodotObject.IsInstanceValid(host))
-        {
-            QueueFree();
-            return;
-        }
-
-        var size = host.GetViewport()?.GetVisibleRect().Size ?? Live2DLayout.ReferenceViewportSize;
-        if (size.IsEqualApprox(_lastViewportSize))
-            return;
-        _lastViewportSize = size;
-        Live2DRuntimeManager.RefreshForViewportChange(_scene, host, size);
     }
 }

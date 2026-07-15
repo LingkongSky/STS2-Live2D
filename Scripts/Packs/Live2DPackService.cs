@@ -5,9 +5,9 @@ using STS2RitsuLib;
 
 namespace Live2D.Scripts.Packs;
 
-public sealed record Live2DPackImportSummary(int ImportedModels, int SkippedDuplicates);
+internal sealed record Live2DPackImportSummary(int ImportedModels, int SkippedDuplicates);
 
-public static class Live2DPackService
+internal static class Live2DPackService
 {
     public static void ExportAll(string destinationPath)
     {

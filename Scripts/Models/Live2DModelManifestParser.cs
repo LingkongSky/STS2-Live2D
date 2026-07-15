@@ -4,13 +4,13 @@ using Live2D.Scripts.Configuration;
 
 namespace Live2D.Scripts.Models;
 
-public sealed record ParsedLive2DModel(
+internal sealed record ParsedLive2DModel(
     string EntryPath,
     IReadOnlyList<string> RelativeFiles,
     IReadOnlyList<Live2DActionDescriptor> Actions,
     string ContentHash);
 
-public static class Live2DModelManifestParser
+internal static class Live2DModelManifestParser
 {
     public static ParsedLive2DModel Parse(string modelJsonPath)
     {
