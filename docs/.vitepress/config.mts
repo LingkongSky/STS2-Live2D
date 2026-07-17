@@ -132,7 +132,7 @@ export default defineConfig({
           { text: 'Mod 接入', link: '/integration/getting-started' },
           { text: '参考', link: '/reference/api' },
           { text: '维护', link: '/maintainers/development' },
-          { text: 'v0.4.0 · API 4', link: '/reference/api' }
+          { text: 'v0.4.1 · API 4', link: '/reference/api' }
         ],
         sidebar: {
           '/guide/': [{ text: '玩家指南', items: [
@@ -181,7 +181,7 @@ export default defineConfig({
           { text: 'Mod Integration', link: '/en/integration/getting-started' },
           { text: 'Reference', link: '/en/reference/api' },
           { text: 'Maintainers', link: '/en/maintainers/development' },
-          { text: 'v0.4.0 · API 4', link: '/en/reference/api' }
+          { text: 'v0.4.1 · API 4', link: '/en/reference/api' }
         ],
         sidebar: {
           '/en/guide/': [{ text: 'Player Guide', items: [
@@ -230,7 +230,7 @@ export default defineConfig({
           { text: 'Mod 連携', link: '/ja/integration/getting-started' },
           { text: 'リファレンス', link: '/ja/reference/api' },
           { text: 'メンテナンス', link: '/ja/maintainers/development' },
-          { text: 'v0.4.0 · API 4', link: '/ja/reference/api' }
+          { text: 'v0.4.1 · API 4', link: '/ja/reference/api' }
         ],
         sidebar: {
           '/ja/guide/': [{ text: 'プレイヤーガイド', items: [

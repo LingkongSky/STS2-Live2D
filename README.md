@@ -2,7 +2,7 @@
 
 《杀戮尖塔 2》的 Live2D 运行时 Mod，同时为其他 Mod 提供稳定的模型控制 API。
 
-> 当前为开发预览版本。运行时 Mod 版本：`0.4.0`；公共 API 版本：`4`。
+> 当前为开发预览版本。运行时 Mod 版本：`0.4.1`；公共 API 版本：`4`。
 
 ## 能力
 
@@ -32,19 +32,19 @@ npm run dev
 ## 最小引用
 
 ```xml
-<PackageReference Include="STS2.Live2D" Version="0.4.0" />
+<PackageReference Include="STS2.Live2D" Version="0.4.1" />
 ```
 
-NuGet 只提供编译期引用，不会复制第二份 `Live2D.dll`。使用者仍需在 Mod 清单中声明 Live2D
-运行时依赖。完整示例见 [Mod 接入文档](https://lingkongsky.github.io/STS2-Live2D/integration/getting-started)。
+NuGet 只提供编译期引用，不会安装或复制 `Live2D.dll`。使用者仍需在 Mod 清单中声明并要求玩家安装
+Live2D 运行时 Mod。完整示例见 [Mod 接入文档](https://lingkongsky.github.io/STS2-Live2D/integration/getting-started)。
 
 接口使用要点：稳定模型句柄可跨场景重建继续持有；`Snapshot`、立即更新、播放和 Pack 生命周期操作必须在
 Godot 主线程执行；`QueueUpdate` 及 Parameter/Part Queue API 可从任意线程提交并自动合并待处理值。
 
 ## 构建
 
-首次构建时复制 `local.props.template` 为 `local.props`，并将其中的 `Sts2Dir` 改为游戏安装目录；
-`local.props` 已被 Git 忽略。也可以在命令行直接传入该属性：
+构建会从 Steam 自动发现游戏目录。若游戏位于无法自动识别的库，可设置 `STS2_DIR`
+环境变量，或在命令行直接传入 `Sts2Dir`：
 
 ```powershell
 dotnet build -c Release `

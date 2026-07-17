@@ -2,8 +2,8 @@
 
 This guide covers runtime requirements, development-build installation, and importing your first model.
 
-::: warning Release status
-STS2 Live2D has not been released publicly. An official download link will be added here later; for now, only developers should use local builds.
+::: warning Installation scope
+The NuGet package is compile-time only and does not contain the player runtime. Build the current runtime from this repository and avoid files from unknown sources.
 :::
 
 ## Requirements
@@ -15,11 +15,14 @@ STS2 Live2D has not been released publicly. An official download link will be ad
 
 ## Install a development build
 
-Copy `local.props.template` to `local.props`, point `Sts2Dir` at the game directory, then run:
+The build discovers the Steam game directory automatically. Run:
 
 ```powershell
 dotnet build -c Release
 ```
+
+If discovery fails, set the `STS2_DIR` environment variable or run
+`dotnet build -c Release -p:Sts2Dir="game directory"`.
 
 The build copies the runtime to `mods/Live2D`. That directory must contain at least:
 

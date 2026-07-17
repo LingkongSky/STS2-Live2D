@@ -35,7 +35,7 @@ jobs:
         uses: actions/cache@v5.0.5
         with:
           path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('NuGet/STS2.Live2D.Package.csproj', 'Live2D.csproj', 'Directory.Build.props') }}
+          key: ${{ runner.os }}-nuget-${{ hashFiles('NuGet/STS2.Live2D.Package.csproj', 'Live2D.csproj') }}
 
       - name: Verify tag version
         id: version
@@ -61,25 +61,13 @@ jobs:
           -RequireClean
 
       - name: Test package consumption
-        shell: bash
+        shell: pwsh
         env:
-          PACKAGE_VERSION: ${{ steps.version.outputs.value }}
           NUGET_PACKAGES: ${{ runner.temp }}/live2d-nuget-cache
-        run: |
-          set -euo pipefail
-          project="Tools/ApiConsumerExample/Live2DApiConsumerExample.csproj"
-          dotnet restore "$project" \
-            -p:Live2DPackageVersion="$PACKAGE_VERSION" \
-            -p:RestoreAdditionalProjectSources="$GITHUB_WORKSPACE/artifacts" \
-            --force
-          dotnet build "$project" \
-            -c Release \
-            -p:Live2DPackageVersion="$PACKAGE_VERSION" \
-            --no-restore
-          if [[ -f "Tools/ApiConsumerExample/.godot/mono/temp/bin/Release/Live2D.dll" ]]; then
-            echo 'Compile-only Live2D.dll was copied to the consumer output.' >&2
-            exit 1
-          fi
+        run: >-
+          ./Tools/test-nuget-package.ps1
+          -PackagePath "artifacts/STS2.Live2D.${{ steps.version.outputs.value }}.nupkg"
+          -ExpectedVersion "${{ steps.version.outputs.value }}"
 
       - name: Upload validated package
         uses: actions/upload-artifact@v7.0.1

@@ -11,8 +11,6 @@ npm ci
 npm run build
 Pop-Location
 dotnet build .\Live2D.csproj -c Release -p:Live2DCopyToGame=false
-dotnet build .\Tools\ApiConsumerExample\Live2DApiConsumerExample.csproj `
-  -c Release -p:Live2DCopyToGame=false
 ```
 
 The consumer output must not contain `Live2D.dll`.
@@ -37,16 +35,13 @@ Use `Tools/export-live2d-pck.ps1` to export and verify all ten shaders in isolat
   -Sts2Dir "D:\Program Files\Steam\steamapps\common\Slay the Spire 2"
 git diff -- NuGet/package/ref/net9.0
 .\Tools\pack-nuget.ps1 -OutputDirectory artifacts
-$packageSource = (Resolve-Path .\artifacts).Path
-dotnet restore .\Tools\ApiConsumerExample\Live2DApiConsumerExample.csproj `
-  -p:Live2DPackageVersion=0.4.0 `
-  -p:RestoreAdditionalProjectSources="$packageSource" --force
-dotnet build .\Tools\ApiConsumerExample\Live2DApiConsumerExample.csproj `
-  -c Release -p:Live2DPackageVersion=0.4.0 --no-restore
+.\Tools\test-nuget-package.ps1 `
+  -PackagePath .\artifacts\STS2.Live2D.0.4.1.nupkg `
+  -ExpectedVersion 0.4.1
 ```
 
-NuGet may contain only the `ref/net9.0` reference assembly/XML documentation, README, third-party notices, `docs/content` Markdown, and the buildTransitive target. It must not contain a `lib/`
-runtime assembly. Setting `Live2DPackageVersion` switches the consumer example from ProjectReference to the packaged API; its output must still omit `Live2D.dll`.
+NuGet may contain only the `ref/net9.0` reference assembly/XML documentation, README, third-party notices, and `docs/content` Markdown. It must not contain a `lib/`
+runtime assembly. The validation script creates a disposable consumer project, compiles the full API example, and confirms that its output omits `Live2D.dll`.
 
 `NuGet/package/ref/net9.0` is the prepared release directory. Its `Live2D.dll` must be a metadata-only reference assembly, never the runtime DLL. Commit the refreshed DLL and XML together with the corresponding source changes.
 

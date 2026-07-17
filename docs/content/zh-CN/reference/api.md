@@ -1,6 +1,6 @@
 # 公共 API 参考
 
-当前运行时版本为 `Live2DApi.RuntimeVersion == "0.4.0"`，能力版本为 `Live2DApi.RuntimeApiVersion == 4`。
+当前运行时版本为 `Live2DApi.RuntimeVersion == "0.4.1"`，能力版本为 `Live2DApi.RuntimeApiVersion == 4`。
 只有 `Live2D.Api` 命名空间属于稳定第三方 API；`Live2D.Scripts.*` 与 gd_cubism 类型是实现细节。
 
 ## 线程规则

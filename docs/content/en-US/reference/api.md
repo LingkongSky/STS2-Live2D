@@ -1,6 +1,6 @@
 # Public API Reference
 
-The current runtime reports `Live2DApi.RuntimeVersion == "0.4.0"` and `Live2DApi.RuntimeApiVersion == 4`. Only `Live2D.Api` is stable public API.
+The current runtime reports `Live2DApi.RuntimeVersion == "0.4.1"` and `Live2DApi.RuntimeApiVersion == 4`. Only `Live2D.Api` is stable public API.
 
 ## Thread rules
 

@@ -194,7 +194,7 @@ if ($siteConfig -notmatch [regex]::Escape("v$packageVersion · API $apiVersion")
 }
 foreach ($locale in $locales) {
     $releaseDoc = Get-Content -LiteralPath (Join-Path $contentRoot "$locale/maintainers/release.md") -Raw
-    if ($releaseDoc -notmatch [regex]::Escape("Live2DPackageVersion=$packageVersion")) {
+    if ($releaseDoc -notmatch [regex]::Escape("ExpectedVersion $packageVersion")) {
         throw "NuGet consumer command is not current for locale: $locale"
     }
 }

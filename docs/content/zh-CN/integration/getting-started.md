@@ -7,7 +7,7 @@
 推荐使用 ref-only NuGet 包：
 
 ```xml
-<PackageReference Include="STS2.Live2D" Version="0.4.0" />
+<PackageReference Include="STS2.Live2D" Version="0.4.1" />
 ```
 
 在同一工作区开发时也可以引用源码：
@@ -27,7 +27,7 @@
 ```json
 {
   "dependencies": [
-    { "id": "Live2D", "min_version": "0.4.0" }
+    { "id": "Live2D", "min_version": "0.4.1" }
   ]
 }
 ```
@@ -79,4 +79,4 @@ await Live2DApi.InvokeAsync(() =>
 - [随自己的 Mod 分发模型](./packs)
 - [公共 API 参考](../reference/api)
 
-仓库中的 `Tools/ApiConsumerExample` 是可编译的完整示例。
+仓库中的 `Tools/ApiConsumerExample` 提供完整的接入源码示例。

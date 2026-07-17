@@ -84,7 +84,7 @@ gd_cubism 通过固定的 `res://addons/gd_cubism/res/shader/*` 路径加载 10 
 
 ## 本地生成物
 
-`.gitignore` 排除 Godot/.NET 缓存、NuGet 与 PCK 产物、文档依赖、测试覆盖率、崩溃转储、`local.props` 和本地模型夹具。
+`.gitignore` 排除 Godot/.NET 缓存、NuGet 与 PCK 产物、文档依赖、测试覆盖率、崩溃转储和本地模型夹具。
 本项目按资源路径加载内容，因此 Godot 生成的外部 `*.uid` 文件不提交。`addons/gd_cubism/bin` 是例外：发布所需的
 `libgd_cubism.windows.release.x86_64.dll` 必须保持追踪。
 

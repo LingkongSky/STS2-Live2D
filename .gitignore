@@ -60,7 +60,6 @@ pnpm-debug.log*
 mono_crash.*.json
 
 # Local environment and secrets
-/local.props
 /.env
 /.env.*
 !/.env.example

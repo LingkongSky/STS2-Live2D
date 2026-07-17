@@ -40,11 +40,11 @@ features:
 
 ## Current status
 
-::: warning Development preview
-These docs describe the latest implementation, which has not been publicly released. Do not install builds from unknown sources before an official download is available.
+::: warning Distribution scope
+The `STS2.Live2D` NuGet package provides compile-time APIs for other Mods only. Players must install the Live2D runtime Mod separately; the NuGet package is not a runtime distribution.
 :::
 
-- **Runtime version:** `0.4.0`
+- **Runtime version:** `0.4.1`
 - **Public API:** `4`
 - **Pack format:** `1`
 - **Supported platform:** Windows x86_64

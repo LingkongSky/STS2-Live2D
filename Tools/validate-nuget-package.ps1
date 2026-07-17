@@ -22,7 +22,6 @@ try {
     $requiredEntries = @(
         'README.md',
         'THIRD-PARTY-NOTICES.md',
-        'buildTransitive/STS2.Live2D.targets',
         'ref/net9.0/Live2D.dll',
         'ref/net9.0/Live2D.xml'
     )

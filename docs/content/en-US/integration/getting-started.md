@@ -7,7 +7,7 @@ This guide adds a compile-time reference, declares the runtime dependency, and p
 Use the ref-only NuGet package:
 
 ```xml
-<PackageReference Include="STS2.Live2D" Version="0.4.0" />
+<PackageReference Include="STS2.Live2D" Version="0.4.1" />
 ```
 
 For development in the same workspace:
@@ -25,7 +25,7 @@ Neither option copies a second `Live2D.dll` to the consumer output.
 ```json
 {
   "dependencies": [
-    { "id": "Live2D", "min_version": "0.4.0" }
+    { "id": "Live2D", "min_version": "0.4.1" }
   ]
 }
 ```
@@ -74,4 +74,4 @@ Runtime overrides do not modify the player's settings and disappear when the gam
 - [Bundle models with your Mod](./packs)
 - [Public API reference](../reference/api)
 
-`Tools/ApiConsumerExample` in the repository is a buildable example.
+`Tools/ApiConsumerExample` in the repository contains the complete integration source example.

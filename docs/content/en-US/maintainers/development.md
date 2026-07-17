@@ -52,7 +52,7 @@ Register patches through RitsuLib `CreatePatcher`, `IPatchMethod`, and `ApplyReq
 
 ## Local generated files
 
-`.gitignore` excludes Godot/.NET caches, NuGet and PCK artifacts, documentation dependencies, coverage output, crash dumps, `local.props`, and local
+`.gitignore` excludes Godot/.NET caches, NuGet and PCK artifacts, documentation dependencies, coverage output, crash dumps, and local
 model fixtures. This project loads resources by path, so generated external `*.uid` files are not committed. The required
 `addons/gd_cubism/bin/libgd_cubism.windows.release.x86_64.dll` is explicitly kept under version control.
 

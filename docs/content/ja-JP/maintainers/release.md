@@ -11,8 +11,6 @@ npm ci
 npm run build
 Pop-Location
 dotnet build .\Live2D.csproj -c Release -p:Live2DCopyToGame=false
-dotnet build .\Tools\ApiConsumerExample\Live2DApiConsumerExample.csproj `
-  -c Release -p:Live2DCopyToGame=false
 ```
 
 コンシューマー出力に `Live2D.dll` が含まれてはいけません。
@@ -37,15 +35,12 @@ dotnet build .\Tools\ApiConsumerExample\Live2DApiConsumerExample.csproj `
   -Sts2Dir "D:\Program Files\Steam\steamapps\common\Slay the Spire 2"
 git diff -- NuGet/package/ref/net9.0
 .\Tools\pack-nuget.ps1 -OutputDirectory artifacts
-$packageSource = (Resolve-Path .\artifacts).Path
-dotnet restore .\Tools\ApiConsumerExample\Live2DApiConsumerExample.csproj `
-  -p:Live2DPackageVersion=0.4.0 `
-  -p:RestoreAdditionalProjectSources="$packageSource" --force
-dotnet build .\Tools\ApiConsumerExample\Live2DApiConsumerExample.csproj `
-  -c Release -p:Live2DPackageVersion=0.4.0 --no-restore
+.\Tools\test-nuget-package.ps1 `
+  -PackagePath .\artifacts\STS2.Live2D.0.4.1.nupkg `
+  -ExpectedVersion 0.4.1
 ```
 
-NuGet に含められるのは `ref/net9.0` の参照アセンブリ/XML、README、第三者ライセンス声明、`docs/content` の Markdown、buildTransitive target だけです。`lib/` ランタイム DLL は禁止です。`Live2DPackageVersion` を指定するとコンシューマー例は ProjectReference ではなく生成済み NuGet を検証し、出力に `Live2D.dll` を含めません。
+NuGet に含められるのは `ref/net9.0` の参照アセンブリ/XML、README、第三者ライセンス声明、`docs/content` の Markdown だけです。`lib/` ランタイム DLL は禁止です。検証スクリプトは一時コンシューマープロジェクトで完全な API 例をコンパイルし、出力に `Live2D.dll` が含まれないことを確認します。
 
 `NuGet/package/ref/net9.0` は準備済みリリースディレクトリです。ここに置く `Live2D.dll` はメタデータ専用の参照アセンブリであり、ランタイム DLL ではありません。更新した DLL と XML は、対応するソース変更と同じコミットに含めます。
 

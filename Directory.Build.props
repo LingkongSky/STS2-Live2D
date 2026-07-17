@@ -1,7 +1,0 @@
-<Project>
-  <!-- Local, untracked overrides are imported before project evaluation. -->
-  <Import Project="local.props" Condition="Exists('local.props')" />
-
-  <!-- Fill Sts2Dir/Sts2DataDir from the local Steam installation when possible. -->
-  <Import Project="Sts2PathDiscovery.props" Condition="Exists('Sts2PathDiscovery.props')" />
-</Project>

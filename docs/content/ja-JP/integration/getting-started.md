@@ -7,7 +7,7 @@
 ref-only NuGet パッケージを推奨します。
 
 ```xml
-<PackageReference Include="STS2.Live2D" Version="0.4.0" />
+<PackageReference Include="STS2.Live2D" Version="0.4.1" />
 ```
 
 同じワークスペースで開発する場合：
@@ -25,7 +25,7 @@ ref-only NuGet パッケージを推奨します。
 ```json
 {
   "dependencies": [
-    { "id": "Live2D", "min_version": "0.4.0" }
+    { "id": "Live2D", "min_version": "0.4.1" }
   ]
 }
 ```
@@ -74,4 +74,4 @@ await Live2DApi.InvokeAsync(() =>
 - [モデルを Mod に同梱](./packs)
 - [公開 API リファレンス](../reference/api)
 
-リポジトリの `Tools/ApiConsumerExample` はビルド可能な完全サンプルです。
+リポジトリの `Tools/ApiConsumerExample` には完全な統合ソース例があります。

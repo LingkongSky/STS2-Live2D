@@ -12,7 +12,7 @@
     <NoWarn>$(NoWarn);NU5131</NoWarn>
     <PackageId>STS2.Live2D</PackageId>
     <!-- Keep synchronized with Live2D.csproj; Tools/pack-nuget.ps1 enforces it. -->
-    <Version>0.4.0</Version>
+    <Version>0.4.1</Version>
     <Title>STS2 Live2D API</Title>
     <Authors>LingkongSky</Authors>
     <Copyright>Copyright (c) 2026 OLC</Copyright>
@@ -38,8 +38,5 @@
     <None Include="..\docs\content\**\*.md"
           Pack="true"
           PackagePath="docs/content/%(RecursiveDir)%(Filename)%(Extension)" />
-    <None Include="..\buildTransitive\STS2.Live2D.targets"
-          Pack="true"
-          PackagePath="buildTransitive/STS2.Live2D.targets" />
   </ItemGroup>
 </Project>

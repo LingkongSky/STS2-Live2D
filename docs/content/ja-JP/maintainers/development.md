@@ -52,7 +52,7 @@ RitsuLib の `CreatePatcher`、`IPatchMethod`、`ApplyRequiredPatcher` を使用
 
 ## ローカル生成物
 
-`.gitignore` は Godot/.NET キャッシュ、NuGet/PCK 成果物、文書依存、カバレッジ、クラッシュダンプ、`local.props`、ローカルモデルを除外します。
+`.gitignore` は Godot/.NET キャッシュ、NuGet/PCK 成果物、文書依存、カバレッジ、クラッシュダンプ、ローカルモデルを除外します。
 このプロジェクトはパスで資源を読み込むため、生成された外部 `*.uid` はコミットしません。ただし配布に必要な
 `addons/gd_cubism/bin/libgd_cubism.windows.release.x86_64.dll` は明示的に追跡します。
 
