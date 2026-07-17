@@ -5,6 +5,7 @@ namespace Live2D.Api;
 /// <summary>
 /// Describes a partial, transient update for one rendered Live2D model instance.
 /// Unspecified properties retain their current value.
+/// <para>中文：只填写需要修改的字段；未填写字段沿用当前值。</para>
 /// </summary>
 public sealed class Live2DModelUpdate
 {

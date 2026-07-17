@@ -38,6 +38,8 @@ model.QueueUpdate(update =>
 ```
 
 同一模型尚未执行的更新会合并：不同字段全部保留，同一字段最后提交值获胜。该接口适合不需要逐次确认的状态流。
+传给 `QueueUpdate(Action<Live2DModelUpdate>)` 的配置委托会在调用线程立即执行；只有构造完成的更新数据会进入主线程队列。
+不要在该委托中读取 `Snapshot` 或访问其他 Godot 对象。
 
 ## Parameter 与 Part 队列
 

@@ -49,6 +49,9 @@
 - `RegisterPack(ownerModId, path/data)`：只读注册其他 Mod 的 Pack。
 - 路径支持操作系统路径、`res://`、`user://`；数据重载接受 `ReadOnlyMemory<byte>`。
 
+`res://`、`user://` 与内存数据会先复制到操作系统临时文件，导入或注册结束后无论成功失败都会删除。
+只读注册需要保留的资源会复制到会话缓存，不依赖该临时文件继续存在。
+
 ## ILive2DPackHandle
 
 | 成员 | 说明 |
@@ -70,6 +73,9 @@
 `ModelId`、`OwnerModId`、`PackId`、`ModelKey`、`InstanceId` 和 `Scene` 描述稳定身份。
 `IsAvailable` 表示底层场景实例是否存在，`CanDestroy` 表示是否允许销毁。
 
+场景切换或节点重建不会使句柄失效。不可用期间仍可读取身份与 `Actions`；`Snapshot` 必须在主线程读取，
+此时返回最后一次已知状态。
+
 - `BecameAvailable` / `BecameUnavailable`：持续监听绑定变化。
 - `WaitUntilAvailableAsync` / `WaitUntilUnavailableAsync`：无订阅竞态的可取消等待。
 - `Snapshot`：当前变换、显示、播放和渲染快照。
@@ -77,7 +83,8 @@
 
 ### 状态更新
 
-`Apply(update)` 应用部分更新；`Update(configure)` 创建更新并调用配置委托；`QueueUpdate` 从任意线程提交并按字段合并。
+`Apply(update)` 应用部分更新；`Update(configure)` 创建更新并调用配置委托；两者都要求主线程。
+`QueueUpdate` 可从任意线程提交并按字段合并。`configure` 委托在调用线程立即执行，因此只应填写更新数据，不应访问 Godot 节点。
 
 | `Live2DModelUpdate` 字段 | 校验与行为 |
 | --- | --- |

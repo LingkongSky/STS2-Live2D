@@ -53,5 +53,8 @@ pack.Unregister(); // 移除该 Pack 的全部实例并释放会话缓存
 - `res://` 与 `user://` 路径。
 - `ReadOnlyMemory<byte>` 内存数据。
 
+`res://`、`user://` 和内存输入会由运行时暂存到操作系统临时目录。解析完成或发生异常后临时文件都会删除；
+`RegisterPack` 所需资源会进入独立的会话缓存，`Unregister` 时释放。
+
 PCK 导出时必须确保 Pack 文件被包含在使用者 Mod 的资源中。完整归档结构和安全限制见
 [Pack 格式参考](../reference/pack-format)。

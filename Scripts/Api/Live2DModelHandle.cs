@@ -139,23 +139,13 @@ internal sealed class Live2DModelHandle : ILive2DModelHandle
     }
 
     public void Update(Action<Live2DModelUpdate> configure)
-    {
-        ArgumentNullException.ThrowIfNull(configure);
-        var update = new Live2DModelUpdate();
-        configure(update);
-        Apply(update);
-    }
+        => Apply(CreateUpdate(configure));
 
     public void QueueUpdate(Live2DModelUpdate update)
         => _queuedUpdates.Queue(update);
 
     public void QueueUpdate(Action<Live2DModelUpdate> configure)
-    {
-        ArgumentNullException.ThrowIfNull(configure);
-        var update = new Live2DModelUpdate();
-        configure(update);
-        QueueUpdate(update);
-    }
+        => QueueUpdate(CreateUpdate(configure));
 
     public void SetPosition(Vector2 position) => Apply(new Live2DModelUpdate { Position = position });
     public void SetScale(Vector2 scale) => Apply(new Live2DModelUpdate { Scale = scale });
@@ -327,6 +317,14 @@ internal sealed class Live2DModelHandle : ILive2DModelHandle
     private void OnMotionFinished() => MotionFinished?.Invoke(this);
     private void OnMotionEvent(string value) => MotionEvent?.Invoke(this, value);
 
+    private static Live2DModelUpdate CreateUpdate(Action<Live2DModelUpdate> configure)
+    {
+        ArgumentNullException.ThrowIfNull(configure);
+        var update = new Live2DModelUpdate();
+        configure(update);
+        return update;
+    }
+
     private static Live2DModelSnapshot ApplyToSnapshot(
         Live2DModelSnapshot snapshot,
         Live2DModelUpdate update)
@@ -372,4 +370,3 @@ internal sealed class Live2DModelHandle : ILive2DModelHandle
         Live2DMaskSettings.None,
         Live2DPlaybackSnapshot.Empty);
 }
-

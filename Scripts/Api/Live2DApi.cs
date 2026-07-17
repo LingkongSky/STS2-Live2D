@@ -6,7 +6,10 @@ using MegaCrit.Sts2.Core.Nodes;
 
 namespace Live2D.Api;
 
-/// <summary>Public runtime entry point for other Slay the Spire 2 mods.</summary>
+/// <summary>
+/// Public runtime entry point for other Slay the Spire 2 mods.
+/// <para>中文：其他 Mod 接入 Live2D 运行时的统一入口。</para>
+/// </summary>
 public static class Live2DApi
 {
     /// <summary>Compile-time API capability number.</summary>
@@ -106,39 +109,18 @@ public static class Live2DApi
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(packagePath);
         EnsureMainThread();
-        if (!packagePath.StartsWith("res://", StringComparison.OrdinalIgnoreCase) &&
-            !packagePath.StartsWith("user://", StringComparison.OrdinalIgnoreCase))
-            return ConvertResult(Live2DPackService.Import(packagePath));
-
-        var temporaryPath = MaterializeGodotFile(packagePath);
-        try
-        {
-            return ConvertResult(Live2DPackService.Import(temporaryPath));
-        }
-        finally
-        {
-            if (File.Exists(temporaryPath))
-                File.Delete(temporaryPath);
-        }
+        return WithPackPath(
+            packagePath,
+            static path => ConvertResult(Live2DPackService.Import(path)));
     }
 
     /// <summary>Imports a user-managed Live2D pack from in-memory archive data.</summary>
     public static Live2DPackImportResult ImportPack(ReadOnlyMemory<byte> packageData)
     {
         EnsureMainThread();
-        if (packageData.IsEmpty)
-            throw new InvalidDataException("Live2D pack data is empty.");
-        var temporaryPath = CreateTemporaryPackPath();
-        try
-        {
-            File.WriteAllBytes(temporaryPath, packageData.Span);
-            return ConvertResult(Live2DPackService.Import(temporaryPath));
-        }
-        finally
-        {
-            if (File.Exists(temporaryPath))
-                File.Delete(temporaryPath);
-        }
+        return WithPackData(
+            packageData,
+            static path => ConvertResult(Live2DPackService.Import(path)));
     }
 
     /// <summary>
@@ -150,20 +132,9 @@ public static class Live2DApi
         ArgumentException.ThrowIfNullOrWhiteSpace(ownerModId);
         ArgumentException.ThrowIfNullOrWhiteSpace(packagePath);
         EnsureMainThread();
-        if (!packagePath.StartsWith("res://", StringComparison.OrdinalIgnoreCase) &&
-            !packagePath.StartsWith("user://", StringComparison.OrdinalIgnoreCase))
-            return Live2DRegisteredPackRegistry.Register(ownerModId, packagePath);
-
-        var temporaryPath = MaterializeGodotFile(packagePath);
-        try
-        {
-            return Live2DRegisteredPackRegistry.Register(ownerModId, temporaryPath);
-        }
-        finally
-        {
-            if (File.Exists(temporaryPath))
-                File.Delete(temporaryPath);
-        }
+        return WithPackPath(
+            packagePath,
+            path => Live2DRegisteredPackRegistry.Register(ownerModId, path));
     }
 
     /// <summary>Registers a read-only pack from in-memory archive data.</summary>
@@ -171,19 +142,9 @@ public static class Live2DApi
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(ownerModId);
         EnsureMainThread();
-        if (packageData.IsEmpty)
-            throw new InvalidDataException("Live2D pack data is empty.");
-        var temporaryPath = CreateTemporaryPackPath();
-        try
-        {
-            File.WriteAllBytes(temporaryPath, packageData.Span);
-            return Live2DRegisteredPackRegistry.Register(ownerModId, temporaryPath);
-        }
-        finally
-        {
-            if (File.Exists(temporaryPath))
-                File.Delete(temporaryPath);
-        }
+        return WithPackData(
+            packageData,
+            path => Live2DRegisteredPackRegistry.Register(ownerModId, path));
     }
 
     internal static void UnbindScene(Live2DSceneKind scene)
@@ -271,6 +232,42 @@ public static class Live2DApi
 
     internal static void InitializeDispatcher(Action<Exception> unhandledExceptionHandler)
         => Live2DMainThreadDispatcher.Install(unhandledExceptionHandler);
+
+    private static T WithPackPath<T>(string packagePath, Func<string, T> action)
+    {
+        if (!IsGodotPath(packagePath))
+            return action(packagePath);
+        return WithTemporaryPackFile(MaterializeGodotFile(packagePath), action);
+    }
+
+    private static T WithPackData<T>(ReadOnlyMemory<byte> packageData, Func<string, T> action)
+    {
+        if (packageData.IsEmpty)
+            throw new InvalidDataException("Live2D pack data is empty.");
+
+        var temporaryPath = CreateTemporaryPackPath();
+        return WithTemporaryPackFile(temporaryPath, path =>
+        {
+            File.WriteAllBytes(path, packageData.Span);
+            return action(path);
+        });
+    }
+
+    private static T WithTemporaryPackFile<T>(string path, Func<string, T> action)
+    {
+        try
+        {
+            return action(path);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    private static bool IsGodotPath(string path)
+        => path.StartsWith("res://", StringComparison.OrdinalIgnoreCase) ||
+           path.StartsWith("user://", StringComparison.OrdinalIgnoreCase);
 
     private static string MaterializeGodotFile(string packagePath)
     {

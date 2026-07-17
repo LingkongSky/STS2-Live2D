@@ -1,0 +1,113 @@
+name: Publish NuGet package
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: nuget-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Build, validate, and publish
+    runs-on: ubuntu-latest
+    environment: nuget
+
+    steps:
+      - name: Check out release tag
+        uses: actions/checkout@v6.0.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      # RitsuLib uses the same versioned API-signature repository so CI does
+      # not need a redistributable copy of the game installation.
+      - name: Check out STS2 API signatures
+        uses: actions/checkout@v6.0.2
+        with:
+          repository: BAKAOLC/STS2-API-Signatures
+          path: sts2-api-signatures
+          fetch-depth: 1
+          persist-credentials: false
+          token: ${{ secrets.STS2_SIGNATURES_TOKEN || github.token }}
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v5.3.0
+        with:
+          dotnet-version: '9.x'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v5.0.5
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('Live2D.csproj', 'Directory.Build.props', 'Sts2PathDiscovery.props') }}
+
+      - name: Verify tag version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(dotnet msbuild Live2D.csproj -nologo -getProperty:PackageVersion | tail -n 1 | tr -d '\r')"
+          if [[ "$GITHUB_REF_NAME" != "v$version" ]]; then
+            echo "Tag $GITHUB_REF_NAME does not match package version $version" >&2
+            exit 1
+          fi
+          echo "value=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Build and validate NuGet package
+        shell: pwsh
+        run: >-
+          ./Tools/pack-nuget.ps1
+          -Sts2ApiSignatureRoot "${{ github.workspace }}/sts2-api-signatures"
+          -OutputDirectory "${{ github.workspace }}/artifacts"
+          -RequireClean
+
+      - name: Test package consumption
+        shell: bash
+        env:
+          PACKAGE_VERSION: ${{ steps.version.outputs.value }}
+          NUGET_PACKAGES: ${{ runner.temp }}/live2d-nuget-cache
+        run: |
+          set -euo pipefail
+          project="Tools/ApiConsumerExample/Live2DApiConsumerExample.csproj"
+          dotnet restore "$project" \
+            -p:Live2DPackageVersion="$PACKAGE_VERSION" \
+            -p:RestoreAdditionalProjectSources="$GITHUB_WORKSPACE/artifacts" \
+            --force
+          dotnet build "$project" \
+            -c Release \
+            -p:Live2DPackageVersion="$PACKAGE_VERSION" \
+            --no-restore
+          if [[ -f "Tools/ApiConsumerExample/.godot/mono/temp/bin/Release/Live2D.dll" ]]; then
+            echo 'Compile-only Live2D.dll was copied to the consumer output.' >&2
+            exit 1
+          fi
+
+      - name: Upload validated package
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: STS2.Live2D.${{ steps.version.outputs.value }}
+          path: artifacts/STS2.Live2D.${{ steps.version.outputs.value }}.nupkg
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Log in to nuget.org with OIDC
+        id: login
+        uses: NuGet/login@v1
+        with:
+          user: LingkongSky
+
+      - name: Publish package
+        shell: bash
+        run: >-
+          dotnet nuget push
+          "artifacts/STS2.Live2D.${{ steps.version.outputs.value }}.nupkg"
+          --api-key "${{ steps.login.outputs.NUGET_API_KEY }}"
+          --source https://api.nuget.org/v3/index.json
+          --skip-duplicate

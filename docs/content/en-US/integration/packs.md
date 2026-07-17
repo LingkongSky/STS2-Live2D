@@ -48,3 +48,6 @@ Destroy removes one runtime instance. Unregister removes all instances from that
 
 Registration and import accept OS paths, `res://`, `user://`, and `ReadOnlyMemory<byte>`. Ensure the Pack is included in your PCK export. See the
 [Pack format reference](../reference/pack-format) for archive structure and security limits.
+
+The runtime materializes `res://`, `user://`, and memory inputs in the OS temporary directory. Temporary files are deleted after success or failure;
+`RegisterPack` copies required assets into an independent session cache that is released by `Unregister`.

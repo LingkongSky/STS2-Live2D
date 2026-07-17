@@ -33,7 +33,9 @@ dotnet build .\Tools\ApiConsumerExample\Live2DApiConsumerExample.csproj `
 `Tools/export-live2d-pck.ps1` で PCK を出力し、10 個の Shader を隔離検証します。NuGet は次で作成します。
 
 ```powershell
-dotnet pack .\Live2D.csproj -c Release -p:Live2DCopyToGame=false -o artifacts
+.\Tools\pack-nuget.ps1 `
+  -Sts2Dir "D:\Program Files\Steam\steamapps\common\Slay the Spire 2" `
+  -OutputDirectory artifacts
 $packageSource = (Resolve-Path .\artifacts).Path
 dotnet restore .\Tools\ApiConsumerExample\Live2DApiConsumerExample.csproj `
   -p:Live2DPackageVersion=0.4.0 `
@@ -42,7 +44,11 @@ dotnet build .\Tools\ApiConsumerExample\Live2DApiConsumerExample.csproj `
   -c Release -p:Live2DPackageVersion=0.4.0 --no-restore
 ```
 
-NuGet に含められるのは `ref/net10.0` DLL/XML、README、Markdown 文書、buildTransitive target だけです。`lib/` ランタイム DLL は禁止です。`Live2DPackageVersion` を指定するとコンシューマー例は ProjectReference ではなく生成済み NuGet を検証し、出力に `Live2D.dll` を含めません。
+NuGet に含められるのは `ref/net9.0` の参照アセンブリ/XML、README、第三者ライセンス声明、`docs/content` の Markdown、buildTransitive target だけです。`lib/` ランタイム DLL は禁止です。`Live2DPackageVersion` を指定するとコンシューマー例は ProjectReference ではなく生成済み NuGet を検証し、出力に `Live2D.dll` を含めません。
+
+プロジェクトバージョンと一致する `v*` タグを push すると `publish-nuget.yml` が実行され、固定バージョンの非公開
+`STS2-API-Signatures` を使ってビルドし、NuGet Trusted Publishing (OIDC) で公開します。NuGet.org のポリシーをこのワークフローと
+`nuget` environment に関連付け、別リポジトリの取得には読み取り専用 `STS2_SIGNATURES_TOKEN` secret を設定します。
 
 ## リリースチェック
 

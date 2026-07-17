@@ -1,0 +1,11 @@
+; Minimal isolated project used to prove that Live2D.pck contains the resources
+; required by gd_cubism. It intentionally has no access to the main source tree.
+config_version=5
+
+[application]
+
+config/name="Live2D PCK Verifier"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"

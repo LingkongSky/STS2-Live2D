@@ -38,12 +38,24 @@ npm run dev
 NuGet 只提供编译期引用，不会复制第二份 `Live2D.dll`。使用者仍需在 Mod 清单中声明 Live2D
 运行时依赖。完整示例见 [Mod 接入文档](https://lingkongsky.github.io/STS2-Live2D/integration/getting-started)。
 
+接口使用要点：稳定模型句柄可跨场景重建继续持有；`Snapshot`、立即更新、播放和 Pack 生命周期操作必须在
+Godot 主线程执行；`QueueUpdate` 及 Parameter/Part Queue API 可从任意线程提交并自动合并待处理值。
+
 ## 构建
 
+首次构建时复制 `local.props.template` 为 `local.props`，并将其中的 `Sts2Dir` 改为游戏安装目录；
+`local.props` 已被 Git 忽略。也可以在命令行直接传入该属性：
+
 ```powershell
-dotnet build -p:Live2DCopyToGame=false
-dotnet pack -c Release -p:Live2DCopyToGame=false
+dotnet build -c Release `
+  -p:Sts2Dir="D:\Program Files\Steam\steamapps\common\Slay the Spire 2" `
+  -p:Live2DCopyToGame=false
+
+.\Tools\pack-nuget.ps1 `
+  -Sts2Dir "D:\Program Files\Steam\steamapps\common\Slay the Spire 2"
 ```
 
 ## LICENSE
-[MIT](LICENSE)
+
+[MIT](https://github.com/LingkongSky/STS2-Live2D/blob/main/LICENSE)。GDCubism 与 Live2D Cubism SDK 的许可说明见
+[第三方声明](THIRD-PARTY-NOTICES.md)。

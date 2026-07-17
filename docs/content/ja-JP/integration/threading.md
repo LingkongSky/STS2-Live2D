@@ -31,6 +31,8 @@ model.QueueUpdate(update =>
 ```
 
 同じモデルの未実行更新は統合されます。異なる項目は保持され、同じ項目は最後の値が優先されます。
+`QueueUpdate(Action<Live2DModelUpdate>)` のコールバックは呼び出し元スレッドですぐ実行され、完成したデータだけがキューへ入ります。
+コールバック内で `Snapshot` や他の Godot オブジェクトへアクセスしないでください。
 
 ## Parameter / Part キュー
 

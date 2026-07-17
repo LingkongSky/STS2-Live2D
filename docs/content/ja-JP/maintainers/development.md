@@ -37,7 +37,7 @@ Live2DRuntimeManager
 - レイアウトは 1920×1080 基準で保存し、ビューポート短辺で換算します。
 - 安定 API ハンドルはノード再生成後に再接続し、セッション上書きを復元します。
 - 公開 API は `Live2D.Api` だけです。
-- NuGet は `ref/net10.0` のコンパイル資産だけを含みます。
+- NuGet は `ref/net9.0` の参照アセンブリと XML 文書だけを含みます。
 - 順序を持つ再生コマンドを統合キューへ入れません。
 - 設定は Schema 6 のみを受け付け、移行レイヤーはありません。
 
@@ -49,6 +49,12 @@ gd_cubism は固定された `res://addons/gd_cubism/res/shader/*` から 10 個
 ## ゲームパッチ
 
 RitsuLib の `CreatePatcher`、`IPatchMethod`、`ApplyRequiredPatcher` を使用します。Harmony を直接作成しないでください。
+
+## ローカル生成物
+
+`.gitignore` は Godot/.NET キャッシュ、NuGet/PCK 成果物、文書依存、カバレッジ、クラッシュダンプ、`local.props`、ローカルモデルを除外します。
+このプロジェクトはパスで資源を読み込むため、生成された外部 `*.uid` はコミットしません。ただし配布に必要な
+`addons/gd_cubism/bin/libgd_cubism.windows.release.x86_64.dll` は明示的に追跡します。
 
 ## ソース構成
 

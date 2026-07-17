@@ -8,7 +8,7 @@ using Godot.NativeInterop;
 #pragma warning disable CA1050
 
 
-public partial class GDCubismUserModelCS : GodotObject
+internal partial class GDCubismUserModelCS : GodotObject
 {
     public enum Moc3FileFormatVersionEnum : long
     {

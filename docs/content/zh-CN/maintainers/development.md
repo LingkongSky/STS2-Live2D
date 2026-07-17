@@ -71,7 +71,7 @@ gd_cubism 通过固定的 `res://addons/gd_cubism/res/shader/*` 路径加载 10 
 ## 公共 API 约束
 
 - 只有 `Live2D.Api` 属于公共表面。
-- NuGet 只打包 `ref/net10.0` 编译资产，不提供第二份运行时 DLL。
+- NuGet 只打包 `ref/net9.0` 引用程序集，不提供第二份运行时 DLL。
 - 稳定句柄不能直接暴露 Godot 节点。
 - 队列输入必须提交时复制和校验；同字段或同 ID 使用最后值。
 - 有顺序含义的动作与表情不能进入合并队列。
@@ -81,6 +81,12 @@ gd_cubism 通过固定的 `res://addons/gd_cubism/res/shader/*` 路径加载 10 
 
 所有游戏方法补丁必须通过 RitsuLib 的 `CreatePatcher`、`IPatchMethod` 和 `ApplyRequiredPatcher` 注册。
 不要直接创建 Harmony 实例或调用 `PatchAll`。
+
+## 本地生成物
+
+`.gitignore` 排除 Godot/.NET 缓存、NuGet 与 PCK 产物、文档依赖、测试覆盖率、崩溃转储、`local.props` 和本地模型夹具。
+本项目按资源路径加载内容，因此 Godot 生成的外部 `*.uid` 文件不提交。`addons/gd_cubism/bin` 是例外：发布所需的
+`libgd_cubism.windows.release.x86_64.dll` 必须保持追踪。
 
 ## 目录
 

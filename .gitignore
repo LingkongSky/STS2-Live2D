@@ -5,23 +5,37 @@ Desktop.ini
 .vs/
 .vscode/
 .idea/
+.fleet/
 *.suo
 *.user
 *.userosscache
 *.sln.docstates
+*.DotSettings.user
 
 # .NET and Godot build output
 .godot/
+.mono/
+.import/
 bin/
 obj/
+out/
+publish/
+packages/
 TestResults/
 coverage/
+coverage.*
+*.trx
 *.pdb
+# Godot regenerates external resource UIDs for this path-based project.
 *.uid
-Tools/
+
+# Tools/ contains release, consumer, PCK, and render-verification source and
+# is intentionally tracked. Its .godot/bin/obj output is ignored above.
 
 # Documentation website dependencies and generated output
 node_modules/
+.npm/
+.pnpm-store/
 docs/.vitepress/cache/
 docs/.vitepress/dist/
 .vite/
@@ -34,24 +48,30 @@ pnpm-debug.log*
 # Local tools, logs and temporary files
 .tools/
 .cache/
+/sts2-api-signatures/
 *.log
 *.tmp
 *.bak
 *.orig
+*.dmp
+/core
+/core.[0-9]*
+mono_crash.*.json
 
 # Local environment and secrets
-.env
-.env.*
-!.env.example
+/local.props
+/.env
+/.env.*
+!/.env.example
 
 # Generated release and verification artifacts
-artifacts/
+/artifacts/
 *.nupkg
 *.snupkg
 *.pck
 
 # Large local-only model fixtures
-examples/
+/examples/
 
 # The native Cubism extension is a required runtime dependency. The generic
 # bin/ rule above must not hide its distributable Windows binary.

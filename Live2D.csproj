@@ -1,16 +1,28 @@
 <Project Sdk="Godot.NET.Sdk/4.5.1">
+  <PropertyGroup Label="Compatibility">
+    <Sts2ApiCompat>0.107.1</Sts2ApiCompat>
+    <Sts2ApiSignatureDir Condition="'$(Sts2ApiSignatureRoot)' != ''">$(Sts2ApiSignatureRoot)/$(Sts2ApiCompat)</Sts2ApiSignatureDir>
+    <Sts2AssemblyPath Condition="'$(Sts2AssemblyPath)' == '' and '$(Sts2ApiSignatureDir)' != ''">$(Sts2ApiSignatureDir)/sts2.dll</Sts2AssemblyPath>
+    <Sts2AssemblyPath Condition="'$(Sts2AssemblyPath)' == '' and '$(Sts2DataDir)' != ''">$(Sts2DataDir)/sts2.dll</Sts2AssemblyPath>
+  </PropertyGroup>
+
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>true</ImplicitUsings>
     <LangVersion>12.0</LangVersion>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+    <!-- Godot injects this reference from Sdk.targets, after project-level
+         PackageReference Update items have already been evaluated. Re-add it
+         explicitly so it remains available to the build but never becomes a
+         dependency of the public API package. -->
+    <DisableImplicitGodotGeneratorReferences>true</DisableImplicitGodotGeneratorReferences>
     <!-- NU5131 is a packages.config-only reference-group warning. This package is
          intentionally ref-only and is smoke-tested through PackageReference. -->
     <NoWarn>$(NoWarn);CS1591;NU5131</NoWarn>
-    <Sts2Dir Condition="'$(Sts2Dir)' == ''">C:\SteamLibrary\steamapps\common\Slay the Spire 2</Sts2Dir>
-    <Sts2AssemblyPath Condition="'$(Sts2AssemblyPath)' == ''">$(Sts2Dir)\data_sts2_windows_x86_64\sts2.dll</Sts2AssemblyPath>
     <Live2DCopyToGame Condition="'$(Live2DCopyToGame)' == ''">true</Live2DCopyToGame>
   </PropertyGroup>
 
@@ -18,10 +30,14 @@
     <IsPackable>true</IsPackable>
     <PackageId>STS2.Live2D</PackageId>
     <Version>0.4.0</Version>
+    <Title>STS2 Live2D API</Title>
     <Authors>LingkongSky</Authors>
+    <Copyright>Copyright (c) 2026 OLC</Copyright>
     <Description>Public runtime API for integrating Live2D models into Slay the Spire 2 mods.</Description>
+    <PackageTags>slay-the-spire-2;sts2;live2d;godot;modding</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageProjectUrl>https://github.com/LingkongSky/STS2-Live2D</PackageProjectUrl>
     <RepositoryUrl>https://github.com/LingkongSky/STS2-Live2D</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
@@ -30,6 +46,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Keeps implementation types internal to consumers while allowing the
+         dedicated rendering smoke-test assembly to exercise them. -->
+    <InternalsVisibleTo Include="Live2DRenderSmoke" />
     <Compile Remove="Tools\**\*.cs" />
     <EmbeddedResource Remove="Tools\**\*" />
     <None Remove="Tools\**\*" />
@@ -39,6 +58,9 @@
       <Private>false</Private>
     </Reference>
     <PackageReference Include="STS2.RitsuLib.Compat.0.107.1" Version="0.4.56" PrivateAssets="all" />
+    <PackageReference Include="Godot.SourceGenerators"
+                      Version="$(PackageVersion_Godot_SourceGenerators)"
+                      PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
@@ -47,16 +69,19 @@
     <EmbeddedResource Include="Live2D\localization\*.json"
                       LogicalName="Live2D.Localization.%(Filename)%(Extension)" />
     <None Include="README.md" Pack="true" PackagePath="\" />
-    <None Include="docs\**\*.md" Pack="true" PackagePath="docs\%(RecursiveDir)%(Filename)%(Extension)" />
+    <None Include="THIRD-PARTY-NOTICES.md" Pack="true" PackagePath="\" />
+    <None Include="docs\content\**\*.md" Pack="true" PackagePath="docs\content\%(RecursiveDir)%(Filename)%(Extension)" />
     <None Include="buildTransitive\STS2.Live2D.targets"
           Pack="true"
           PackagePath="buildTransitive\$(PackageId).targets" />
   </ItemGroup>
 
   <Target Name="PackLive2DCompileReference">
+    <Error Condition="!Exists('$(TargetRefPath)')"
+           Text="The reference assembly was not generated: '$(TargetRefPath)'. Build the project before packing." />
     <ItemGroup>
       <!-- Compile-only assets: consuming mods must declare/install the Live2D runtime mod. -->
-      <TfmSpecificPackageFile Include="$(TargetPath)">
+      <TfmSpecificPackageFile Include="$(TargetRefPath)">
         <PackagePath>ref/$(TargetFramework)/$(AssemblyName).dll</PackagePath>
       </TfmSpecificPackageFile>
       <TfmSpecificPackageFile Include="$(TargetDir)$(AssemblyName).xml"
@@ -64,6 +89,13 @@
         <PackagePath>ref/$(TargetFramework)/$(AssemblyName).xml</PackagePath>
       </TfmSpecificPackageFile>
     </ItemGroup>
+  </Target>
+
+  <Target Name="ValidateSts2Assembly" BeforeTargets="ResolveAssemblyReferences">
+    <Error Condition="'$(Sts2ApiSignatureRoot)' != '' and !Exists('$(Sts2ApiSignatureRoot)')"
+           Text="Sts2ApiSignatureRoot does not exist: '$(Sts2ApiSignatureRoot)'." />
+    <Error Condition="'$(Sts2AssemblyPath)' == '' or !Exists('$(Sts2AssemblyPath)')"
+           Text="Could not find sts2.dll at '$(Sts2AssemblyPath)'. Set Sts2Dir in local.props, pass /p:Sts2Dir=..., or pass /p:Sts2ApiSignatureRoot=... with a $(Sts2ApiCompat)/sts2.dll signature." />
   </Target>
 
   <Target Name="CopyMod" AfterTargets="Build" Condition="'$(Live2DCopyToGame)' == 'true'">

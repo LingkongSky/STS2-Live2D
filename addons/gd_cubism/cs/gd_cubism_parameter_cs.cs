@@ -6,7 +6,7 @@ using Godot;
 #pragma warning disable CA1050
 
 
-public partial class GDCubismParameterCS : GDCubismValueAbsCS
+internal partial class GDCubismParameterCS : GDCubismValueAbsCS
 {
     // private static readonly StringName NativeName = "GDCubismParameter";
 

@@ -35,6 +35,9 @@ All API events are raised on the Godot main thread. Async continuations are not 
 - `RegisterPack(ownerModId, path/data)` registers a read-only Pack.
 - Paths may be OS, `res://`, or `user://`; data overloads accept `ReadOnlyMemory<byte>`.
 
+`res://`, `user://`, and in-memory inputs are materialized to an OS temporary file. It is deleted after success or failure. Read-only registration
+copies required assets into its session cache and does not depend on the temporary file afterward.
+
 ## ILive2DPackHandle
 
 `OwnerModId`, `PackId`, `Name`, `IsRegistered`, and `Models` expose Pack identity and metadata. `CreateModel` creates an idempotent runtime instance;
@@ -47,6 +50,9 @@ All API events are raised on the Godot main thread. Async continuations are not 
 `ModelId`, `OwnerModId`, `PackId`, `ModelKey`, `InstanceId`, and `Scene` form stable identity. `IsAvailable` reports binding state and `CanDestroy`
 reports lifecycle authority.
 
+Scene changes and node rebuilds do not invalidate the handle. Identity and `Actions` remain readable while unavailable; `Snapshot` is main-thread-only
+and returns the last-known state when no live node is bound.
+
 - Availability events support continuous observation.
 - Async availability waits are cancellable and race-free.
 - `Snapshot` exposes transform, visibility, playback, and rendering state.
@@ -54,7 +60,8 @@ reports lifecycle authority.
 
 ### Updates
 
-`Apply` performs a partial update, `Update` configures one, and `QueueUpdate` merges fields from any thread.
+`Apply` performs a partial update and `Update` configures one; both require the main thread. `QueueUpdate` merges fields from any thread. Its
+configuration callback runs immediately on the calling thread, so it should only fill update data and must not access Godot nodes.
 
 | Field | Validation |
 | --- | --- |

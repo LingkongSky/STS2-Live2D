@@ -1,0 +1,7 @@
+config_version=5
+
+[application]
+config/name="Live2D API Consumer Example"
+
+[dotnet]
+project/assembly_name="Live2DApiConsumerExample"

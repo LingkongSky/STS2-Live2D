@@ -1,0 +1,12 @@
+<Project>
+  <PropertyGroup>
+    <!-- Local game install used for development and runtime deployment. -->
+    <Sts2Dir>Path/To/Steam/steamapps/common/Slay the Spire 2</Sts2Dir>
+
+    <!--
+      Optional CI/offline reference root. The selected directory must contain:
+      $(Sts2ApiSignatureRoot)/$(Sts2ApiCompat)/sts2.dll
+    -->
+    <!-- <Sts2ApiSignatureRoot>Path/To/sts2-api-signatures</Sts2ApiSignatureRoot> -->
+  </PropertyGroup>
+</Project>

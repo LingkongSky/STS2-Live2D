@@ -18,7 +18,7 @@ using STS2RitsuLib.Patching.Models;
 namespace Live2D;
 
 [ModInitializer(nameof(Initialize))]
-public static class Entry
+internal static class Entry
 {
     public const string ModId = "Live2D";
     public const string ModVersion = "0.4.0";

@@ -36,6 +36,9 @@
 - `RegisterPack(ownerModId, path/data)` は読み取り専用登録です。
 - OS、`res://`、`user://` パス、および `ReadOnlyMemory<byte>` に対応します。
 
+`res://`、`user://`、メモリ入力は OS の一時ファイルへ展開され、成功・失敗に関係なく処理後に削除されます。
+読み取り専用登録に必要な資源はセッションキャッシュへコピーされ、一時ファイルには依存しません。
+
 ## ILive2DPackHandle
 
 `OwnerModId`、`PackId`、`Name`、`IsRegistered`、`Models` が ID とメタデータを公開します。`CreateModel` は再実行可能な
@@ -48,6 +51,9 @@
 `ModelId`、`OwnerModId`、`PackId`、`ModelKey`、`InstanceId`、`Scene` が安定 ID を構成します。`IsAvailable` は接続状態、
 `CanDestroy` は破棄権限を表します。
 
+シーン切り替えやノード再生成でもハンドルは無効になりません。利用不可の間も ID と `Actions` は読み取り可能です。
+`Snapshot` はメインスレッド専用で、ノード未接続時は最後に確認した状態を返します。
+
 - 利用可能状態イベントは継続監視向けです。
 - 2 つの非同期待機はキャンセル可能で、購読競合がありません。
 - `Snapshot` は変換、表示、再生、描画状態を返します。
@@ -55,7 +61,8 @@
 
 ### 状態更新
 
-`Apply` は部分更新、`Update` は設定コールバック、`QueueUpdate` は任意スレッドから項目を統合します。
+`Apply` は部分更新、`Update` は設定コールバックで、どちらもメインスレッド専用です。`QueueUpdate` は任意スレッドから項目を統合します。
+設定コールバックは呼び出し元スレッドですぐ実行されるため、更新データだけを設定し、Godot ノードへアクセスしないでください。
 
 | 項目 | 検証 |
 | --- | --- |

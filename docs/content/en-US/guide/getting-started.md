@@ -15,7 +15,7 @@ STS2 Live2D has not been released publicly. An official download link will be ad
 
 ## Install a development build
 
-Point `Sts2Dir` in `Live2D.csproj` at your game directory, then run:
+Copy `local.props.template` to `local.props`, point `Sts2Dir` at the game directory, then run:
 
 ```powershell
 dotnet build -c Release

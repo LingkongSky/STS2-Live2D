@@ -37,7 +37,7 @@ The main-thread dispatcher is a persistent child of `SceneTree.Root` and consume
 - Layout is stored against 1920×1080 and scaled by the shorter viewport axis.
 - Stable API handles rebind and restore session overrides after node rebuilds.
 - Only `Live2D.Api` is public surface.
-- The NuGet package contains compile-time `ref/net10.0` assets only.
+- The NuGet package contains only the `ref/net9.0` reference assembly and XML documentation.
 - Ordered playback commands never enter coalescing queues.
 - Current configuration accepts Schema 6 only; there is no migration layer.
 
@@ -49,6 +49,12 @@ gd_cubism loads ten shaders from fixed `res://addons/gd_cubism/res/shader/*` pat
 ## Game patches
 
 Register patches through RitsuLib `CreatePatcher`, `IPatchMethod`, and `ApplyRequiredPatcher`. Do not create Harmony instances directly.
+
+## Local generated files
+
+`.gitignore` excludes Godot/.NET caches, NuGet and PCK artifacts, documentation dependencies, coverage output, crash dumps, `local.props`, and local
+model fixtures. This project loads resources by path, so generated external `*.uid` files are not committed. The required
+`addons/gd_cubism/bin/libgd_cubism.windows.release.x86_64.dll` is explicitly kept under version control.
 
 ## Source layout
 

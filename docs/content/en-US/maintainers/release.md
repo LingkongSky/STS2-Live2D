@@ -33,7 +33,9 @@ This covers blend modes, clipping geometry, filters, dispatch, coalesced queues,
 Use `Tools/export-live2d-pck.ps1` to export and verify all ten shaders in isolation. Pack NuGet with:
 
 ```powershell
-dotnet pack .\Live2D.csproj -c Release -p:Live2DCopyToGame=false -o artifacts
+.\Tools\pack-nuget.ps1 `
+  -Sts2Dir "D:\Program Files\Steam\steamapps\common\Slay the Spire 2" `
+  -OutputDirectory artifacts
 $packageSource = (Resolve-Path .\artifacts).Path
 dotnet restore .\Tools\ApiConsumerExample\Live2DApiConsumerExample.csproj `
   -p:Live2DPackageVersion=0.4.0 `
@@ -42,8 +44,12 @@ dotnet build .\Tools\ApiConsumerExample\Live2DApiConsumerExample.csproj `
   -c Release -p:Live2DPackageVersion=0.4.0 --no-restore
 ```
 
-NuGet may contain only `ref/net10.0` DLL/XML documentation, README, Markdown docs, and the buildTransitive target. It must not contain a `lib/`
+NuGet may contain only the `ref/net9.0` reference assembly/XML documentation, README, third-party notices, `docs/content` Markdown, and the buildTransitive target. It must not contain a `lib/`
 runtime assembly. Setting `Live2DPackageVersion` switches the consumer example from ProjectReference to the packaged API; its output must still omit `Live2D.dll`.
+
+Pushing a `v*` tag that matches the project version runs `publish-nuget.yml`. It builds against the pinned private
+`STS2-API-Signatures` checkout and publishes through NuGet Trusted Publishing (OIDC). Bind the NuGet.org policy to this workflow and the
+`nuget` environment, and configure a read-only `STS2_SIGNATURES_TOKEN` repository secret when cross-repository checkout requires it.
 
 ## Release checklist
 

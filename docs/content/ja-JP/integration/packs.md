@@ -49,3 +49,6 @@ Destroy は 1 つのインスタンスを削除します。Unregister はその 
 
 OS パス、`res://`、`user://`、`ReadOnlyMemory<byte>` に対応します。Pack を自身の PCK エクスポートへ必ず含めてください。
 構造と安全制限は [Pack 形式](../reference/pack-format) を参照してください。
+
+`res://`、`user://`、メモリ入力は OS の一時ディレクトリへ展開され、成功・失敗に関係なく処理後に削除されます。
+`RegisterPack` に必要な資源は独立したセッションキャッシュへコピーされ、`Unregister` で解放されます。

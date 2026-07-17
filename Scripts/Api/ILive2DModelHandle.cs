@@ -5,6 +5,7 @@ namespace Live2D.Api;
 /// <summary>
 /// Stable handle for one model in one scene. The handle remains valid when the
 /// underlying Godot nodes are rebuilt and reports availability through <see cref="IsAvailable"/>.
+/// <para>中文：句柄在场景重建后仍保持有效；实际节点是否可用请检查 <see cref="IsAvailable"/>。</para>
 /// </summary>
 public interface ILive2DModelHandle
 {
@@ -26,7 +27,10 @@ public interface ILive2DModelHandle
     bool CanDestroy { get; }
     /// <summary>Actions declared by the model, available even before scene binding.</summary>
     IReadOnlyList<Live2DActionInfo> Actions { get; }
-    /// <summary>Current live or last-known model state. Read on the Godot main thread.</summary>
+    /// <summary>
+    /// Current live or last-known model state. Read on the Godot main thread.
+    /// <para>中文：只能在 Godot 主线程读取；节点暂不可用时返回最后一次状态。</para>
+    /// </summary>
     Live2DModelSnapshot Snapshot { get; }
 
     /// <summary>Raised on the Godot main thread after a scene instance is bound.</summary>
@@ -41,6 +45,7 @@ public interface ILive2DModelHandle
     /// <summary>
     /// Completes when this stable handle is bound to a live scene instance. Returns
     /// immediately when it is already available and can be called from any thread.
+    /// <para>中文：可从任意线程等待模型绑定，不需要轮询。</para>
     /// </summary>
     Task<ILive2DModelHandle> WaitUntilAvailableAsync(
         CancellationToken cancellationToken = default);
@@ -52,7 +57,10 @@ public interface ILive2DModelHandle
     Task<ILive2DModelHandle> WaitUntilUnavailableAsync(
         CancellationToken cancellationToken = default);
 
-    /// <summary>Applies a partial transient state update on the Godot main thread.</summary>
+    /// <summary>
+    /// Applies a partial transient state update on the Godot main thread.
+    /// <para>中文：立即更新必须在主线程调用；未赋值字段保持不变。</para>
+    /// </summary>
     void Apply(Live2DModelUpdate update);
     /// <summary>Builds and applies a partial transient state update on the main thread.</summary>
     void Update(Action<Live2DModelUpdate> configure);
@@ -60,6 +68,7 @@ public interface ILive2DModelHandle
     /// <summary>
     /// Queues a state update from any thread. Pending updates for this model are
     /// merged, with the most recently submitted value winning for each field.
+    /// <para>中文：可从任意线程调用；同一字段在执行前只保留最后一次提交值。</para>
     /// </summary>
     void QueueUpdate(Live2DModelUpdate update);
 
@@ -149,6 +158,9 @@ public interface ILive2DModelHandle
     /// <summary>Queues and coalesces a batch of Cubism part opacity values.</summary>
     void QueuePartOpacities(IReadOnlyDictionary<string, float> values);
 
-    /// <summary>Destroys this registered runtime instance.</summary>
+    /// <summary>
+    /// Destroys this registered runtime instance.
+    /// <para>中文：仅注册 Pack 创建且 <see cref="CanDestroy"/> 为 true 的实例允许销毁。</para>
+    /// </summary>
     void Destroy();
 }

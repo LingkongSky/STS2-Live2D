@@ -32,6 +32,8 @@ model.QueueUpdate(update =>
 ```
 
 Pending updates for one model are coalesced. Different fields are retained, and the last submission wins for the same field.
+The callback passed to `QueueUpdate(Action<Live2DModelUpdate>)` runs immediately on the calling thread; only the completed data object is queued.
+Do not read `Snapshot` or touch other Godot objects inside that callback.
 
 ## Parameter and part queues
 
