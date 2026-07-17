@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   publish:
-    name: Build, validate, and publish
+    name: Package, validate, and publish
     runs-on: ubuntu-latest
     environment: nuget
 
@@ -26,17 +26,6 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      # RitsuLib uses the same versioned API-signature repository so CI does
-      # not need a redistributable copy of the game installation.
-      - name: Check out STS2 API signatures
-        uses: actions/checkout@v6.0.2
-        with:
-          repository: BAKAOLC/STS2-API-Signatures
-          path: sts2-api-signatures
-          fetch-depth: 1
-          persist-credentials: false
-          token: ${{ secrets.STS2_SIGNATURES_TOKEN || github.token }}
-
       - name: Set up .NET
         uses: actions/setup-dotnet@v5.3.0
         with:
@@ -46,25 +35,28 @@ jobs:
         uses: actions/cache@v5.0.5
         with:
           path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('Live2D.csproj', 'Directory.Build.props', 'Sts2PathDiscovery.props') }}
+          key: ${{ runner.os }}-nuget-${{ hashFiles('NuGet/STS2.Live2D.Package.csproj', 'Live2D.csproj', 'Directory.Build.props') }}
 
       - name: Verify tag version
         id: version
         shell: bash
         run: |
           set -euo pipefail
-          version="$(dotnet msbuild Live2D.csproj -nologo -getProperty:PackageVersion | tail -n 1 | tr -d '\r')"
+          version="$(sed -nE 's|^[[:space:]]*<Version>([^<]+)</Version>[[:space:]]*$|\1|p' NuGet/STS2.Live2D.Package.csproj | head -n 1)"
+          if [[ -z "$version" ]]; then
+            echo 'Could not read package version.' >&2
+            exit 1
+          fi
           if [[ "$GITHUB_REF_NAME" != "v$version" ]]; then
             echo "Tag $GITHUB_REF_NAME does not match package version $version" >&2
             exit 1
           fi
           echo "value=$version" >> "$GITHUB_OUTPUT"
 
-      - name: Build and validate NuGet package
+      - name: Package committed reference assets
         shell: pwsh
         run: >-
           ./Tools/pack-nuget.ps1
-          -Sts2ApiSignatureRoot "${{ github.workspace }}/sts2-api-signatures"
           -OutputDirectory "${{ github.workspace }}/artifacts"
           -RequireClean
 

@@ -48,6 +48,7 @@ pnpm-debug.log*
 # Local tools, logs and temporary files
 .tools/
 .cache/
+/work/
 /sts2-api-signatures/
 *.log
 *.tmp

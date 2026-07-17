@@ -15,6 +15,8 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Deterministic>true</Deterministic>
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+    <Version>0.4.0</Version>
+    <IsPackable>false</IsPackable>
     <!-- Godot injects this reference from Sdk.targets, after project-level
          PackageReference Update items have already been evaluated. Re-add it
          explicitly so it remains available to the build but never becomes a
@@ -26,30 +28,12 @@
     <Live2DCopyToGame Condition="'$(Live2DCopyToGame)' == ''">true</Live2DCopyToGame>
   </PropertyGroup>
 
-  <PropertyGroup Label="NuGet package">
-    <IsPackable>true</IsPackable>
-    <PackageId>STS2.Live2D</PackageId>
-    <Version>0.4.0</Version>
-    <Title>STS2 Live2D API</Title>
-    <Authors>LingkongSky</Authors>
-    <Copyright>Copyright (c) 2026 OLC</Copyright>
-    <Description>Public runtime API for integrating Live2D models into Slay the Spire 2 mods.</Description>
-    <PackageTags>slay-the-spire-2;sts2;live2d;godot;modding</PackageTags>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <PackageProjectUrl>https://github.com/LingkongSky/STS2-Live2D</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/LingkongSky/STS2-Live2D</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-    <IncludeBuildOutput>false</IncludeBuildOutput>
-    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);PackLive2DCompileReference</TargetsForTfmSpecificContentInPackage>
-  </PropertyGroup>
-
   <ItemGroup>
     <!-- Keeps implementation types internal to consumers while allowing the
          dedicated rendering smoke-test assembly to exercise them. -->
     <InternalsVisibleTo Include="Live2DRenderSmoke" />
     <Compile Remove="Tools\**\*.cs" />
+    <Compile Remove="work\**\*.cs" />
     <EmbeddedResource Remove="Tools\**\*" />
     <None Remove="Tools\**\*" />
     <Content Remove="Tools\**\*" />
@@ -68,28 +52,7 @@
                         Exclude="addons\gd_cubism\cs\**\*;addons\gd_cubism\res\**\*;addons\gd_cubism\**\*.uid;addons\gd_cubism\**\*.lib;addons\gd_cubism\**\*.exp;addons\gd_cubism\bin\.gitignore" />
     <EmbeddedResource Include="Live2D\localization\*.json"
                       LogicalName="Live2D.Localization.%(Filename)%(Extension)" />
-    <None Include="README.md" Pack="true" PackagePath="\" />
-    <None Include="THIRD-PARTY-NOTICES.md" Pack="true" PackagePath="\" />
-    <None Include="docs\content\**\*.md" Pack="true" PackagePath="docs\content\%(RecursiveDir)%(Filename)%(Extension)" />
-    <None Include="buildTransitive\STS2.Live2D.targets"
-          Pack="true"
-          PackagePath="buildTransitive\$(PackageId).targets" />
   </ItemGroup>
-
-  <Target Name="PackLive2DCompileReference">
-    <Error Condition="!Exists('$(TargetRefPath)')"
-           Text="The reference assembly was not generated: '$(TargetRefPath)'. Build the project before packing." />
-    <ItemGroup>
-      <!-- Compile-only assets: consuming mods must declare/install the Live2D runtime mod. -->
-      <TfmSpecificPackageFile Include="$(TargetRefPath)">
-        <PackagePath>ref/$(TargetFramework)/$(AssemblyName).dll</PackagePath>
-      </TfmSpecificPackageFile>
-      <TfmSpecificPackageFile Include="$(TargetDir)$(AssemblyName).xml"
-                              Condition="Exists('$(TargetDir)$(AssemblyName).xml')">
-        <PackagePath>ref/$(TargetFramework)/$(AssemblyName).xml</PackagePath>
-      </TfmSpecificPackageFile>
-    </ItemGroup>
-  </Target>
 
   <Target Name="ValidateSts2Assembly" BeforeTargets="ResolveAssemblyReferences">
     <Error Condition="'$(Sts2ApiSignatureRoot)' != '' and !Exists('$(Sts2ApiSignatureRoot)')"

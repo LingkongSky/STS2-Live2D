@@ -51,11 +51,17 @@ dotnet build -c Release `
   -p:Sts2Dir="D:\Program Files\Steam\steamapps\common\Slay the Spire 2" `
   -p:Live2DCopyToGame=false
 
-.\Tools\pack-nuget.ps1 `
+.\Tools\update-nuget-reference.ps1 `
   -Sts2Dir "D:\Program Files\Steam\steamapps\common\Slay the Spire 2"
+
+.\Tools\pack-nuget.ps1 -OutputDirectory artifacts
 ```
+
+GitHub Actions 参考 JMC 的预制发布目录方式，只打包仓库中提交的
+`NuGet/package/ref/net9.0`，不会在 CI 编译 Live2D 或读取游戏程序集。
 
 ## LICENSE
 
-[MIT](https://github.com/LingkongSky/STS2-Live2D/blob/main/LICENSE)。GDCubism 与 Live2D Cubism SDK 的许可说明见
-[第三方声明](THIRD-PARTY-NOTICES.md)。
+[MIT](https://github.com/LingkongSky/STS2-Live2D/blob/main/LICENSE)
+
+[第三方声明](THIRD-PARTY-NOTICES.md)

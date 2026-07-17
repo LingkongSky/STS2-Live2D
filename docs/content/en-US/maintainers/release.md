@@ -30,12 +30,13 @@ This covers blend modes, clipping geometry, filters, dispatch, coalesced queues,
 
 ## PCK and NuGet
 
-Use `Tools/export-live2d-pck.ps1` to export and verify all ten shaders in isolation. Pack NuGet with:
+Use `Tools/export-live2d-pck.ps1` to export and verify all ten shaders in isolation. NuGet follows JMC's prepared `modPublish` approach. After changing the public API or XML comments, refresh the committed reference assets on a machine with the game installed, then pack them:
 
 ```powershell
-.\Tools\pack-nuget.ps1 `
-  -Sts2Dir "D:\Program Files\Steam\steamapps\common\Slay the Spire 2" `
-  -OutputDirectory artifacts
+.\Tools\update-nuget-reference.ps1 `
+  -Sts2Dir "D:\Program Files\Steam\steamapps\common\Slay the Spire 2"
+git diff -- NuGet/package/ref/net9.0
+.\Tools\pack-nuget.ps1 -OutputDirectory artifacts
 $packageSource = (Resolve-Path .\artifacts).Path
 dotnet restore .\Tools\ApiConsumerExample\Live2DApiConsumerExample.csproj `
   -p:Live2DPackageVersion=0.4.0 `
@@ -47,9 +48,9 @@ dotnet build .\Tools\ApiConsumerExample\Live2DApiConsumerExample.csproj `
 NuGet may contain only the `ref/net9.0` reference assembly/XML documentation, README, third-party notices, `docs/content` Markdown, and the buildTransitive target. It must not contain a `lib/`
 runtime assembly. Setting `Live2DPackageVersion` switches the consumer example from ProjectReference to the packaged API; its output must still omit `Live2D.dll`.
 
-Pushing a `v*` tag that matches the project version runs `publish-nuget.yml`. It builds against the pinned private
-`STS2-API-Signatures` checkout and publishes through NuGet Trusted Publishing (OIDC). Bind the NuGet.org policy to this workflow and the
-`nuget` environment, and configure a read-only `STS2_SIGNATURES_TOKEN` repository secret when cross-repository checkout requires it.
+`NuGet/package/ref/net9.0` is the prepared release directory. Its `Live2D.dll` must be a metadata-only reference assembly, never the runtime DLL. Commit the refreshed DLL and XML together with the corresponding source changes.
+
+Pushing a `v*` tag that matches the project version runs `publish-nuget.yml`. It only packages and validates the committed reference assets; it does not compile Live2D, read a game installation, or access `STS2-API-Signatures`. It then publishes through NuGet Trusted Publishing (OIDC). Bind the NuGet.org policy to this workflow and the `nuget` environment. `STS2_SIGNATURES_TOKEN` is no longer required.
 
 ## Release checklist
 

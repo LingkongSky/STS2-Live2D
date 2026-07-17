@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    JMC-style prepared release directory: this project only packs committed
+    assets. It never compiles Live2D or reads the game installation.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <IsPackable>true</IsPackable>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <!-- Ref-only packages do not use packages.config reference groups. -->
+    <NoWarn>$(NoWarn);NU5131</NoWarn>
+    <PackageId>STS2.Live2D</PackageId>
+    <!-- Keep synchronized with Live2D.csproj; Tools/pack-nuget.ps1 enforces it. -->
+    <Version>0.4.0</Version>
+    <Title>STS2 Live2D API</Title>
+    <Authors>LingkongSky</Authors>
+    <Copyright>Copyright (c) 2026 OLC</Copyright>
+    <Description>Public runtime API for integrating Live2D models into Slay the Spire 2 mods.</Description>
+    <PackageTags>slay-the-spire-2;sts2;live2d;godot;modding</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageProjectUrl>https://github.com/LingkongSky/STS2-Live2D</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/LingkongSky/STS2-Live2D</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Public signatures expose Godot types, so consumers need GodotSharp. -->
+    <PackageReference Include="GodotSharp" Version="4.5.1" />
+
+    <!-- Compile-only assets. The runtime Live2D.dll must never be placed here. -->
+    <None Include="package\ref\net9.0\Live2D.dll" Pack="true" PackagePath="ref/net9.0/Live2D.dll" />
+    <None Include="package\ref\net9.0\Live2D.xml" Pack="true" PackagePath="ref/net9.0/Live2D.xml" />
+    <None Include="..\README.md" Pack="true" PackagePath="README.md" />
+    <None Include="..\THIRD-PARTY-NOTICES.md" Pack="true" PackagePath="THIRD-PARTY-NOTICES.md" />
+    <None Include="..\docs\content\**\*.md"
+          Pack="true"
+          PackagePath="docs/content/%(RecursiveDir)%(Filename)%(Extension)" />
+    <None Include="..\buildTransitive\STS2.Live2D.targets"
+          Pack="true"
+          PackagePath="buildTransitive/STS2.Live2D.targets" />
+  </ItemGroup>
+</Project>

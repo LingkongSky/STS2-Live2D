@@ -1,0 +1,1902 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Live2D</name>
+    </assembly>
+    <members>
+        <member name="T:GDCubismParameterCS.MethodName">
+            <summary>
+            Cached StringNames for the methods contained in this class, for fast lookup.
+            </summary>
+        </member>
+        <member name="T:GDCubismParameterCS.PropertyName">
+            <summary>
+            Cached StringNames for the properties and fields contained in this class, for fast lookup.
+            </summary>
+        </member>
+        <member name="F:GDCubismParameterCS.PropertyName.DefaultValue">
+            <summary>
+            Cached name for the 'DefaultValue' property.
+            </summary>
+        </member>
+        <member name="F:GDCubismParameterCS.PropertyName.MaximumValue">
+            <summary>
+            Cached name for the 'MaximumValue' property.
+            </summary>
+        </member>
+        <member name="F:GDCubismParameterCS.PropertyName.MinimumValue">
+            <summary>
+            Cached name for the 'MinimumValue' property.
+            </summary>
+        </member>
+        <member name="M:GDCubismParameterCS.GetGodotClassPropertyValue(Godot.NativeInterop.godot_string_name@,Godot.NativeInterop.godot_variant@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:GDCubismParameterCS.GetGodotPropertyList">
+            <summary>
+            Get the property information for all the properties declared in this class.
+            This method is used by Godot to register the available properties in the editor.
+            Do not call this method.
+            </summary>
+        </member>
+        <member name="M:GDCubismParameterCS.SaveGodotObjectData(Godot.Bridge.GodotSerializationInfo)">
+            <inheritdoc/>
+        </member>
+        <member name="M:GDCubismParameterCS.RestoreGodotObjectData(Godot.Bridge.GodotSerializationInfo)">
+            <inheritdoc/>
+        </member>
+        <member name="T:GDCubismParameterCS.SignalName">
+            <summary>
+            Cached StringNames for the signals contained in this class, for fast lookup.
+            </summary>
+        </member>
+        <member name="T:GDCubismPartOpacityCS.MethodName">
+            <summary>
+            Cached StringNames for the methods contained in this class, for fast lookup.
+            </summary>
+        </member>
+        <member name="T:GDCubismPartOpacityCS.PropertyName">
+            <summary>
+            Cached StringNames for the properties and fields contained in this class, for fast lookup.
+            </summary>
+        </member>
+        <member name="M:GDCubismPartOpacityCS.SaveGodotObjectData(Godot.Bridge.GodotSerializationInfo)">
+            <inheritdoc/>
+        </member>
+        <member name="M:GDCubismPartOpacityCS.RestoreGodotObjectData(Godot.Bridge.GodotSerializationInfo)">
+            <inheritdoc/>
+        </member>
+        <member name="T:GDCubismPartOpacityCS.SignalName">
+            <summary>
+            Cached StringNames for the signals contained in this class, for fast lookup.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.Moc3FileFormatVersionEnum.CSM_MOC_VERSION_UNKNOWN">
+            <summary>Unknown or failed to load.</summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.Moc3FileFormatVersionEnum.CSM_MOC_VERSION_30">
+            <summary>moc3 file version 3.0.00 - 3.2.07</summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.Moc3FileFormatVersionEnum.CSM_MOC_VERSION_33">
+            <summary>moc3 file version 3.3.00 - 3.3.03</summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.Moc3FileFormatVersionEnum.CSM_MOC_VERSION_40">
+            <summary>moc3 file version 4.0.00 - 4.1.05</summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.Moc3FileFormatVersionEnum.CSM_MOC_VERSION_42">
+            <summary>moc3 file version 4.2.00 - 4.2.02</summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.Moc3FileFormatVersionEnum.CSM_MOC_VERSION_50">
+            <summary>moc3 file version 5.0.00 -</summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.MotionProcessCallbackEnum.Physics">
+            <summary>
+                The animation update process is performed within the <c>_physics_process</c> function.
+                This is used when you want to interact with physical simulations.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.MotionProcessCallbackEnum.Idle">
+            <summary>
+                The animation update process is performed within the _process function.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.MotionProcessCallbackEnum.Manual">
+            <summary>
+                No animation update process is performed. Use the <c>advance</c> function to process the animation.
+            </summary>
+        </member>
+        <member name="P:GDCubismUserModelCS.Assets">
+            <value>
+                Property <c>Assets</c>
+                <br />
+                You can load a Live2D model by specifying a file with the *.model3.json extension.
+                The file is loaded immediately upon specification.
+                <br />
+                if you want to switch the Live2D model, you can do so simply by specifying a new file.
+            </value>
+        </member>
+        <member name="P:GDCubismUserModelCS.LoadExpressions">
+            <value>
+                Property <c>LoadExpressions</c>
+                <br />
+                If set to <c>false</c>, it will not load _Expressions_ when loading the Live2D Model.
+            </value>
+        </member>
+        <member name="P:GDCubismUserModelCS.LoadMotions">
+            <value>
+                Property <c>LoadMotions</c>
+                <br />
+                If set to <c>false</c>, it will not load _Motions_ when loading the Live2D Model.
+            </value>
+        </member>
+        <member name="P:GDCubismUserModelCS.MaskViewportSize">
+            <value>
+                Property <c>MaskViewportSize</c>
+                <br />
+                Specify the maximum resolution for any individual mask required for the Live2D model.
+                <br />
+                If set to 0, size of the mask will be relative to the source pixel resolution of the model's canvas.
+                <br />
+                Mask resolution is also dynamically resized relative to the model's scale within its viewport.
+                <br />
+                <br />
+                Reducing the resolution can help conserve GPU memory, however reducing resolution too far can cause visual issues where masks are applied.
+                <br />
+                For many, it's best to leave this at default and rely solely on the automatic scaling.
+            </value>
+        </member>
+        <member name="P:GDCubismUserModelCS.ParameterMode">
+            <value>
+                Property <c>ParameterMode</c>
+                <br />
+                Specifies the control method for the currently held Live2D model.
+            </value>
+        </member>
+        <member name="P:GDCubismUserModelCS.PhysicsEvaluate">
+            <value>
+                Property <c>PhysicsEvaluate</c>
+                <br />
+                Setting this parameter to `false` disables physical calculations.
+            </value>
+        </member>
+        <member name="P:GDCubismUserModelCS.PlaybackProcessMode">
+            <value>
+                Property <c>PlaybackProcessMode</c>
+                <br />
+                Specifies the playback method for the currently held Live2D model.
+            </value>
+        </member>
+        <member name="P:GDCubismUserModelCS.PoseUpdate">
+            <value>
+                Property <c>PoseUpdate</c>
+                <br />
+                Setting this parameter to `false` disables transparency calculations between drawing parts specified in the pose group.
+                If you want to manually handle all transparency calculations, set this parameter to `false`.
+            </value>
+        </member>
+        <member name="P:GDCubismUserModelCS.SpeedScale">
+            <value>
+                Property <c>SpeedScale</c>
+                <br />
+                Specifies the playback speed for the currently held Live2D model.
+            </value>
+        </member>
+        <member name="M:GDCubismUserModelCS.Advance(System.Double)">
+            <summary>
+                Advances the animation by the specified <paramref name="delta">delta</paramref> time (in seconds).
+                Please specify a value of 0.0 or more for delta.
+            </summary>
+            <param name="delta">The time to progress the animation.</param>
+        </member>
+        <member name="M:GDCubismUserModelCS.CsmGetLatestMocVersion">
+            <summary>
+                Returns the latest file version that GDCubismUserModel can load.
+            </summary>
+            <returns>Moc3FileFormatVersionEnum</returns>
+        </member>
+        <member name="M:GDCubismUserModelCS.CsmGetMocVersion">
+            <summary>
+                Returns the version of the loaded moc3 file.
+            </summary>
+            <returns>Moc3FileFormatVersionEnum</returns>
+        </member>
+        <member name="M:GDCubismUserModelCS.CsmGetVersion">
+            <summary>
+                Returns the version number of the Cubism Native SDK Core used by GDCubism in <c>Dictionary</c> format
+                <list type="bullet">
+                    <item>
+                        <term>version</term>
+                        <description>int: The value returned by the csmVersion function is stored as is.</description>
+                    </item>
+                    <item>
+                        <term>major</term>
+                        <description>int: Only the major version is extracted from the version and stored.</description>
+                    </item>
+                    <item>
+                        <term>minor</term>
+                        <description>int: Only the minor version is extracted from the version and stored.</description>
+                    </item>
+                    <item>
+                        <term>patch</term>
+                        <description>int: Only the patch number is extracted from the version and stored.</description>
+                    </item>
+                </list>
+            </summary>
+            <returns>Godot.Collections.Dictionary</returns>
+        </member>
+        <member name="M:GDCubismUserModelCS.GetCanvasInfo">
+            <summary>
+                Returns the following information in <c>Dictionary</c> format.
+                <list type="bullet">
+                    <item>
+                        <term>size_in_pixels</term>
+                        <description>Vector2: Returns the width and height of the canvas of the loaded Live2D model in pixels.</description>
+                    </item>
+                    <item>
+                        <term>origin_in_pixels</term>
+                        <description>Vector2: Returns the center position of the loaded Live2D model in pixels.</description>
+                    </item>
+                    <item>
+                        <term>ixels_per_unit</term>
+                        <description>float: Returns the pixelsPerUnit of the loaded Live2D model.</description>
+                    </item>
+                </list>
+            </summary>
+            <returns>Godot.Collections.Dictionary</returns>
+        </member>
+        <member name="M:GDCubismUserModelCS.GetCubismMotionQueueEntries">
+            <summary>
+                Returns the information of the <c>Motion</c> currently being played.
+            </summary>
+            <returns>Godot.Collections.Array</returns>
+        </member>
+        <member name="M:GDCubismUserModelCS.GetExpressions">
+            <summary>
+                Returns a list of Expressions from the currently held Live2D model.
+                The information obtained can be used as an argument for the <c>start_expression</c> function.
+            </summary>
+            <returns>Godot.Collections.Array</returns>
+        </member>
+        <member name="M:GDCubismUserModelCS.GetMeshes">
+            <summary>
+                Retrieves the <c>ArrayMesh</c> information of the <c>MeshInstance</c> used in the current Motion state.
+                The keys held by this <c>Dictionary</c> are identical to the names of the <c>MeshInstance</c> generated by <c>GDCubismUserModel</c>.
+                <br />
+                The information that can be obtained is the <c>ArrayMesh</c> used internally.
+                <br />
+                CAUTION<br />
+                get_meshes is an experimental function added in v0.1. Please be aware that the specifications may change or be removed in the future.
+            </summary>
+            <returns>Godot.Collections.Dictionary</returns>
+        </member>
+        <member name="M:GDCubismUserModelCS.GetMotions">
+            <summary>
+                Returns a list of <c>Motions</c> from the currently held Live2D model.
+                The returned <c>Dictionary</c> is the <c>group</c> and the number of motions it contains.
+            </summary>
+            <returns>Godot.Collections.Dictionary</returns>
+        </member>
+        <member name="M:GDCubismUserModelCS.GetParameters">
+            <summary>
+                Retrieves the controller class for operating the currently held Live2D model.
+            </summary>
+            <returns>Godot.Collections.Array</returns>
+        </member>
+        <member name="M:GDCubismUserModelCS.GetPartOpacities">
+            <summary>
+                Retrieves the controller class for operating the transparency of the parts of the currently held Live2D model.
+            </summary>
+            <returns>Godot.Collections.Array</returns>
+        </member>
+        <member name="M:GDCubismUserModelCS.StartExpression(System.String)">
+            <summary>
+                Plays the specified <paramref name="expression_id">expression_id</paramref>.
+            </summary>
+            <param name="expression_id"></param>
+        </member>
+        <member name="M:GDCubismUserModelCS.StartMotion(System.String,System.Int32,GDCubismUserModelCS.PriorityEnum)">
+            <summary>
+                Plays the specified <paramref name="grp_name">group</paramref> and <paramref name="no">no</paramref>.
+            </summary>
+            <param name="grp_name"></param>
+            <param name="no"></param>
+            <param name="priority"></param>
+        </member>
+        <member name="M:GDCubismUserModelCS.StartMotionLoop(System.String,System.Int32,GDCubismUserModelCS.PriorityEnum,System.Boolean,System.Boolean)">
+            <summary>
+                Plays the specified <paramref name="grp_name">group</paramref> and <paramref name="no">no</paramref>.
+                If you want to play it repeatedly, specify it.
+                If the loop argument is <c>false</c>, it will behave the same as the <c>start_motion</c> function.
+            </summary>
+            <param name="grp_name"></param>
+            <param name="no"></param>
+            <param name="priority"></param>
+            <param name="loop"></param>
+            <param name="loop_in_fade"></param>
+        </member>
+        <member name="M:GDCubismUserModelCS.StopExpression">
+            <summary>
+                It stops the currently playing <c>Expression</c>.
+            </summary>
+        </member>
+        <member name="M:GDCubismUserModelCS.StopMotion">
+            <summary>
+                It stops the currently playing <c>Motion</c>.
+            </summary>
+        </member>
+        <member name="T:GDCubismUserModelCS.MethodName">
+            <summary>
+            Cached StringNames for the methods contained in this class, for fast lookup.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.MethodName.GetInternalObject">
+            <summary>
+            Cached name for the 'GetInternalObject' method.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.MethodName.Attach">
+            <summary>
+            Cached name for the 'Attach' method.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.MethodName.Detach">
+            <summary>
+            Cached name for the 'Detach' method.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.MethodName.Advance">
+            <summary>
+            Cached name for the 'Advance' method.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.MethodName.CsmGetLatestMocVersion">
+            <summary>
+            Cached name for the 'CsmGetLatestMocVersion' method.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.MethodName.CsmGetMocVersion">
+            <summary>
+            Cached name for the 'CsmGetMocVersion' method.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.MethodName.CsmGetVersion">
+            <summary>
+            Cached name for the 'CsmGetVersion' method.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.MethodName.GetCanvasInfo">
+            <summary>
+            Cached name for the 'GetCanvasInfo' method.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.MethodName.GetCubismMotionQueueEntries">
+            <summary>
+            Cached name for the 'GetCubismMotionQueueEntries' method.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.MethodName.GetExpressions">
+            <summary>
+            Cached name for the 'GetExpressions' method.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.MethodName.GetHitAreas">
+            <summary>
+            Cached name for the 'GetHitAreas' method.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.MethodName.GetMeshes">
+            <summary>
+            Cached name for the 'GetMeshes' method.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.MethodName.GetMotions">
+            <summary>
+            Cached name for the 'GetMotions' method.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.MethodName.GetParameters">
+            <summary>
+            Cached name for the 'GetParameters' method.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.MethodName.GetPartOpacities">
+            <summary>
+            Cached name for the 'GetPartOpacities' method.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.MethodName.StartExpression">
+            <summary>
+            Cached name for the 'StartExpression' method.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.MethodName.StartMotion">
+            <summary>
+            Cached name for the 'StartMotion' method.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.MethodName.StartMotionLoop">
+            <summary>
+            Cached name for the 'StartMotionLoop' method.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.MethodName.StopExpression">
+            <summary>
+            Cached name for the 'StopExpression' method.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.MethodName.StopMotion">
+            <summary>
+            Cached name for the 'StopMotion' method.
+            </summary>
+        </member>
+        <member name="M:GDCubismUserModelCS.GetGodotMethodList">
+            <summary>
+            Get the method information for all the methods declared in this class.
+            This method is used by Godot to register the available methods in the editor.
+            Do not call this method.
+            </summary>
+        </member>
+        <member name="M:GDCubismUserModelCS.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name@,Godot.NativeInterop.NativeVariantPtrArgs,Godot.NativeInterop.godot_variant@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:GDCubismUserModelCS.HasGodotClassMethod(Godot.NativeInterop.godot_string_name@)">
+            <inheritdoc/>
+        </member>
+        <member name="T:GDCubismUserModelCS.PropertyName">
+            <summary>
+            Cached StringNames for the properties and fields contained in this class, for fast lookup.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.PropertyName.Assets">
+            <summary>
+            Cached name for the 'Assets' property.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.PropertyName.LoadExpressions">
+            <summary>
+            Cached name for the 'LoadExpressions' property.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.PropertyName.LoadMotions">
+            <summary>
+            Cached name for the 'LoadMotions' property.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.PropertyName.MaskViewportSize">
+            <summary>
+            Cached name for the 'MaskViewportSize' property.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.PropertyName.ParameterMode">
+            <summary>
+            Cached name for the 'ParameterMode' property.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.PropertyName.PhysicsEvaluate">
+            <summary>
+            Cached name for the 'PhysicsEvaluate' property.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.PropertyName.PlaybackProcessMode">
+            <summary>
+            Cached name for the 'PlaybackProcessMode' property.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.PropertyName.PoseUpdate">
+            <summary>
+            Cached name for the 'PoseUpdate' property.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.PropertyName.ShaderAdd">
+            <summary>
+            Cached name for the 'ShaderAdd' property.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.PropertyName.ShaderMix">
+            <summary>
+            Cached name for the 'ShaderMix' property.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.PropertyName.ShaderMul">
+            <summary>
+            Cached name for the 'ShaderMul' property.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.PropertyName.ShaderMask">
+            <summary>
+            Cached name for the 'ShaderMask' property.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.PropertyName.ShaderMaskAdd">
+            <summary>
+            Cached name for the 'ShaderMaskAdd' property.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.PropertyName.ShaderMaskAddInv">
+            <summary>
+            Cached name for the 'ShaderMaskAddInv' property.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.PropertyName.ShaderMaskMix">
+            <summary>
+            Cached name for the 'ShaderMaskMix' property.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.PropertyName.ShaderMaskMixInv">
+            <summary>
+            Cached name for the 'ShaderMaskMixInv' property.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.PropertyName.ShaderMaskMul">
+            <summary>
+            Cached name for the 'ShaderMaskMul' property.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.PropertyName.ShaderMaskMulInv">
+            <summary>
+            Cached name for the 'ShaderMaskMulInv' property.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.PropertyName.SpeedScale">
+            <summary>
+            Cached name for the 'SpeedScale' property.
+            </summary>
+        </member>
+        <member name="F:GDCubismUserModelCS.PropertyName.InternalObject">
+            <summary>
+            Cached name for the 'InternalObject' field.
+            </summary>
+        </member>
+        <member name="M:GDCubismUserModelCS.SetGodotClassPropertyValue(Godot.NativeInterop.godot_string_name@,Godot.NativeInterop.godot_variant@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:GDCubismUserModelCS.GetGodotClassPropertyValue(Godot.NativeInterop.godot_string_name@,Godot.NativeInterop.godot_variant@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:GDCubismUserModelCS.GetGodotPropertyList">
+            <summary>
+            Get the property information for all the properties declared in this class.
+            This method is used by Godot to register the available properties in the editor.
+            Do not call this method.
+            </summary>
+        </member>
+        <member name="M:GDCubismUserModelCS.SaveGodotObjectData(Godot.Bridge.GodotSerializationInfo)">
+            <inheritdoc/>
+        </member>
+        <member name="M:GDCubismUserModelCS.RestoreGodotObjectData(Godot.Bridge.GodotSerializationInfo)">
+            <inheritdoc/>
+        </member>
+        <member name="T:GDCubismUserModelCS.SignalName">
+            <summary>
+            Cached StringNames for the signals contained in this class, for fast lookup.
+            </summary>
+        </member>
+        <member name="T:GDCubismValueAbsCS.MethodName">
+            <summary>
+            Cached StringNames for the methods contained in this class, for fast lookup.
+            </summary>
+        </member>
+        <member name="F:GDCubismValueAbsCS.MethodName.GetInternalObject">
+            <summary>
+            Cached name for the 'GetInternalObject' method.
+            </summary>
+        </member>
+        <member name="F:GDCubismValueAbsCS.MethodName.Attach">
+            <summary>
+            Cached name for the 'Attach' method.
+            </summary>
+        </member>
+        <member name="F:GDCubismValueAbsCS.MethodName.Detach">
+            <summary>
+            Cached name for the 'Detach' method.
+            </summary>
+        </member>
+        <member name="M:GDCubismValueAbsCS.GetGodotMethodList">
+            <summary>
+            Get the method information for all the methods declared in this class.
+            This method is used by Godot to register the available methods in the editor.
+            Do not call this method.
+            </summary>
+        </member>
+        <member name="M:GDCubismValueAbsCS.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name@,Godot.NativeInterop.NativeVariantPtrArgs,Godot.NativeInterop.godot_variant@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:GDCubismValueAbsCS.HasGodotClassMethod(Godot.NativeInterop.godot_string_name@)">
+            <inheritdoc/>
+        </member>
+        <member name="T:GDCubismValueAbsCS.PropertyName">
+            <summary>
+            Cached StringNames for the properties and fields contained in this class, for fast lookup.
+            </summary>
+        </member>
+        <member name="F:GDCubismValueAbsCS.PropertyName.Id">
+            <summary>
+            Cached name for the 'Id' property.
+            </summary>
+        </member>
+        <member name="F:GDCubismValueAbsCS.PropertyName.Value">
+            <summary>
+            Cached name for the 'Value' property.
+            </summary>
+        </member>
+        <member name="F:GDCubismValueAbsCS.PropertyName.InternalObject">
+            <summary>
+            Cached name for the 'InternalObject' field.
+            </summary>
+        </member>
+        <member name="M:GDCubismValueAbsCS.SetGodotClassPropertyValue(Godot.NativeInterop.godot_string_name@,Godot.NativeInterop.godot_variant@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:GDCubismValueAbsCS.GetGodotClassPropertyValue(Godot.NativeInterop.godot_string_name@,Godot.NativeInterop.godot_variant@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:GDCubismValueAbsCS.GetGodotPropertyList">
+            <summary>
+            Get the property information for all the properties declared in this class.
+            This method is used by Godot to register the available properties in the editor.
+            Do not call this method.
+            </summary>
+        </member>
+        <member name="M:GDCubismValueAbsCS.SaveGodotObjectData(Godot.Bridge.GodotSerializationInfo)">
+            <inheritdoc/>
+        </member>
+        <member name="M:GDCubismValueAbsCS.RestoreGodotObjectData(Godot.Bridge.GodotSerializationInfo)">
+            <inheritdoc/>
+        </member>
+        <member name="T:GDCubismValueAbsCS.SignalName">
+            <summary>
+            Cached StringNames for the signals contained in this class, for fast lookup.
+            </summary>
+        </member>
+        <member name="T:Live2D.Api.ILive2DModelHandle">
+            <summary>
+            Stable handle for one model in one scene. The handle remains valid when the
+            underlying Godot nodes are rebuilt and reports availability through <see cref="P:Live2D.Api.ILive2DModelHandle.IsAvailable"/>.
+            <para>中文：句柄在场景重建后仍保持有效；实际节点是否可用请检查 <see cref="P:Live2D.Api.ILive2DModelHandle.IsAvailable"/>。</para>
+            </summary>
+        </member>
+        <member name="P:Live2D.Api.ILive2DModelHandle.ModelId">
+            <summary>Runtime model ID unique within a scene.</summary>
+        </member>
+        <member name="P:Live2D.Api.ILive2DModelHandle.OwnerModId">
+            <summary>Owning Mod ID.</summary>
+        </member>
+        <member name="P:Live2D.Api.ILive2DModelHandle.PackId">
+            <summary>Registered Pack ID, or null for a user-managed model.</summary>
+        </member>
+        <member name="P:Live2D.Api.ILive2DModelHandle.ModelKey">
+            <summary>Stable model key inside its Pack.</summary>
+        </member>
+        <member name="P:Live2D.Api.ILive2DModelHandle.InstanceId">
+            <summary>Owner-selected stable runtime instance ID.</summary>
+        </member>
+        <member name="P:Live2D.Api.ILive2DModelHandle.Scene">
+            <summary>Scene in which this handle is instantiated.</summary>
+        </member>
+        <member name="P:Live2D.Api.ILive2DModelHandle.IsAvailable">
+            <summary>Whether the handle is currently bound to a live scene instance.</summary>
+        </member>
+        <member name="P:Live2D.Api.ILive2DModelHandle.CanDestroy">
+            <summary>Whether <see cref="M:Live2D.Api.ILive2DModelHandle.Destroy"/> is currently permitted.</summary>
+        </member>
+        <member name="P:Live2D.Api.ILive2DModelHandle.Actions">
+            <summary>Actions declared by the model, available even before scene binding.</summary>
+        </member>
+        <member name="P:Live2D.Api.ILive2DModelHandle.Snapshot">
+            <summary>
+            Current live or last-known model state. Read on the Godot main thread.
+            <para>中文：只能在 Godot 主线程读取；节点暂不可用时返回最后一次状态。</para>
+            </summary>
+        </member>
+        <member name="E:Live2D.Api.ILive2DModelHandle.BecameAvailable">
+            <summary>Raised on the Godot main thread after a scene instance is bound.</summary>
+        </member>
+        <member name="E:Live2D.Api.ILive2DModelHandle.BecameUnavailable">
+            <summary>Raised on the Godot main thread after a scene instance is unbound.</summary>
+        </member>
+        <member name="E:Live2D.Api.ILive2DModelHandle.MotionFinished">
+            <summary>Raised when the active non-looping motion finishes.</summary>
+        </member>
+        <member name="E:Live2D.Api.ILive2DModelHandle.MotionEvent">
+            <summary>Raised for a Cubism motion event; the second argument is its event string.</summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DModelHandle.WaitUntilAvailableAsync(System.Threading.CancellationToken)">
+            <summary>
+            Completes when this stable handle is bound to a live scene instance. Returns
+            immediately when it is already available and can be called from any thread.
+            <para>中文：可从任意线程等待模型绑定，不需要轮询。</para>
+            </summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DModelHandle.WaitUntilUnavailableAsync(System.Threading.CancellationToken)">
+            <summary>
+            Completes when this stable handle is no longer bound to a live scene instance.
+            Returns immediately when it is already unavailable and can be called from any thread.
+            </summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DModelHandle.Apply(Live2D.Api.Live2DModelUpdate)">
+            <summary>
+            Applies a partial transient state update on the Godot main thread.
+            <para>中文：立即更新必须在主线程调用；未赋值字段保持不变。</para>
+            </summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DModelHandle.Update(System.Action{Live2D.Api.Live2DModelUpdate})">
+            <summary>Builds and applies a partial transient state update on the main thread.</summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DModelHandle.QueueUpdate(Live2D.Api.Live2DModelUpdate)">
+            <summary>
+            Queues a state update from any thread. Pending updates for this model are
+            merged, with the most recently submitted value winning for each field.
+            <para>中文：可从任意线程调用；同一字段在执行前只保留最后一次提交值。</para>
+            </summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DModelHandle.QueueUpdate(System.Action{Live2D.Api.Live2DModelUpdate})">
+            <summary>
+            Builds and queues a mergeable state update from any thread. Ordered commands
+            such as motions and expressions are intentionally not part of this update.
+            </summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DModelHandle.SetPosition(Godot.Vector2)">
+            <summary>Sets model-root position.</summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DModelHandle.SetScale(Godot.Vector2)">
+            <summary>Sets model-root scale.</summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DModelHandle.SetUniformScale(System.Single)">
+            <summary>Sets equal positive X/Y model-root scale.</summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DModelHandle.SetRotation(System.Single)">
+            <summary>Sets clockwise model-root rotation in degrees.</summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DModelHandle.SetOpacity(System.Single)">
+            <summary>Sets model opacity, clamped to 0 through 1.</summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DModelHandle.SetVisible(System.Boolean)">
+            <summary>Sets model-root visibility.</summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DModelHandle.SetLayer(System.Int32)">
+            <summary>Sets Godot canvas Z index.</summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DModelHandle.SetPlaybackSpeed(System.Single)">
+            <summary>Sets Cubism playback speed.</summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DModelHandle.SetPhysicsEnabled(System.Boolean)">
+            <summary>Enables or disables Cubism physics.</summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DModelHandle.SetPoseEnabled(System.Boolean)">
+            <summary>Enables or disables Cubism pose updates.</summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DModelHandle.SetMaskViewportSize(System.Int32)">
+            <summary>Sets Cubism drawable-mask viewport size.</summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DModelHandle.SetBlendMode(Live2D.Api.Live2DBlendMode)">
+            <summary>Sets the whole-model blend operation.</summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DModelHandle.SetFilter(Live2D.Api.Live2DFilterSettings)">
+            <summary>Sets the whole-model color filter.</summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DModelHandle.ResetFilter">
+            <summary>Restores the neutral whole-model filter.</summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DModelHandle.SetMask(Live2D.Api.Live2DMaskSettings)">
+            <summary>Sets a model-local canvas crop.</summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DModelHandle.ClearMask">
+            <summary>Disables the model-local canvas crop.</summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DModelHandle.PlayAction(Live2D.Api.Live2DActionInfo,System.Boolean)">
+            <summary>Plays a declared action.</summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DModelHandle.PlayMotion(System.String,System.Int32,System.Boolean)">
+            <summary>Plays a Cubism motion group/index.</summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DModelHandle.StopMotion">
+            <summary>Stops the current motion.</summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DModelHandle.SetExpression(System.String)">
+            <summary>Starts a Cubism expression by ID.</summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DModelHandle.ClearExpression">
+            <summary>Stops the active expression.</summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DModelHandle.GetParameters">
+            <summary>Returns current Cubism parameter metadata and values.</summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DModelHandle.TryGetParameter(System.String,Live2D.Api.Live2DParameterInfo@)">
+            <summary>Tries to find a Cubism parameter by case-insensitive ID.</summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DModelHandle.SetParameter(System.String,System.Single)">
+            <summary>Sets one Cubism parameter, clamped to its model range.</summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DModelHandle.SetParameters(System.Collections.Generic.IReadOnlyDictionary{System.String,System.Single})">
+            <summary>Validates and sets a batch of Cubism parameters atomically.</summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DModelHandle.QueueParameter(System.String,System.Single)">
+            <summary>
+            Queues a dynamic Cubism parameter value from any thread. Pending values are
+            coalesced by case-insensitive parameter ID.
+            </summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DModelHandle.QueueParameters(System.Collections.Generic.IReadOnlyDictionary{System.String,System.Single})">
+            <summary>Queues and coalesces a batch of dynamic Cubism parameter values.</summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DModelHandle.GetParts">
+            <summary>Returns current Cubism part-opacity values.</summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DModelHandle.TryGetPart(System.String,Live2D.Api.Live2DPartInfo@)">
+            <summary>Tries to find a Cubism part by case-insensitive ID.</summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DModelHandle.SetPartOpacity(System.String,System.Single)">
+            <summary>Sets one Cubism part opacity, clamped to 0 through 1.</summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DModelHandle.SetPartOpacities(System.Collections.Generic.IReadOnlyDictionary{System.String,System.Single})">
+            <summary>Validates and sets a batch of Cubism part opacities atomically.</summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DModelHandle.QueuePartOpacity(System.String,System.Single)">
+            <summary>
+            Queues a Cubism part opacity from any thread. Pending values are coalesced
+            by case-insensitive part ID.
+            </summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DModelHandle.QueuePartOpacities(System.Collections.Generic.IReadOnlyDictionary{System.String,System.Single})">
+            <summary>Queues and coalesces a batch of Cubism part opacity values.</summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DModelHandle.Destroy">
+            <summary>
+            Destroys this registered runtime instance.
+            <para>中文：仅注册 Pack 创建且 <see cref="P:Live2D.Api.ILive2DModelHandle.CanDestroy"/> 为 true 的实例允许销毁。</para>
+            </summary>
+        </member>
+        <member name="T:Live2D.Api.Live2DActionType">
+            <summary>Kind of action declared by a model.</summary>
+        </member>
+        <member name="F:Live2D.Api.Live2DActionType.Motion">
+            <summary>Cubism motion group and index.</summary>
+        </member>
+        <member name="F:Live2D.Api.Live2DActionType.Expression">
+            <summary>Cubism expression ID.</summary>
+        </member>
+        <member name="T:Live2D.Api.Live2DActionInfo">
+            <summary>An action declared by a model inside a registered pack.</summary>
+            <param name="Type">Motion or expression.</param>
+            <param name="DisplayName">User-facing action name.</param>
+            <param name="MotionGroup">Motion group, or empty for an expression.</param>
+            <param name="MotionIndex">Motion index, or -1 for an expression.</param>
+            <param name="ExpressionId">Expression ID, or empty for a motion.</param>
+        </member>
+        <member name="M:Live2D.Api.Live2DActionInfo.#ctor(Live2D.Api.Live2DActionType,System.String,System.String,System.Int32,System.String)">
+            <summary>An action declared by a model inside a registered pack.</summary>
+            <param name="Type">Motion or expression.</param>
+            <param name="DisplayName">User-facing action name.</param>
+            <param name="MotionGroup">Motion group, or empty for an expression.</param>
+            <param name="MotionIndex">Motion index, or -1 for an expression.</param>
+            <param name="ExpressionId">Expression ID, or empty for a motion.</param>
+        </member>
+        <member name="P:Live2D.Api.Live2DActionInfo.Type">
+            <summary>Motion or expression.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DActionInfo.DisplayName">
+            <summary>User-facing action name.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DActionInfo.MotionGroup">
+            <summary>Motion group, or empty for an expression.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DActionInfo.MotionIndex">
+            <summary>Motion index, or -1 for an expression.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DActionInfo.ExpressionId">
+            <summary>Expression ID, or empty for a motion.</summary>
+        </member>
+        <member name="T:Live2D.Api.Live2DPackModelInfo">
+            <summary>A read-only model entry exposed by a registered Live2D pack.</summary>
+            <param name="ModelKey">Stable key inside the Pack.</param>
+            <param name="DisplayName">User-facing model name.</param>
+            <param name="ContentHash">Pack-declared content identity.</param>
+            <param name="Actions">Actions declared by this model.</param>
+        </member>
+        <member name="M:Live2D.Api.Live2DPackModelInfo.#ctor(System.String,System.String,System.String,System.Collections.Generic.IReadOnlyList{Live2D.Api.Live2DActionInfo})">
+            <summary>A read-only model entry exposed by a registered Live2D pack.</summary>
+            <param name="ModelKey">Stable key inside the Pack.</param>
+            <param name="DisplayName">User-facing model name.</param>
+            <param name="ContentHash">Pack-declared content identity.</param>
+            <param name="Actions">Actions declared by this model.</param>
+        </member>
+        <member name="P:Live2D.Api.Live2DPackModelInfo.ModelKey">
+            <summary>Stable key inside the Pack.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DPackModelInfo.DisplayName">
+            <summary>User-facing model name.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DPackModelInfo.ContentHash">
+            <summary>Pack-declared content identity.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DPackModelInfo.Actions">
+            <summary>Actions declared by this model.</summary>
+        </member>
+        <member name="T:Live2D.Api.Live2DCreateOptions">
+            <summary>
+            Options used to create one runtime instance from a registered pack model.
+            <para>中文：从已注册 Pack 创建运行时模型实例时使用的选项。</para>
+            </summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DCreateOptions.Scene">
+            <summary>Scene in which the model should be instantiated.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DCreateOptions.InstanceId">
+            <summary>
+            Owner-defined stable instance ID. When omitted, a new random ID is generated.
+            Reusing an ID with the same model is idempotent.
+            </summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DCreateOptions.InitialState">
+            <summary>Transient state applied when the scene instance becomes available.</summary>
+        </member>
+        <member name="T:Live2D.Api.ILive2DPackHandle">
+            <summary>
+            Handle for a read-only Live2D pack registered by another mod.
+            <para>中文：其他 Mod 注册的只读 Pack 句柄；不会写入玩家模型库。</para>
+            </summary>
+        </member>
+        <member name="P:Live2D.Api.ILive2DPackHandle.OwnerModId">
+            <summary>Mod ID that registered this pack.</summary>
+        </member>
+        <member name="P:Live2D.Api.ILive2DPackHandle.PackId">
+            <summary>Stable PackageId from manifest.json.</summary>
+        </member>
+        <member name="P:Live2D.Api.ILive2DPackHandle.Name">
+            <summary>Pack display name.</summary>
+        </member>
+        <member name="P:Live2D.Api.ILive2DPackHandle.IsRegistered">
+            <summary>Whether this pack remains registered for the current session.</summary>
+        </member>
+        <member name="P:Live2D.Api.ILive2DPackHandle.Models">
+            <summary>Read-only models declared by this pack.</summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DPackHandle.CreateModel(System.String,Live2D.Api.Live2DCreateOptions)">
+            <summary>
+            Creates or retrieves an idempotent runtime model instance.
+            <para>中文：相同模型与 InstanceId 重复调用会返回同一稳定实例。</para>
+            </summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DPackHandle.Unregister">
+            <summary>
+            Removes all runtime instances created by this pack and unregisters it.
+            <para>中文：注销后会同时移除该 Pack 创建的全部运行时实例。</para>
+            </summary>
+        </member>
+        <member name="T:Live2D.Api.Live2DApi">
+            <summary>
+            Public runtime entry point for other Slay the Spire 2 mods.
+            <para>中文：其他 Mod 接入 Live2D 运行时的统一入口。</para>
+            </summary>
+        </member>
+        <member name="F:Live2D.Api.Live2DApi.ApiVersion">
+            <summary>Compile-time API capability number.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DApi.RuntimeApiVersion">
+            <summary>
+            Runtime API capability version. Prefer this property over the compile-time
+            <see cref="F:Live2D.Api.Live2DApi.ApiVersion"/> constant when diagnosing a loaded runtime.
+            </summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DApi.RuntimeVersion">
+            <summary>Version of the currently loaded Live2D runtime Mod.</summary>
+        </member>
+        <member name="E:Live2D.Api.Live2DApi.ModelAvailable">
+            <summary>Raised when a model instance becomes available in a loaded scene.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DApi.IsDispatcherReady">
+            <summary>Whether the Live2D Godot main-thread dispatcher is ready.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DApi.IsMainThread">
+            <summary>Whether the current caller is running on the Live2D Godot main thread.</summary>
+        </member>
+        <member name="M:Live2D.Api.Live2DApi.Post(System.Action)">
+            <summary>
+            Schedules fire-and-forget work on the Godot main thread. Callback exceptions
+            are written to the Live2D log. Use <see cref="M:Live2D.Api.Live2DApi.InvokeAsync(System.Action,System.Threading.CancellationToken)"/>
+            when the caller must observe completion or exceptions.
+            </summary>
+        </member>
+        <member name="M:Live2D.Api.Live2DApi.InvokeAsync(System.Action,System.Threading.CancellationToken)">
+            <summary>
+            Runs work on the Godot main thread and returns a task that represents its
+            completion. Cancellation prevents a callback that has not started yet.
+            </summary>
+        </member>
+        <member name="M:Live2D.Api.Live2DApi.InvokeAsync``1(System.Func{``0},System.Threading.CancellationToken)">
+            <summary>
+            Runs a function on the Godot main thread and returns its result. Cancellation
+            prevents a callback that has not started yet.
+            </summary>
+        </member>
+        <member name="M:Live2D.Api.Live2DApi.GetModels">
+            <summary>Returns all handles that have been observed during this game session.</summary>
+        </member>
+        <member name="M:Live2D.Api.Live2DApi.GetModels(System.String)">
+            <summary>Returns handles owned by one mod, including currently unavailable handles.</summary>
+        </member>
+        <member name="M:Live2D.Api.Live2DApi.GetModel(System.String,Live2D.Api.Live2DScene)">
+            <summary>Returns a stable handle, or null if this model/scene has not been created yet.</summary>
+        </member>
+        <member name="M:Live2D.Api.Live2DApi.TryGetModel(System.String,Live2D.Api.Live2DScene,Live2D.Api.ILive2DModelHandle@)">
+            <summary>Tries to find a stable handle by runtime model ID and scene.</summary>
+        </member>
+        <member name="M:Live2D.Api.Live2DApi.ImportPack(System.String)">
+            <summary>
+            Imports a user-managed Live2D pack from an operating-system path or a
+            Godot <c>res://</c>/<c>user://</c> path. Both .live2dpack and .livepck
+            file names are accepted.
+            </summary>
+        </member>
+        <member name="M:Live2D.Api.Live2DApi.ImportPack(System.ReadOnlyMemory{System.Byte})">
+            <summary>Imports a user-managed Live2D pack from in-memory archive data.</summary>
+        </member>
+        <member name="M:Live2D.Api.Live2DApi.RegisterPack(System.String,System.String)">
+            <summary>
+            Registers a read-only pack owned by another mod. Registered assets remain
+            in a session cache and are not added to the user's managed model library.
+            </summary>
+        </member>
+        <member name="M:Live2D.Api.Live2DApi.RegisterPack(System.String,System.ReadOnlyMemory{System.Byte})">
+            <summary>Registers a read-only pack from in-memory archive data.</summary>
+        </member>
+        <member name="T:Live2D.Api.Live2DMainThreadDispatcher.MethodName">
+            <summary>
+            Cached StringNames for the methods contained in this class, for fast lookup.
+            </summary>
+        </member>
+        <member name="F:Live2D.Api.Live2DMainThreadDispatcher.MethodName._Process">
+            <summary>
+            Cached name for the '_Process' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Api.Live2DMainThreadDispatcher.MethodName._ExitTree">
+            <summary>
+            Cached name for the '_ExitTree' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Api.Live2DMainThreadDispatcher.MethodName.RequireReady">
+            <summary>
+            Cached name for the 'RequireReady' method.
+            </summary>
+        </member>
+        <member name="M:Live2D.Api.Live2DMainThreadDispatcher.GetGodotMethodList">
+            <summary>
+            Get the method information for all the methods declared in this class.
+            This method is used by Godot to register the available methods in the editor.
+            Do not call this method.
+            </summary>
+        </member>
+        <member name="M:Live2D.Api.Live2DMainThreadDispatcher.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name@,Godot.NativeInterop.NativeVariantPtrArgs,Godot.NativeInterop.godot_variant@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Live2D.Api.Live2DMainThreadDispatcher.HasGodotClassMethod(Godot.NativeInterop.godot_string_name@)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Live2D.Api.Live2DMainThreadDispatcher.PropertyName">
+            <summary>
+            Cached StringNames for the properties and fields contained in this class, for fast lookup.
+            </summary>
+        </member>
+        <member name="M:Live2D.Api.Live2DMainThreadDispatcher.SaveGodotObjectData(Godot.Bridge.GodotSerializationInfo)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Live2D.Api.Live2DMainThreadDispatcher.RestoreGodotObjectData(Godot.Bridge.GodotSerializationInfo)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Live2D.Api.Live2DMainThreadDispatcher.SignalName">
+            <summary>
+            Cached StringNames for the signals contained in this class, for fast lookup.
+            </summary>
+        </member>
+        <member name="T:Live2D.Api.Live2DModelSnapshot">
+            <summary>Current runtime state of a rendered Live2D model instance.</summary>
+            <param name="ModelId">Runtime model ID.</param>
+            <param name="Scene">Host scene.</param>
+            <param name="IsAvailable">Whether a live scene instance is bound.</param>
+            <param name="Position">Model-root position.</param>
+            <param name="Scale">Model-root scale.</param>
+            <param name="RotationDegrees">Clockwise model-root rotation.</param>
+            <param name="Opacity">Model opacity.</param>
+            <param name="Visible">Model-root visibility.</param>
+            <param name="Layer">Canvas Z index.</param>
+            <param name="PlaybackSpeed">Cubism playback speed.</param>
+            <param name="PhysicsEnabled">Whether Cubism physics is enabled.</param>
+            <param name="PoseEnabled">Whether Cubism pose updates are enabled.</param>
+            <param name="MaskViewportSize">Cubism drawable-mask viewport size.</param>
+            <param name="BlendMode">Whole-model blend operation.</param>
+            <param name="Filter">Whole-model color filter.</param>
+            <param name="Mask">Model-local canvas crop.</param>
+            <param name="Playback">Currently commanded motion/expression state.</param>
+        </member>
+        <member name="M:Live2D.Api.Live2DModelSnapshot.#ctor(System.String,Live2D.Api.Live2DScene,System.Boolean,Godot.Vector2,Godot.Vector2,System.Single,System.Single,System.Boolean,System.Int32,System.Single,System.Boolean,System.Boolean,System.Int32,Live2D.Api.Live2DBlendMode,Live2D.Api.Live2DFilterSettings,Live2D.Api.Live2DMaskSettings,Live2D.Api.Live2DPlaybackSnapshot)">
+            <summary>Current runtime state of a rendered Live2D model instance.</summary>
+            <param name="ModelId">Runtime model ID.</param>
+            <param name="Scene">Host scene.</param>
+            <param name="IsAvailable">Whether a live scene instance is bound.</param>
+            <param name="Position">Model-root position.</param>
+            <param name="Scale">Model-root scale.</param>
+            <param name="RotationDegrees">Clockwise model-root rotation.</param>
+            <param name="Opacity">Model opacity.</param>
+            <param name="Visible">Model-root visibility.</param>
+            <param name="Layer">Canvas Z index.</param>
+            <param name="PlaybackSpeed">Cubism playback speed.</param>
+            <param name="PhysicsEnabled">Whether Cubism physics is enabled.</param>
+            <param name="PoseEnabled">Whether Cubism pose updates are enabled.</param>
+            <param name="MaskViewportSize">Cubism drawable-mask viewport size.</param>
+            <param name="BlendMode">Whole-model blend operation.</param>
+            <param name="Filter">Whole-model color filter.</param>
+            <param name="Mask">Model-local canvas crop.</param>
+            <param name="Playback">Currently commanded motion/expression state.</param>
+        </member>
+        <member name="P:Live2D.Api.Live2DModelSnapshot.ModelId">
+            <summary>Runtime model ID.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DModelSnapshot.Scene">
+            <summary>Host scene.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DModelSnapshot.IsAvailable">
+            <summary>Whether a live scene instance is bound.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DModelSnapshot.Position">
+            <summary>Model-root position.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DModelSnapshot.Scale">
+            <summary>Model-root scale.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DModelSnapshot.RotationDegrees">
+            <summary>Clockwise model-root rotation.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DModelSnapshot.Opacity">
+            <summary>Model opacity.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DModelSnapshot.Visible">
+            <summary>Model-root visibility.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DModelSnapshot.Layer">
+            <summary>Canvas Z index.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DModelSnapshot.PlaybackSpeed">
+            <summary>Cubism playback speed.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DModelSnapshot.PhysicsEnabled">
+            <summary>Whether Cubism physics is enabled.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DModelSnapshot.PoseEnabled">
+            <summary>Whether Cubism pose updates are enabled.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DModelSnapshot.MaskViewportSize">
+            <summary>Cubism drawable-mask viewport size.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DModelSnapshot.BlendMode">
+            <summary>Whole-model blend operation.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DModelSnapshot.Filter">
+            <summary>Whole-model color filter.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DModelSnapshot.Mask">
+            <summary>Model-local canvas crop.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DModelSnapshot.Playback">
+            <summary>Currently commanded motion/expression state.</summary>
+        </member>
+        <member name="T:Live2D.Api.Live2DPlaybackSnapshot">
+            <summary>Currently commanded motion and expression state for a model instance.</summary>
+            <param name="MotionGroup">Active motion group, or null.</param>
+            <param name="MotionIndex">Active motion index, or -1.</param>
+            <param name="MotionLooping">Whether the active motion loops.</param>
+            <param name="ExpressionId">Active expression ID, or null.</param>
+        </member>
+        <member name="M:Live2D.Api.Live2DPlaybackSnapshot.#ctor(System.String,System.Int32,System.Boolean,System.String)">
+            <summary>Currently commanded motion and expression state for a model instance.</summary>
+            <param name="MotionGroup">Active motion group, or null.</param>
+            <param name="MotionIndex">Active motion index, or -1.</param>
+            <param name="MotionLooping">Whether the active motion loops.</param>
+            <param name="ExpressionId">Active expression ID, or null.</param>
+        </member>
+        <member name="P:Live2D.Api.Live2DPlaybackSnapshot.MotionGroup">
+            <summary>Active motion group, or null.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DPlaybackSnapshot.MotionIndex">
+            <summary>Active motion index, or -1.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DPlaybackSnapshot.MotionLooping">
+            <summary>Whether the active motion loops.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DPlaybackSnapshot.ExpressionId">
+            <summary>Active expression ID, or null.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DPlaybackSnapshot.Empty">
+            <summary>Empty playback state.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DPlaybackSnapshot.HasMotion">
+            <summary>Whether a motion is currently commanded.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DPlaybackSnapshot.HasExpression">
+            <summary>Whether an expression is currently commanded.</summary>
+        </member>
+        <member name="T:Live2D.Api.Live2DParameterInfo">
+            <summary>Metadata and current value for a Cubism parameter.</summary>
+            <param name="Id">Parameter ID.</param>
+            <param name="Value">Current value.</param>
+            <param name="DefaultValue">Model-declared default value.</param>
+            <param name="MinimumValue">Model-declared minimum value.</param>
+            <param name="MaximumValue">Model-declared maximum value.</param>
+        </member>
+        <member name="M:Live2D.Api.Live2DParameterInfo.#ctor(System.String,System.Single,System.Single,System.Single,System.Single)">
+            <summary>Metadata and current value for a Cubism parameter.</summary>
+            <param name="Id">Parameter ID.</param>
+            <param name="Value">Current value.</param>
+            <param name="DefaultValue">Model-declared default value.</param>
+            <param name="MinimumValue">Model-declared minimum value.</param>
+            <param name="MaximumValue">Model-declared maximum value.</param>
+        </member>
+        <member name="P:Live2D.Api.Live2DParameterInfo.Id">
+            <summary>Parameter ID.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DParameterInfo.Value">
+            <summary>Current value.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DParameterInfo.DefaultValue">
+            <summary>Model-declared default value.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DParameterInfo.MinimumValue">
+            <summary>Model-declared minimum value.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DParameterInfo.MaximumValue">
+            <summary>Model-declared maximum value.</summary>
+        </member>
+        <member name="T:Live2D.Api.Live2DPartInfo">
+            <summary>Metadata and current value for a Cubism part opacity controller.</summary>
+            <param name="Id">Part ID.</param>
+            <param name="Opacity">Current opacity.</param>
+        </member>
+        <member name="M:Live2D.Api.Live2DPartInfo.#ctor(System.String,System.Single)">
+            <summary>Metadata and current value for a Cubism part opacity controller.</summary>
+            <param name="Id">Part ID.</param>
+            <param name="Opacity">Current opacity.</param>
+        </member>
+        <member name="P:Live2D.Api.Live2DPartInfo.Id">
+            <summary>Part ID.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DPartInfo.Opacity">
+            <summary>Current opacity.</summary>
+        </member>
+        <member name="T:Live2D.Api.Live2DModelUpdate">
+            <summary>
+            Describes a partial, transient update for one rendered Live2D model instance.
+            Unspecified properties retain their current value.
+            <para>中文：只填写需要修改的字段；未填写字段沿用当前值。</para>
+            </summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DModelUpdate.Position">
+            <summary>Model-root position in canvas coordinates.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DModelUpdate.Scale">
+            <summary>Model-root scale. Components must be finite and non-zero.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DModelUpdate.RotationDegrees">
+            <summary>Clockwise model-root rotation in degrees.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DModelUpdate.Opacity">
+            <summary>Model opacity, clamped to the range 0 through 1.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DModelUpdate.Visible">
+            <summary>Model-root visibility.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DModelUpdate.Layer">
+            <summary>Godot canvas Z index.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DModelUpdate.PlaybackSpeed">
+            <summary>Cubism playback speed. Negative values are treated as zero.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DModelUpdate.PhysicsEnabled">
+            <summary>Whether Cubism physics evaluation is enabled.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DModelUpdate.PoseEnabled">
+            <summary>Whether Cubism pose updates are enabled.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DModelUpdate.MaskViewportSize">
+            <summary>Cubism drawable-mask viewport size. Negative values are treated as zero.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DModelUpdate.BlendMode">
+            <summary>Whole-model canvas blend operation.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DModelUpdate.Filter">
+            <summary>Whole-model color filter.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DModelUpdate.Mask">
+            <summary>Model-local canvas crop.</summary>
+        </member>
+        <member name="T:Live2D.Api.Live2DPackImportResult">
+            <summary>Result of importing a Live2D pack into the user's managed model library.</summary>
+            <param name="ImportedModels">Number of models added to the managed library.</param>
+            <param name="SkippedDuplicates">Number of models skipped as duplicate content.</param>
+        </member>
+        <member name="M:Live2D.Api.Live2DPackImportResult.#ctor(System.Int32,System.Int32)">
+            <summary>Result of importing a Live2D pack into the user's managed model library.</summary>
+            <param name="ImportedModels">Number of models added to the managed library.</param>
+            <param name="SkippedDuplicates">Number of models skipped as duplicate content.</param>
+        </member>
+        <member name="P:Live2D.Api.Live2DPackImportResult.ImportedModels">
+            <summary>Number of models added to the managed library.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DPackImportResult.SkippedDuplicates">
+            <summary>Number of models skipped as duplicate content.</summary>
+        </member>
+        <member name="T:Live2D.Api.Live2DBlendMode">
+            <summary>Blend operation used when the composited model is drawn.</summary>
+        </member>
+        <member name="F:Live2D.Api.Live2DBlendMode.Normal">
+            <summary>Standard alpha blending.</summary>
+        </member>
+        <member name="F:Live2D.Api.Live2DBlendMode.Add">
+            <summary>Additive blending.</summary>
+        </member>
+        <member name="F:Live2D.Api.Live2DBlendMode.Subtract">
+            <summary>Subtractive blending.</summary>
+        </member>
+        <member name="F:Live2D.Api.Live2DBlendMode.Multiply">
+            <summary>Multiplicative blending.</summary>
+        </member>
+        <member name="F:Live2D.Api.Live2DBlendMode.PremultipliedAlpha">
+            <summary>Premultiplied-alpha blending.</summary>
+        </member>
+        <member name="T:Live2D.Api.Live2DMaskType">
+            <summary>Built-in canvas mask shapes. Coordinates are local to the model instance.</summary>
+        </member>
+        <member name="F:Live2D.Api.Live2DMaskType.None">
+            <summary>No canvas crop.</summary>
+        </member>
+        <member name="F:Live2D.Api.Live2DMaskType.Rectangle">
+            <summary>Axis-aligned rectangle.</summary>
+        </member>
+        <member name="F:Live2D.Api.Live2DMaskType.Ellipse">
+            <summary>Ellipse fitted inside the configured rectangle.</summary>
+        </member>
+        <member name="F:Live2D.Api.Live2DMaskType.RoundedRectangle">
+            <summary>Rectangle with rounded corners.</summary>
+        </member>
+        <member name="T:Live2D.Api.Live2DFilterSettings">
+            <summary>
+            Color adjustments applied to the whole composited model. Neutral values leave the
+            rendered image unchanged.
+            </summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DFilterSettings.Default">
+            <summary>Neutral filter settings.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DFilterSettings.Tint">
+            <summary>Multiplicative RGBA tint; default is white.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DFilterSettings.Brightness">
+            <summary>Brightness offset from -1 through 1.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DFilterSettings.Contrast">
+            <summary>Contrast multiplier from 0 through 4.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DFilterSettings.Saturation">
+            <summary>Saturation multiplier from 0 through 4.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DFilterSettings.Grayscale">
+            <summary>Grayscale mix from 0 through 1.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DFilterSettings.HueShiftDegrees">
+            <summary>Hue rotation in degrees.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DFilterSettings.Invert">
+            <summary>Color inversion mix from 0 through 1.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DFilterSettings.Gamma">
+            <summary>Gamma correction from 0.01 through 10.</summary>
+        </member>
+        <member name="T:Live2D.Api.Live2DMaskSettings">
+            <summary>
+            Canvas crop/mask applied in model-local coordinates. Rounded and elliptical masks
+            approximate their edges with <see cref="P:Live2D.Api.Live2DMaskSettings.SegmentsPerCorner"/> line segments.
+            </summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DMaskSettings.None">
+            <summary>Disabled canvas crop settings.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DMaskSettings.Type">
+            <summary>Crop shape.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DMaskSettings.Rect">
+            <summary>Crop bounds in model-local coordinates.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DMaskSettings.CornerRadius">
+            <summary>Rounded-rectangle corner radius; must be non-negative.</summary>
+        </member>
+        <member name="P:Live2D.Api.Live2DMaskSettings.SegmentsPerCorner">
+            <summary>Curve segments per corner, from 2 through 64.</summary>
+        </member>
+        <member name="T:Live2D.Api.Live2DScene">
+            <summary>Built-in host scenes currently supported by the Live2D runtime.</summary>
+        </member>
+        <member name="F:Live2D.Api.Live2DScene.MainMenu">
+            <summary>The game's main menu.</summary>
+        </member>
+        <member name="F:Live2D.Api.Live2DScene.InGame">
+            <summary>Map and combat scenes, which share one configuration.</summary>
+        </member>
+        <member name="T:Live2D.Scripts.Runtime.Live2DPlaybackController.MethodName">
+            <summary>
+            Cached StringNames for the methods contained in this class, for fast lookup.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.Runtime.Live2DPlaybackController.MethodName._Ready">
+            <summary>
+            Cached name for the '_Ready' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.Runtime.Live2DPlaybackController.MethodName._ExitTree">
+            <summary>
+            Cached name for the '_ExitTree' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.Runtime.Live2DPlaybackController.MethodName._Process">
+            <summary>
+            Cached name for the '_Process' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.Runtime.Live2DPlaybackController.MethodName.BeforeMotion">
+            <summary>
+            Cached name for the 'BeforeMotion' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.Runtime.Live2DPlaybackController.MethodName.RequestIdle">
+            <summary>
+            Cached name for the 'RequestIdle' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.Runtime.Live2DPlaybackController.MethodName.OnMotionFinished">
+            <summary>
+            Cached name for the 'OnMotionFinished' method.
+            </summary>
+        </member>
+        <member name="M:Live2D.Scripts.Runtime.Live2DPlaybackController.GetGodotMethodList">
+            <summary>
+            Get the method information for all the methods declared in this class.
+            This method is used by Godot to register the available methods in the editor.
+            Do not call this method.
+            </summary>
+        </member>
+        <member name="M:Live2D.Scripts.Runtime.Live2DPlaybackController.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name@,Godot.NativeInterop.NativeVariantPtrArgs,Godot.NativeInterop.godot_variant@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Live2D.Scripts.Runtime.Live2DPlaybackController.HasGodotClassMethod(Godot.NativeInterop.godot_string_name@)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Live2D.Scripts.Runtime.Live2DPlaybackController.PropertyName">
+            <summary>
+            Cached StringNames for the properties and fields contained in this class, for fast lookup.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.Runtime.Live2DPlaybackController.PropertyName._autoPlayIdle">
+            <summary>
+            Cached name for the '_autoPlayIdle' field.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.Runtime.Live2DPlaybackController.PropertyName._resumeIdleAfterMotion">
+            <summary>
+            Cached name for the '_resumeIdleAfterMotion' field.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.Runtime.Live2DPlaybackController.PropertyName._verificationFramesLeft">
+            <summary>
+            Cached name for the '_verificationFramesLeft' field.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.Runtime.Live2DPlaybackController.PropertyName._retryDelay">
+            <summary>
+            Cached name for the '_retryDelay' field.
+            </summary>
+        </member>
+        <member name="M:Live2D.Scripts.Runtime.Live2DPlaybackController.SetGodotClassPropertyValue(Godot.NativeInterop.godot_string_name@,Godot.NativeInterop.godot_variant@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Live2D.Scripts.Runtime.Live2DPlaybackController.GetGodotClassPropertyValue(Godot.NativeInterop.godot_string_name@,Godot.NativeInterop.godot_variant@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Live2D.Scripts.Runtime.Live2DPlaybackController.GetGodotPropertyList">
+            <summary>
+            Get the property information for all the properties declared in this class.
+            This method is used by Godot to register the available properties in the editor.
+            Do not call this method.
+            </summary>
+        </member>
+        <member name="M:Live2D.Scripts.Runtime.Live2DPlaybackController.SaveGodotObjectData(Godot.Bridge.GodotSerializationInfo)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Live2D.Scripts.Runtime.Live2DPlaybackController.RestoreGodotObjectData(Godot.Bridge.GodotSerializationInfo)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Live2D.Scripts.Runtime.Live2DPlaybackController.SignalName">
+            <summary>
+            Cached StringNames for the signals contained in this class, for fast lookup.
+            </summary>
+        </member>
+        <member name="T:Live2D.Scripts.Runtime.Live2DViewportWatcher.MethodName">
+            <summary>
+            Cached StringNames for the methods contained in this class, for fast lookup.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.Runtime.Live2DViewportWatcher.MethodName.Configure">
+            <summary>
+            Cached name for the 'Configure' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.Runtime.Live2DViewportWatcher.MethodName._Process">
+            <summary>
+            Cached name for the '_Process' method.
+            </summary>
+        </member>
+        <member name="M:Live2D.Scripts.Runtime.Live2DViewportWatcher.GetGodotMethodList">
+            <summary>
+            Get the method information for all the methods declared in this class.
+            This method is used by Godot to register the available methods in the editor.
+            Do not call this method.
+            </summary>
+        </member>
+        <member name="M:Live2D.Scripts.Runtime.Live2DViewportWatcher.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name@,Godot.NativeInterop.NativeVariantPtrArgs,Godot.NativeInterop.godot_variant@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Live2D.Scripts.Runtime.Live2DViewportWatcher.HasGodotClassMethod(Godot.NativeInterop.godot_string_name@)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Live2D.Scripts.Runtime.Live2DViewportWatcher.PropertyName">
+            <summary>
+            Cached StringNames for the properties and fields contained in this class, for fast lookup.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.Runtime.Live2DViewportWatcher.PropertyName._scene">
+            <summary>
+            Cached name for the '_scene' field.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.Runtime.Live2DViewportWatcher.PropertyName._lastViewportSize">
+            <summary>
+            Cached name for the '_lastViewportSize' field.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.Runtime.Live2DViewportWatcher.PropertyName._elapsed">
+            <summary>
+            Cached name for the '_elapsed' field.
+            </summary>
+        </member>
+        <member name="M:Live2D.Scripts.Runtime.Live2DViewportWatcher.SetGodotClassPropertyValue(Godot.NativeInterop.godot_string_name@,Godot.NativeInterop.godot_variant@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Live2D.Scripts.Runtime.Live2DViewportWatcher.GetGodotClassPropertyValue(Godot.NativeInterop.godot_string_name@,Godot.NativeInterop.godot_variant@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Live2D.Scripts.Runtime.Live2DViewportWatcher.GetGodotPropertyList">
+            <summary>
+            Get the property information for all the properties declared in this class.
+            This method is used by Godot to register the available properties in the editor.
+            Do not call this method.
+            </summary>
+        </member>
+        <member name="M:Live2D.Scripts.Runtime.Live2DViewportWatcher.SaveGodotObjectData(Godot.Bridge.GodotSerializationInfo)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Live2D.Scripts.Runtime.Live2DViewportWatcher.RestoreGodotObjectData(Godot.Bridge.GodotSerializationInfo)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Live2D.Scripts.Runtime.Live2DViewportWatcher.SignalName">
+            <summary>
+            Cached StringNames for the signals contained in this class, for fast lookup.
+            </summary>
+        </member>
+        <member name="T:Live2D.Scripts.UI.Live2DPreviewCanvas.MethodName">
+            <summary>
+            Cached StringNames for the methods contained in this class, for fast lookup.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewCanvas.MethodName._Ready">
+            <summary>
+            Cached name for the '_Ready' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewCanvas.MethodName.SetSimulationSize">
+            <summary>
+            Cached name for the 'SetSimulationSize' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewCanvas.MethodName.AddPreview">
+            <summary>
+            Cached name for the 'AddPreview' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewCanvas.MethodName._Notification">
+            <summary>
+            Cached name for the '_Notification' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewCanvas.MethodName._GuiInput">
+            <summary>
+            Cached name for the '_GuiInput' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewCanvas.MethodName._Draw">
+            <summary>
+            Cached name for the '_Draw' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewCanvas.MethodName.UpdateStageTransform">
+            <summary>
+            Cached name for the 'UpdateStageTransform' method.
+            </summary>
+        </member>
+        <member name="M:Live2D.Scripts.UI.Live2DPreviewCanvas.GetGodotMethodList">
+            <summary>
+            Get the method information for all the methods declared in this class.
+            This method is used by Godot to register the available methods in the editor.
+            Do not call this method.
+            </summary>
+        </member>
+        <member name="M:Live2D.Scripts.UI.Live2DPreviewCanvas.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name@,Godot.NativeInterop.NativeVariantPtrArgs,Godot.NativeInterop.godot_variant@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Live2D.Scripts.UI.Live2DPreviewCanvas.HasGodotClassMethod(Godot.NativeInterop.godot_string_name@)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Live2D.Scripts.UI.Live2DPreviewCanvas.PropertyName">
+            <summary>
+            Cached StringNames for the properties and fields contained in this class, for fast lookup.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewCanvas.PropertyName._dragging">
+            <summary>
+            Cached name for the '_dragging' field.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewCanvas.PropertyName._stage">
+            <summary>
+            Cached name for the '_stage' field.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewCanvas.PropertyName._simulationSize">
+            <summary>
+            Cached name for the '_simulationSize' field.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewCanvas.PropertyName._canvasScale">
+            <summary>
+            Cached name for the '_canvasScale' field.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewCanvas.PropertyName._displayRect">
+            <summary>
+            Cached name for the '_displayRect' field.
+            </summary>
+        </member>
+        <member name="M:Live2D.Scripts.UI.Live2DPreviewCanvas.SetGodotClassPropertyValue(Godot.NativeInterop.godot_string_name@,Godot.NativeInterop.godot_variant@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Live2D.Scripts.UI.Live2DPreviewCanvas.GetGodotClassPropertyValue(Godot.NativeInterop.godot_string_name@,Godot.NativeInterop.godot_variant@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Live2D.Scripts.UI.Live2DPreviewCanvas.GetGodotPropertyList">
+            <summary>
+            Get the property information for all the properties declared in this class.
+            This method is used by Godot to register the available properties in the editor.
+            Do not call this method.
+            </summary>
+        </member>
+        <member name="M:Live2D.Scripts.UI.Live2DPreviewCanvas.SaveGodotObjectData(Godot.Bridge.GodotSerializationInfo)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Live2D.Scripts.UI.Live2DPreviewCanvas.RestoreGodotObjectData(Godot.Bridge.GodotSerializationInfo)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Live2D.Scripts.UI.Live2DPreviewCanvas.SignalName">
+            <summary>
+            Cached StringNames for the signals contained in this class, for fast lookup.
+            </summary>
+        </member>
+        <member name="T:Live2D.Scripts.UI.Live2DPreviewEditor.MethodName">
+            <summary>
+            Cached StringNames for the methods contained in this class, for fast lookup.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.MethodName._Ready">
+            <summary>
+            Cached name for the '_Ready' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.MethodName._UnhandledInput">
+            <summary>
+            Cached name for the '_UnhandledInput' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.MethodName.BuildUi">
+            <summary>
+            Cached name for the 'BuildUi' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.MethodName.SelectScene">
+            <summary>
+            Cached name for the 'SelectScene' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.MethodName.AddResolutionOption">
+            <summary>
+            Cached name for the 'AddResolutionOption' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.MethodName.SelectResolution">
+            <summary>
+            Cached name for the 'SelectResolution' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.MethodName.RebuildPreview">
+            <summary>
+            Cached name for the 'RebuildPreview' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.MethodName.ApplyPreviewTransform">
+            <summary>
+            Cached name for the 'ApplyPreviewTransform' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.MethodName.MovePreview">
+            <summary>
+            Cached name for the 'MovePreview' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.MethodName.ChangeScale">
+            <summary>
+            Cached name for the 'ChangeScale' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.MethodName.ChangeRotation">
+            <summary>
+            Cached name for the 'ChangeRotation' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.MethodName.UpdateControls">
+            <summary>
+            Cached name for the 'UpdateControls' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.MethodName.Save">
+            <summary>
+            Cached name for the 'Save' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.MethodName.Close">
+            <summary>
+            Cached name for the 'Close' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.MethodName.CreateSliderRow">
+            <summary>
+            Cached name for the 'CreateSliderRow' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.MethodName.CreateField">
+            <summary>
+            Cached name for the 'CreateField' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.MethodName.CreateSectionTitle">
+            <summary>
+            Cached name for the 'CreateSectionTitle' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.MethodName.CreatePanelStyle">
+            <summary>
+            Cached name for the 'CreatePanelStyle' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.MethodName.L">
+            <summary>
+            Cached name for the 'L' method.
+            </summary>
+        </member>
+        <member name="M:Live2D.Scripts.UI.Live2DPreviewEditor.GetGodotMethodList">
+            <summary>
+            Get the method information for all the methods declared in this class.
+            This method is used by Godot to register the available methods in the editor.
+            Do not call this method.
+            </summary>
+        </member>
+        <member name="M:Live2D.Scripts.UI.Live2DPreviewEditor.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name@,Godot.NativeInterop.NativeVariantPtrArgs,Godot.NativeInterop.godot_variant@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Live2D.Scripts.UI.Live2DPreviewEditor.HasGodotClassMethod(Godot.NativeInterop.godot_string_name@)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Live2D.Scripts.UI.Live2DPreviewEditor.PropertyName">
+            <summary>
+            Cached StringNames for the properties and fields contained in this class, for fast lookup.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.PropertyName._canvas">
+            <summary>
+            Cached name for the '_canvas' field.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.PropertyName._sceneChoice">
+            <summary>
+            Cached name for the '_sceneChoice' field.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.PropertyName._resolutionChoice">
+            <summary>
+            Cached name for the '_resolutionChoice' field.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.PropertyName._offsetX">
+            <summary>
+            Cached name for the '_offsetX' field.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.PropertyName._offsetY">
+            <summary>
+            Cached name for the '_offsetY' field.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.PropertyName._scale">
+            <summary>
+            Cached name for the '_scale' field.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.PropertyName._rotation">
+            <summary>
+            Cached name for the '_rotation' field.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.PropertyName._scaleInput">
+            <summary>
+            Cached name for the '_scaleInput' field.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.PropertyName._rotationInput">
+            <summary>
+            Cached name for the '_rotationInput' field.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.PropertyName._currentScene">
+            <summary>
+            Cached name for the '_currentScene' field.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.PropertyName._previewViewportSize">
+            <summary>
+            Cached name for the '_previewViewportSize' field.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.PropertyName._updatingControls">
+            <summary>
+            Cached name for the '_updatingControls' field.
+            </summary>
+        </member>
+        <member name="M:Live2D.Scripts.UI.Live2DPreviewEditor.SetGodotClassPropertyValue(Godot.NativeInterop.godot_string_name@,Godot.NativeInterop.godot_variant@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Live2D.Scripts.UI.Live2DPreviewEditor.GetGodotClassPropertyValue(Godot.NativeInterop.godot_string_name@,Godot.NativeInterop.godot_variant@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Live2D.Scripts.UI.Live2DPreviewEditor.GetGodotPropertyList">
+            <summary>
+            Get the property information for all the properties declared in this class.
+            This method is used by Godot to register the available properties in the editor.
+            Do not call this method.
+            </summary>
+        </member>
+        <member name="M:Live2D.Scripts.UI.Live2DPreviewEditor.SaveGodotObjectData(Godot.Bridge.GodotSerializationInfo)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Live2D.Scripts.UI.Live2DPreviewEditor.RestoreGodotObjectData(Godot.Bridge.GodotSerializationInfo)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Live2D.Scripts.UI.Live2DPreviewEditor.SignalName">
+            <summary>
+            Cached StringNames for the signals contained in this class, for fast lookup.
+            </summary>
+        </member>
+    </members>
+</doc>
