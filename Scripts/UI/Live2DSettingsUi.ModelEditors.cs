@@ -28,6 +28,17 @@ internal static partial class Live2DSettingsUi
         name.AddThemeFontSizeOverride("font_size", 20);
         titleRow.AddChild(name);
 
+        if (model.IsExternalPackModel)
+        {
+            var provider = new Label
+            {
+                Text = F("model.external_provider", "Provided by {0}", model.ExternalOwnerModId),
+                TooltipText = $"{model.ExternalOwnerModId}/{model.ExternalPackId}/{model.ExternalModelKey}",
+            };
+            provider.AddThemeColorOverride("font_color", new Color(0.55f, 0.8f, 1f));
+            titleRow.AddChild(provider);
+        }
+
         var configure = new Button
         {
             Text = L("button.configure", "Configure"),
@@ -39,43 +50,55 @@ internal static partial class Live2DSettingsUi
             NavigateToPage(configure, ModelDetailPageId);
         };
         titleRow.AddChild(configure);
-        var exportModel = new Button
+        if (!model.IsExternalPackModel)
         {
-            Text = L("button.export_model_pack", "Export Package"),
-            CustomMinimumSize = new Vector2(140f, 0f),
-        };
-        exportModel.Pressed += () => ShowModelPackExportDialog(model.Id, model.DisplayName);
-        titleRow.AddChild(exportModel);
+            var exportModel = new Button
+            {
+                Text = L("button.export_model_pack", "Export Package"),
+                CustomMinimumSize = new Vector2(140f, 0f),
+            };
+            exportModel.Pressed += () => ShowModelPackExportDialog(model.Id, model.DisplayName);
+            titleRow.AddChild(exportModel);
+        }
         card.AddChild(titleRow);
 
         var actions = new HBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
 
         var previewEditor = new Button { Text = L("button.preview_adjust", "Preview & Adjust") };
+        if (model.IsExternalPackModel &&
+            !Live2DRegisteredPackRegistry.TryGetLibraryModelAsset(model, out _))
+        {
+            previewEditor.Disabled = true;
+            previewEditor.TooltipText = L("model.external_unavailable", "The provider Mod is not loaded.");
+        }
         previewEditor.Pressed += () => Live2DPreviewEditor.Show(model.Id, uiHost);
         actions.AddChild(previewEditor);
 
-        var delete = new Button { Text = L("button.delete", "Delete") };
         PanelContainer? modelCard = null;
-        delete.Pressed += () =>
+        if (!model.IsExternalPackModel)
         {
-            delete.Disabled = true;
-            try
+            var delete = new Button { Text = L("button.delete", "Delete") };
+            delete.Pressed += () =>
             {
-                if (_selectedModelId == model.Id)
-                    _selectedModelId = null;
-                RemoveModel(model.Id);
-                modelCard?.Hide();
-                modelCard?.QueueFree();
-                onDeleted();
-                uiHost.RequestRefreshAfterDataModelBatchChange();
-            }
-            catch (Exception ex)
-            {
-                delete.Disabled = false;
-                Entry.Logger.Error($"[{Entry.ModId}] Failed to delete model {model.Id}: {ex}");
-            }
-        };
-        actions.AddChild(delete);
+                delete.Disabled = true;
+                try
+                {
+                    if (_selectedModelId == model.Id)
+                        _selectedModelId = null;
+                    RemoveModel(model.Id);
+                    modelCard?.Hide();
+                    modelCard?.QueueFree();
+                    onDeleted();
+                    uiHost.RequestRefreshAfterDataModelBatchChange();
+                }
+                catch (Exception ex)
+                {
+                    delete.Disabled = false;
+                    Entry.Logger.Error($"[{Entry.ModId}] Failed to delete model {model.Id}: {ex}");
+                }
+            };
+            actions.AddChild(delete);
+        }
         card.AddChild(actions);
         modelCard = WrapCard(card);
         return modelCard;

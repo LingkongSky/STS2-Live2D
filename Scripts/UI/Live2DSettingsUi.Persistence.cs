@@ -5,7 +5,6 @@ using Live2D.Scripts.Models;
 using Live2D.Scripts.Packs;
 using Live2D.Scripts.Runtime;
 using STS2RitsuLib;
-using STS2RitsuLib.RuntimeInput;
 using STS2RitsuLib.Settings;
 
 namespace Live2D.Scripts.UI;
@@ -247,7 +246,7 @@ internal static partial class Live2DSettingsUi
     {
         if (string.IsNullOrWhiteSpace(value))
             return "";
-        return RuntimeHotkeyService.TryNormalizeBinding(value, out var normalized) ? normalized : value.Trim();
+        return Live2DHotkeyManager.NormalizeBindingForStorage(value);
     }
 
     private static void ModifyGlobalScene(Live2DSceneKind scene, Action<SceneDisplayConfig> mutation)

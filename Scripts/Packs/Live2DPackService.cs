@@ -11,9 +11,16 @@ internal static class Live2DPackService
 {
     public static void ExportAll(string destinationPath)
     {
+        var current = Live2DConfigStore.Get();
+        var exportable = new Live2DSettings
+        {
+            SchemaVersion = current.SchemaVersion,
+            Global = current.Global,
+            Models = current.Models.Where(model => !model.IsExternalPackModel).ToList(),
+        };
         Live2DPackArchive.Write(
             EnsurePackageExtension(destinationPath),
-            Live2DConfigStore.Get(),
+            exportable,
             Live2DModelRepository.ModelsDirectory,
             includeGlobalConfig: false);
     }
@@ -23,6 +30,8 @@ internal static class Live2DPackService
         var current = Live2DConfigStore.Get();
         var model = current.Models.FirstOrDefault(value => value.Id == modelId)
                     ?? throw new InvalidOperationException($"Model configuration does not exist: {modelId}");
+        if (model.IsExternalPackModel)
+            throw new InvalidOperationException("Provider-owned models cannot be exported from the user library.");
         var packageSettings = new Live2DSettings
         {
             SchemaVersion = current.SchemaVersion,
@@ -134,9 +143,9 @@ internal static class Live2DPackService
 
     private static string EnsurePackageExtension(string path)
     {
-        return path.EndsWith(".live2dpack", StringComparison.OrdinalIgnoreCase)
+        return path.EndsWith(Live2D.Api.Live2DApi.PackageFileExtension, StringComparison.OrdinalIgnoreCase)
             ? path
-            : path + ".live2dpack";
+            : path + Live2D.Api.Live2DApi.PackageFileExtension;
     }
 
     private static string CreateStagingDirectory(string prefix)

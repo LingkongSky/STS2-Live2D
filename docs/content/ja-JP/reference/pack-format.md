@@ -1,6 +1,6 @@
 # Pack 形式
 
-`.live2dpack` と `.livepck` は同じ ZIP 形式です。ここでは `FormatVersion = 1` だけを説明し、旧形式は移行しません。
+`.live2dpack` は Live2D パッケージの拡張子です。内容は `FormatVersion = 1` の ZIP で、他のファイル拡張子は Live2D パッケージではありません。
 
 ## 構造
 
@@ -30,7 +30,7 @@ models/
   "Name": "Example Characters",
   "Author": "ExampleMod",
   "CreatedAt": "2026-07-15T00:00:00+08:00",
-  "MinimumModVersion": "0.4.1",
+  "MinimumModVersion": "0.5.5",
   "SettingsSchemaVersion": 6,
   "IncludesGlobalConfig": false,
   "Models": [{
@@ -53,7 +53,7 @@ models/
 `settings/models.json` はモデル設定配列です。ID、相対エントリ、内容ハッシュ、上書き、アクション情報、バインド配列が必要です。
 `settings/global.json` は [Global 設定](./configuration) と同じ構造で、`IncludesGlobalConfig=true` の場合だけ存在します。
 
-読み取り専用登録はグローバル設定を書き込みません。永続インポートは取り込めます。
+`RegisterPack` はグローバル設定をインポートしません。永続インポートでは取り込めます。
 
 ## 安全制限
 

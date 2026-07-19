@@ -1,8 +1,5 @@
-using System.Security.Cryptography;
-using System.Text;
 using Live2D.Api;
 using Live2D.Scripts.Configuration;
-using Live2D.Scripts.Runtime;
 
 namespace Live2D.Scripts.Packs;
 
@@ -34,9 +31,6 @@ internal sealed class RegisteredLive2DPackHandle : ILive2DPackHandle
     public string Name => _pack.Name;
     public bool IsRegistered { get; private set; } = true;
     public IReadOnlyList<Live2DPackModelInfo> Models { get; }
-
-    public ILive2DModelHandle CreateModel(string modelKey, Live2DCreateOptions? options = null)
-        => Live2DRegisteredPackRegistry.CreateModel(_pack, modelKey, options ?? new Live2DCreateOptions());
 
     public void Unregister() => Live2DRegisteredPackRegistry.Unregister(_pack);
 

@@ -15,16 +15,18 @@ NuGet 包只供其他 Mod 编译，不包含玩家运行时。当前运行时请
 
 ## 安装开发构建
 
-从源码构建时会自动发现 Steam 游戏目录，然后执行：
+安装开发构建需要 Godot 4.5.1 Mono 和 .NET 9 SDK。Godot 负责导出 Shader PCK，.NET CLI 负责生成完整 Mod 目录：
 
 ```powershell
-dotnet build -c Release
+$Godot = "C:\Tools\Godot\Godot_v4.5.1-stable_mono_win64_console.exe"
+$env:STS2_DIR = "D:\SteamLibrary\steamapps\common\Slay the Spire 2"
+
+& $Godot --headless --editor --path $PWD --quit
+& $Godot --headless --path $PWD --export-pack Live2D "$PWD\Live2D.pck"
+dotnet publish .\Live2D.csproj -c Release -o .\artifacts\Live2D -p:BundleMod=true
 ```
 
-若自动发现失败，请设置 `STS2_DIR` 环境变量，或执行
-`dotnet build -c Release -p:Sts2Dir="游戏目录"`。
-
-构建会把运行时文件复制到游戏的 `mods/Live2D`。该目录至少应包含：
+将 `artifacts/Live2D` 整个目录复制为游戏的 `mods/Live2D`。该目录至少应包含：
 
 ```text
 Live2D.json
@@ -33,7 +35,7 @@ Live2D.pck
 addons/gd_cubism/
 ```
 
-安装或更新 DLL 后必须完全退出并重启游戏。
+普通 `dotnet build` 只编译，不会安装 Mod。安装或更新时必须整体替换同一批次的 DLL、PCK 和原生文件，随后完全退出并重启游戏。
 
 ## 导入第一个模型
 

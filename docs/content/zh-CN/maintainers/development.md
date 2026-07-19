@@ -44,7 +44,7 @@ Live2DRuntimeManager
 ```
 
 只有 `Live2DConfigResolver` 可以实现继承规则。运行时、设置界面、预览页和 Pack 不应复制另一套解析逻辑。
-当前配置只接受 Schema 6，不包含旧版本迁移路径。
+配置 Schema 固定为 `6`。
 
 ## 场景与布局
 
@@ -75,7 +75,7 @@ gd_cubism 通过固定的 `res://addons/gd_cubism/res/shader/*` 路径加载 10 
 - 稳定句柄不能直接暴露 Godot 节点。
 - 队列输入必须提交时复制和校验；同字段或同 ID 使用最后值。
 - 有顺序含义的动作与表情不能进入合并队列。
-- API 变更必须同步 XML 注释、参考文档、示例和版本检查脚本。
+- API 变更必须同步 XML 注释、参考文档、示例和 CI 版本检查。
 
 ## 游戏补丁
 

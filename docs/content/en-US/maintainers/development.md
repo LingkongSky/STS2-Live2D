@@ -39,7 +39,7 @@ The main-thread dispatcher is a persistent child of `SceneTree.Root` and consume
 - Only `Live2D.Api` is public surface.
 - The NuGet package contains only the `ref/net9.0` reference assembly and XML documentation.
 - Ordered playback commands never enter coalescing queues.
-- Current configuration accepts Schema 6 only; there is no migration layer.
+- Configuration schema is fixed at `6`.
 
 ## PCK and shaders
 
@@ -62,7 +62,7 @@ model fixtures. This project loads resources by path, so generated external `*.u
 Scripts/Api/            Public API
 Scripts/Configuration/  Settings, normalization, persistence, resolution
 Scripts/Models/         model3 parser and managed repository
-Scripts/Packs/          Archive import and read-only registration
+Scripts/Packs/          Archive import and model-library registration
 Scripts/Runtime/        Scene hosts, Cubism, and model instances
 Scripts/UI/             Settings and preview pages
 docs/.vitepress/        Site configuration and theme

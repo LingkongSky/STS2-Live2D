@@ -83,6 +83,5 @@ model.SetBlendMode(Live2DBlendMode.Normal);
 - `IsAvailable` 表示当前场景中是否存在已绑定实例。
 - `WaitUntilAvailableAsync` 和 `WaitUntilUnavailableAsync` 提供可取消等待。
 - `BecameAvailable` / `BecameUnavailable` 适合持续监听。
-- `Destroy()` 只允许销毁由 Pack 创建且 `CanDestroy` 为 true 的运行时实例。
 
 等待方法的 `await` 后不保证仍处于 Godot 主线程；继续执行模型命令时仍应使用 `InvokeAsync`。

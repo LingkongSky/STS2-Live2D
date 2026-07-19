@@ -23,8 +23,6 @@ public interface ILive2DModelHandle
     Live2DScene Scene { get; }
     /// <summary>Whether the handle is currently bound to a live scene instance.</summary>
     bool IsAvailable { get; }
-    /// <summary>Whether <see cref="Destroy"/> is currently permitted.</summary>
-    bool CanDestroy { get; }
     /// <summary>Actions declared by the model, available even before scene binding.</summary>
     IReadOnlyList<Live2DActionInfo> Actions { get; }
     /// <summary>
@@ -158,9 +156,4 @@ public interface ILive2DModelHandle
     /// <summary>Queues and coalesces a batch of Cubism part opacity values.</summary>
     void QueuePartOpacities(IReadOnlyDictionary<string, float> values);
 
-    /// <summary>
-    /// Destroys this registered runtime instance.
-    /// <para>中文：仅注册 Pack 创建且 <see cref="CanDestroy"/> 为 true 的实例允许销毁。</para>
-    /// </summary>
-    void Destroy();
 }

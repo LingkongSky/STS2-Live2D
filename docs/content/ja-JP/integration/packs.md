@@ -1,54 +1,60 @@
 # モデル Pack の同梱
 
-他の Mod は `.live2dpack` または `.livepck` を自身の PCK に含め、Live2D ランタイムから読み込めます。両拡張子は同じ ZIP 形式です。
+他の Mod は `.live2dpack` を自身の PCK に含め、Live2D の統一モデルライブラリへ登録できます。`.live2dpack` が唯一対応するパッケージ拡張子です。
 
-## 読み取り専用登録と永続インポート
-
-| 目的 | API | プレイヤーライブラリへ書き込む |
-| --- | --- | --- |
-| モデルを自分の Mod が管理する | `RegisterPack` | いいえ |
-| プレイヤーが永続編集する | `ImportPack` | はい |
-
-他 Mod に属するキャラクター資源には読み取り専用登録を推奨します。
-
-## 登録と作成
+## 登録
 
 ```csharp
 var pack = Live2DApi.RegisterPack(
     "MyMod",
     "res://MyMod/live2d/characters.live2dpack");
-
-var info = pack.Models.First(model => model.ModelKey == "character-main");
-var model = pack.CreateModel(info.ModelKey, new Live2DCreateOptions
-{
-    Scene = Live2DScene.MainMenu,
-    InstanceId = "main-menu-character",
-    InitialState = new Live2DModelUpdate
-    {
-        Position = new Vector2(1350f, 760f),
-        Scale = Vector2.One * 0.4f,
-        Opacity = 0.9f,
-    },
-});
 ```
 
-インスタンス ID は `OwnerModId / PackId / Scene / InstanceId` です。同じモデルと ID の再作成は同じ結果を返し、異なる
-`ModelKey` を同じ ID に割り当てると拒否されます。
+Pack のモデルは Live2D のモデル管理に表示されます。表示、配置、描画、アクション、ホットキー、シーンインスタンスを Live2D が管理します。
+提供側 Mod は別のモデル設定ページ、ホットキー制御、インスタンス制御を登録しません。
+
+資源は提供側 Mod が所有し、セッションキャッシュにだけ存在するため、ライブラリから削除またはエクスポートできません。
+Live2D はプレイヤー設定だけを永続化します。提供側が未ロードの場合、設定を保持したままモデルが利用不可になります。
+
+提供側は開始 Motion、ストーリー反応、状態連携などキャラクター固有の動作を保持できます。
+`ILive2DProviderLifecycleHook` を実装して Pack より先に登録し、別のインスタンス管理を作成しないでください。
+
+```csharp
+sealed class CharacterHook : ILive2DProviderLifecycleHook
+{
+    public void OnModelAvailable(ILive2DModelHandle model)
+    {
+        if (model.Scene == Live2DScene.MainMenu)
+            model.PlayMotion("Intro", 0);
+    }
+
+    public void OnModelUnavailable(ILive2DModelHandle model)
+    {
+        // 待機中の提供側固有の非同期動作をキャンセルします。
+    }
+}
+
+var lifecycle = Live2DApi.RegisterProviderHook("MyMod", new CharacterHook());
+var pack = Live2DApi.RegisterPack("MyMod", "res://MyMod/live2d/characters.live2dpack");
+```
+
+段階は `OnPackRegistered`、`OnModelAvailable`、`OnModelUnavailable`、`OnPackUnregistered` の 4 つです。
+後から登録した場合も既存 Pack と現在利用可能なモデルが順番に通知されます。返された `IDisposable` を保持し、不要になった時に `Dispose()` してください。
 
 ## ライフサイクル
 
-```csharp
-model.Destroy();
-pack.Unregister();
+`pack.Unregister()` は提供資源を解除してライブラリを更新します。同じ `OwnerModId + PackId + ModelKey` を再登録した時のため、
+プレイヤー設定は保持されます。同じ内容の重複登録は既存ハンドルを返し、同じ ID の異なる内容は拒否されます。
+
+## パスとエクスポート
+
+OS パス、`res://`、`user://`、`ReadOnlyMemory<byte>` に対応します。提供側 PCK に Pack を明示的に含めてください。
+
+```ini
+export_filter="resources"
+include_filter="MyMod/live2d/*.live2dpack"
+exclude_filter="artifacts/**,Scripts/**,MyMod/src/**"
 ```
 
-Destroy は 1 つのインスタンスを削除します。Unregister はその Pack の全インスタンスとセッションキャッシュを削除します。
-どちらもプレイヤーモデルを削除しません。
-
-## 入力元
-
-OS パス、`res://`、`user://`、`ReadOnlyMemory<byte>` に対応します。Pack を自身の PCK エクスポートへ必ず含めてください。
-構造と安全制限は [Pack 形式](../reference/pack-format) を参照してください。
-
-`res://`、`user://`、メモリ入力は OS の一時ディレクトリへ展開され、成功・失敗に関係なく処理後に削除されます。
-`RegisterPack` に必要な資源は独立したセッションキャッシュへコピーされ、`Unregister` で解放されます。
+モデルが 1 つでも `settings/models.json` のルートは `[{ ... }]` の配列にします。完全な構造は
+[Pack 形式](../reference/pack-format)を参照してください。

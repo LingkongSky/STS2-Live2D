@@ -1,60 +1,60 @@
 # 自带模型 Pack
 
-其他 Mod 可以把 `.live2dpack` 或 `.livepck` 放进自己的 PCK，再由 Live2D 运行时读取。两种扩展名内容相同。
+其他 Mod 可以把 `.live2dpack` 放进自己的 PCK，再注册到 Live2D 统一模型库。`.live2dpack` 是唯一支持的资源包后缀。
 
-## 只读注册还是持久导入
-
-| 目标 | API | 是否写入玩家模型库 |
-| --- | --- | --- |
-| 模型属于你的 Mod，由代码管理 | `RegisterPack` | 否 |
-| 让玩家长期编辑和管理模型 | `ImportPack` | 是 |
-
-属于其他 Mod 的角色资源应优先使用只读注册。
-
-## 注册并创建实例
+## 注册
 
 ```csharp
 var pack = Live2DApi.RegisterPack(
     ownerModId: "MyMod",
     packagePath: "res://MyMod/live2d/characters.live2dpack");
-
-var info = pack.Models.First(model => model.ModelKey == "character-main");
-var model = pack.CreateModel(info.ModelKey, new Live2DCreateOptions
-{
-    Scene = Live2DScene.MainMenu,
-    InstanceId = "main-menu-character",
-    InitialState = new Live2DModelUpdate
-    {
-        Position = new Vector2(1350f, 760f),
-        Scale = Vector2.One * 0.4f,
-        Opacity = 0.9f,
-    },
-});
 ```
 
-实例身份由 `OwnerModId / PackId / Scene / InstanceId` 组成。相同身份和模型的重复创建是幂等操作；同一身份指向
-不同 `ModelKey` 会被拒绝。
+注册后，Pack 中的模型直接出现在 Live2D“模型管理”页。显示、布局、渲染、动作、快捷键和场景实例全部由 Live2D 管理；
+提供方 Mod 不应再创建自己的模型设置页、快捷键或实例控制器。
+
+资源仍归提供方 Mod 所有，只暂存在当前会话，因此不能从模型库删除或导出。Live2D 只持久保存玩家配置；提供方未加载时，
+模型会变为不可用，但配置不会丢失。
+
+提供方仍可保留角色专属行为，例如开场动作、剧情反应或状态联动。实现 `ILive2DProviderLifecycleHook`，并在注册 Pack 前注册 Hook；
+不要自行创建第二套实例：
+
+```csharp
+sealed class CharacterHook : ILive2DProviderLifecycleHook
+{
+    public void OnModelAvailable(ILive2DModelHandle model)
+    {
+        if (model.Scene == Live2DScene.MainMenu)
+            model.PlayMotion("Intro", 0);
+    }
+
+    public void OnModelUnavailable(ILive2DModelHandle model)
+    {
+        // 取消仍在等待的角色专属异步行为。
+    }
+}
+
+var lifecycle = Live2DApi.RegisterProviderHook("MyMod", new CharacterHook());
+var pack = Live2DApi.RegisterPack("MyMod", "res://MyMod/live2d/characters.live2dpack");
+```
+
+Hook 分为 `OnPackRegistered`、`OnModelAvailable`、`OnModelUnavailable`、`OnPackUnregistered` 四个阶段。
+晚注册时会按顺序立即回放已有 Pack 和当前可用模型。应长期保存返回的 `IDisposable`；不再需要时调用 `Dispose()`。
 
 ## 生命周期
 
-```csharp
-model.Destroy();  // 只销毁该运行时实例
-pack.Unregister(); // 移除该 Pack 的全部实例并释放会话缓存
+`pack.Unregister()` 会注销资源并刷新模型库。玩家配置会保留，以便下次注册相同 `OwnerModId + PackId + ModelKey` 时恢复。
+重复注册相同身份和相同内容会返回已有句柄；同一身份注册不同内容会报错。
+
+## 路径与导出
+
+注册支持操作系统路径、`res://`、`user://` 和 `ReadOnlyMemory<byte>`。PCK 导出时必须显式包含 Pack：
+
+```ini
+export_filter="resources"
+include_filter="MyMod/live2d/*.live2dpack"
+exclude_filter="artifacts/**,Scripts/**,MyMod/src/**"
 ```
 
-两者都不会删除玩家已经导入的模型。重复注册相同 `OwnerModId + PackId` 和相同内容会返回已有句柄；同一身份注册
-不同内容会报错。
-
-## 路径与内存数据
-
-注册和导入都支持：
-
-- 操作系统文件路径。
-- `res://` 与 `user://` 路径。
-- `ReadOnlyMemory<byte>` 内存数据。
-
-`res://`、`user://` 和内存输入会由运行时暂存到操作系统临时目录。解析完成或发生异常后临时文件都会删除；
-`RegisterPack` 所需资源会进入独立的会话缓存，`Unregister` 时释放。
-
-PCK 导出时必须确保 Pack 文件被包含在使用者 Mod 的资源中。完整归档结构和安全限制见
+`settings/models.json` 的根节点必须是数组，即使只有一个模型也必须写成 `[{ ... }]`。完整结构见
 [Pack 格式参考](../reference/pack-format)。

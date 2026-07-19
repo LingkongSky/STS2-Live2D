@@ -35,6 +35,10 @@ modal is open.
 - Every model resource must stay under `models/<OriginalId>/`.
 - Absolute paths, `..`, symlinks, duplicate paths, and suspicious compression are rejected.
 
+If the log says `JSON value could not be converted to List<Live2DModelConfig>`, the Pack's `settings/models.json` root is not an array, or the game
+is still loading a stale PCK. Check the actual load path in the startup log, compare timestamps and SHA-256 hashes between the publish directory and
+`mods/<ModId>`, and replace the DLL/PCK set from one publish run.
+
 See the [Pack format](../reference/pack-format) for the complete rules.
 
 ## Reporting an issue

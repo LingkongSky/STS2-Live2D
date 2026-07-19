@@ -161,12 +161,15 @@ internal static class Live2DRuntimeManager
         {
             try
             {
+                if (model.IsExternalPackModel &&
+                    !Live2DRegisteredPackRegistry.TryGetLibraryModelAsset(model, out _))
+                    continue;
                 definitions.Add(new Live2DRuntimeModelDefinition(
                     new Live2DRuntimeModelIdentity(
                         model.Id,
-                        Entry.ModId,
-                        null,
-                        model.Id,
+                        model.IsExternalPackModel ? model.ExternalOwnerModId : Entry.ModId,
+                        model.IsExternalPackModel ? model.ExternalPackId : null,
+                        model.IsExternalPackModel ? model.ExternalModelKey : model.Id,
                         model.Id,
                         apiScene),
                     model,
@@ -178,8 +181,6 @@ internal static class Live2DRuntimeManager
                     $"[{Entry.ModId}] Failed to resolve user model {model.Id} in {scene}: {ex}");
             }
         }
-        definitions.AddRange(Live2DRegisteredPackRegistry.GetDefinitions(apiScene));
-
         foreach (var definition in definitions.OrderBy(value => value.Config.DisplayOrder))
         {
             var model = definition.Config;

@@ -1,4 +1,5 @@
 using Live2D.Api;
+using System.Text.Json.Serialization;
 
 namespace Live2D.Scripts.Configuration;
 
@@ -166,6 +167,15 @@ internal sealed class Live2DModelConfig
     public Live2DModelOverrides Overrides { get; set; } = new();
     public List<Live2DActionDescriptor> AvailableActions { get; set; } = [];
     public List<ActionBindingConfig> ActionBindings { get; set; } = [];
+    public string ExternalOwnerModId { get; set; } = "";
+    public string ExternalPackId { get; set; } = "";
+    public string ExternalModelKey { get; set; } = "";
+
+    [JsonIgnore]
+    public bool IsExternalPackModel =>
+        !string.IsNullOrWhiteSpace(ExternalOwnerModId) &&
+        !string.IsNullOrWhiteSpace(ExternalPackId) &&
+        !string.IsNullOrWhiteSpace(ExternalModelKey);
 }
 
 internal sealed class Live2DModelOverrides

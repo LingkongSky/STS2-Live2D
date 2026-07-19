@@ -70,6 +70,5 @@ model.SetMask(new Live2DMaskSettings
 - `IsAvailable` はシーンインスタンスへの接続状態です。
 - 2 つの非同期待機はキャンセル可能です。
 - 利用可能状態イベントは継続監視に使えます。
-- `Destroy()` は `CanDestroy` が true の Pack インスタンスだけで使用できます。
 
 非同期待機後にモデルを操作する場合も `InvokeAsync` を使用してください。

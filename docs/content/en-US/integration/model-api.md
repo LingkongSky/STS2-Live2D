@@ -70,6 +70,5 @@ Use `ResetFilter`, `ClearMask`, and `Live2DBlendMode.Normal` to restore neutral 
 - `IsAvailable` reports whether a scene instance is bound.
 - `WaitUntilAvailableAsync` and `WaitUntilUnavailableAsync` are cancellable waits.
 - Availability events are suitable for continuous observation.
-- `Destroy()` is available only for Pack-created instances where `CanDestroy` is true.
 
 After an asynchronous wait, use `InvokeAsync` before issuing further model commands.

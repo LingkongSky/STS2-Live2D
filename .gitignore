@@ -6,6 +6,8 @@ Desktop.ini
 .vscode/
 .idea/
 .fleet/
+.history/
+.ionide/
 *.suo
 *.user
 *.userosscache
@@ -24,8 +26,12 @@ packages/
 TestResults/
 coverage/
 coverage.*
+*.coverage
+*.coveragexml
 *.trx
 *.pdb
+*.binlog
+*.cache
 # Godot regenerates external resource UIDs for this path-based project.
 *.uid
 
@@ -36,6 +42,7 @@ coverage.*
 node_modules/
 .npm/
 .pnpm-store/
+.yarn/
 docs/.vitepress/cache/
 docs/.vitepress/dist/
 .vite/
@@ -55,6 +62,7 @@ pnpm-debug.log*
 *.bak
 *.orig
 *.dmp
+godot.log
 /core
 /core.[0-9]*
 mono_crash.*.json

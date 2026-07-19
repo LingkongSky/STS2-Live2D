@@ -1,6 +1,6 @@
 # Pack Format
 
-`.live2dpack` and `.livepck` are identical ZIP archives. This document covers `FormatVersion = 1`; old formats are not migrated.
+`.live2dpack` is the Live2D package extension. Its content is a ZIP archive with `FormatVersion = 1`; other filename extensions are not Live2D packages.
 
 ## Layout
 
@@ -30,7 +30,7 @@ Each model and all of its dependencies must remain under its own `models/<Origin
   "Name": "Example Characters",
   "Author": "ExampleMod",
   "CreatedAt": "2026-07-15T00:00:00+08:00",
-  "MinimumModVersion": "0.4.1",
+  "MinimumModVersion": "0.5.5",
   "SettingsSchemaVersion": 6,
   "IncludesGlobalConfig": false,
   "Models": [{
@@ -54,7 +54,7 @@ Each model and all of its dependencies must remain under its own `models/<Origin
 objects, action metadata, and an action-binding array. `settings/global.json` uses the [Global configuration](./configuration) structure and is
 present only when `IncludesGlobalConfig=true`.
 
-Read-only registration never writes global settings; persistent import may import them.
+`RegisterPack` does not import global settings; persistent import may import them.
 
 ## Security limits
 

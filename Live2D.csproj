@@ -47,7 +47,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Deterministic>true</Deterministic>
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
-    <Version>0.4.1</Version>
+    <Version>0.5.5</Version>
     <IsPackable>false</IsPackable>
     <!-- Godot injects this reference from Sdk.targets, after project-level
          PackageReference Update items have already been evaluated. Re-add it
@@ -57,7 +57,8 @@
     <!-- NU5131 is a packages.config-only reference-group warning. This package is
          intentionally ref-only and is smoke-tested through PackageReference. -->
     <NoWarn>$(NoWarn);CS1591;NU5131</NoWarn>
-    <Live2DCopyToGame Condition="'$(Live2DCopyToGame)' == ''">true</Live2DCopyToGame>
+    <BundleMod Condition="'$(BundleMod)' == ''">false</BundleMod>
+    <NuGetReferenceOutputDir Condition="'$(NuGetReferenceOutputDir)' == ''">$(MSBuildProjectDirectory)\NuGet\package\ref\net9.0</NuGetReferenceOutputDir>
   </PropertyGroup>
 
   <ItemGroup>
@@ -65,10 +66,23 @@
          dedicated rendering smoke-test assembly to exercise them. -->
     <InternalsVisibleTo Include="Live2DRenderSmoke" />
     <Compile Remove="Tools\**\*.cs" />
+    <Compile Remove="Tests\**\*.cs" />
+    <Compile Remove="NuGet\**\*.cs" />
+    <Compile Remove="artifacts\**\*.cs" />
+    <Compile Remove=".godot\**\*.cs" />
     <Compile Remove="work\**\*.cs" />
     <EmbeddedResource Remove="Tools\**\*" />
+    <EmbeddedResource Remove="Tests\**\*" />
+    <EmbeddedResource Remove="NuGet\**\*" />
+    <EmbeddedResource Remove="artifacts\**\*" />
     <None Remove="Tools\**\*" />
+    <None Remove="Tests\**\*" />
+    <None Remove="NuGet\**\*" />
+    <None Remove="artifacts\**\*" />
     <Content Remove="Tools\**\*" />
+    <Content Remove="Tests\**\*" />
+    <Content Remove="NuGet\**\*" />
+    <Content Remove="artifacts\**\*" />
     <Reference Include="sts2">
       <HintPath>$(Sts2AssemblyPath)</HintPath>
       <Private>false</Private>
@@ -93,16 +107,21 @@
            Text="Could not find sts2.dll at '$(Sts2AssemblyPath)'. Set STS2_DIR, pass /p:Sts2Dir=..., or pass /p:Sts2ApiSignatureRoot=... with a $(Sts2ApiCompat)/sts2.dll signature." />
   </Target>
 
-  <Target Name="CopyMod" AfterTargets="Build" Condition="'$(Live2DCopyToGame)' == 'true'">
-    <PropertyGroup>
-      <ModOutputDir>$(Sts2Dir)\mods\Live2D</ModOutputDir>
-    </PropertyGroup>
-    <MakeDir Directories="$(ModOutputDir)" />
-    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ModOutputDir)" />
-    <Copy SourceFiles="Live2D.json" DestinationFolder="$(ModOutputDir)" />
-    <Copy SourceFiles="Live2D.pck" DestinationFolder="$(ModOutputDir)" Condition="Exists('Live2D.pck')" />
+  <Target Name="BundlePublishedMod" AfterTargets="Publish" Condition="'$(BundleMod)' == 'true'">
+    <Error Condition="!Exists('$(MSBuildProjectDirectory)\Live2D.pck')"
+           Text="Live2D.pck is missing. Export it with Godot before publishing the mod bundle." />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\Live2D.json;$(MSBuildProjectDirectory)\Live2D.pck"
+          DestinationFolder="$(PublishDir)" />
     <Copy SourceFiles="@(GdCubismAddonFiles)"
-          DestinationFiles="@(GdCubismAddonFiles->'$(ModOutputDir)\addons\gd_cubism\%(RecursiveDir)%(Filename)%(Extension)')"
+          DestinationFiles="@(GdCubismAddonFiles->'$(PublishDir)addons\gd_cubism\%(RecursiveDir)%(Filename)%(Extension)')"
           SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="RefreshNuGetReference" DependsOnTargets="Build">
+    <MakeDir Directories="$(NuGetReferenceOutputDir)" />
+    <Copy SourceFiles="$(IntermediateOutputPath)ref\$(AssemblyName).dll"
+          DestinationFiles="$(NuGetReferenceOutputDir)\$(AssemblyName).dll" />
+    <Copy SourceFiles="$(DocumentationFile)"
+          DestinationFiles="$(NuGetReferenceOutputDir)\$(AssemblyName).xml" />
   </Target>
 </Project>

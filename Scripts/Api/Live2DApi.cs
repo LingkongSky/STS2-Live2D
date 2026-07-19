@@ -13,7 +13,10 @@ namespace Live2D.Api;
 public static class Live2DApi
 {
     /// <summary>Compile-time API capability number.</summary>
-    public const int ApiVersion = 4;
+    public const int ApiVersion = 9;
+
+    /// <summary>The only supported filename extension for a Live2D package.</summary>
+    public const string PackageFileExtension = ".live2dpack";
 
     /// <summary>
     /// Runtime API capability version. Prefer this property over the compile-time
@@ -25,9 +28,7 @@ public static class Live2DApi
     public static string RuntimeVersion => Entry.ModVersion;
 
     private static readonly Dictionary<Live2DModelKey, Live2DModelHandle> Handles = new();
-
-    /// <summary>Raised when a model instance becomes available in a loaded scene.</summary>
-    public static event Action<ILive2DModelHandle>? ModelAvailable;
+    private static readonly List<ProviderLifecycleSubscription> ProviderHooks = [];
 
     /// <summary>Whether the Live2D Godot main-thread dispatcher is ready.</summary>
     public static bool IsDispatcherReady => Live2DMainThreadDispatcher.IsReady;
@@ -82,6 +83,31 @@ public static class Live2DApi
                 .ToArray();
     }
 
+    /// <summary>
+    /// Registers provider-scoped lifecycle hooks for custom character behavior.
+    /// Existing packs and available models are replayed immediately in lifecycle
+    /// order. Call on the Godot main thread; callbacks also run on that thread.
+    /// Dispose the returned subscription to stop receiving callbacks.
+    /// </summary>
+    public static IDisposable RegisterProviderHook(
+        string ownerModId,
+        ILive2DProviderLifecycleHook hook)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(ownerModId);
+        ArgumentNullException.ThrowIfNull(hook);
+        EnsureMainThread();
+
+        var subscription = new ProviderLifecycleSubscription(ownerModId, hook);
+        lock (ProviderHooks)
+            ProviderHooks.Add(subscription);
+
+        foreach (var pack in Live2DRegisteredPackRegistry.GetRegisteredPacks(ownerModId))
+            subscription.NotifyPackRegistered(pack);
+        foreach (var model in GetModels(ownerModId).Where(model => model.IsAvailable))
+            subscription.NotifyModelAvailable(model);
+        return subscription;
+    }
+
     /// <summary>Returns a stable handle, or null if this model/scene has not been created yet.</summary>
     public static ILive2DModelHandle? GetModel(string modelId, Live2DScene scene)
     {
@@ -101,14 +127,14 @@ public static class Live2DApi
     }
 
     /// <summary>
-    /// Imports a user-managed Live2D pack from an operating-system path or a
-    /// Godot <c>res://</c>/<c>user://</c> path. Both .live2dpack and .livepck
-    /// file names are accepted.
+    /// Imports a user-managed <c>.live2dpack</c> from an operating-system path
+    /// or a Godot <c>res://</c>/<c>user://</c> path.
     /// </summary>
     public static Live2DPackImportResult ImportPack(string packagePath)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(packagePath);
         EnsureMainThread();
+        Live2DPackArchive.ValidatePackageExtension(packagePath);
         return WithPackPath(
             packagePath,
             static path => ConvertResult(Live2DPackService.Import(path)));
@@ -124,20 +150,21 @@ public static class Live2DApi
     }
 
     /// <summary>
-    /// Registers a read-only pack owned by another mod. Registered assets remain
-    /// in a session cache and are not added to the user's managed model library.
+    /// Registers a provider-owned pack in the central Live2D model library. Live2D
+    /// owns visibility, layout, actions, hotkeys and scene instances.
     /// </summary>
     public static ILive2DPackHandle RegisterPack(string ownerModId, string packagePath)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(ownerModId);
         ArgumentException.ThrowIfNullOrWhiteSpace(packagePath);
         EnsureMainThread();
+        Live2DPackArchive.ValidatePackageExtension(packagePath);
         return WithPackPath(
             packagePath,
             path => Live2DRegisteredPackRegistry.Register(ownerModId, path));
     }
 
-    /// <summary>Registers a read-only pack from in-memory archive data.</summary>
+    /// <summary>Registers an in-memory provider-owned pack in the central model library.</summary>
     public static ILive2DPackHandle RegisterPack(string ownerModId, ReadOnlyMemory<byte> packageData)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(ownerModId);
@@ -155,43 +182,11 @@ public static class Live2DApi
         lock (Handles)
             sceneHandles = Handles.Where(pair => pair.Key.Scene == apiScene).Select(pair => pair.Value).ToArray();
         foreach (var handle in sceneHandles)
+        {
+            var wasAvailable = handle.IsAvailable;
             handle.Unbind();
-    }
-
-    internal static ILive2DModelHandle ReserveModel(
-        Live2DRuntimeModelDefinition definition,
-        Action destroy)
-    {
-        EnsureMainThread();
-        var identity = definition.Identity;
-        var key = new Live2DModelKey(identity.RuntimeId, identity.Scene);
-        Live2DModelHandle handle;
-        lock (Handles)
-        {
-            if (!Handles.TryGetValue(key, out handle!))
-            {
-                handle = new Live2DModelHandle(definition);
-                Handles.Add(key, handle);
-            }
-            else
-            {
-                handle.EnsureIdentity(identity);
-                handle.UpdateDefinition(definition);
-            }
-        }
-        handle.SetDestroyAction(destroy);
-        return handle;
-    }
-
-    internal static void DisableDestroy(Live2DRuntimeModelIdentity identity)
-    {
-        EnsureMainThread();
-        lock (Handles)
-        {
-            if (!Handles.TryGetValue(new Live2DModelKey(identity.RuntimeId, identity.Scene), out var handle))
-                return;
-            handle.EnsureIdentity(identity);
-            handle.SetDestroyAction(null);
+            if (wasAvailable)
+                NotifyModelUnavailable(handle);
         }
     }
 
@@ -218,7 +213,43 @@ public static class Live2DApi
         var wasAvailable = handle.IsAvailable;
         handle.Bind(instance);
         if (!wasAvailable)
-            ModelAvailable?.Invoke(handle);
+            NotifyModelAvailable(handle);
+    }
+
+    internal static void NotifyPackRegistered(ILive2DPackHandle pack)
+    {
+        EnsureMainThread();
+        foreach (var subscription in GetProviderHooks(pack.OwnerModId))
+            subscription.NotifyPackRegistered(pack);
+    }
+
+    internal static void NotifyModelAvailable(ILive2DModelHandle model)
+    {
+        EnsureMainThread();
+        foreach (var subscription in GetProviderHooks(model.OwnerModId))
+            subscription.NotifyModelAvailable(model);
+    }
+
+    internal static void NotifyModelUnavailable(ILive2DModelHandle model)
+    {
+        EnsureMainThread();
+        foreach (var subscription in GetProviderHooks(model.OwnerModId))
+            subscription.NotifyModelUnavailable(model);
+    }
+
+    internal static void NotifyPackUnregistered(ILive2DPackHandle pack)
+    {
+        EnsureMainThread();
+        foreach (var subscription in GetProviderHooks(pack.OwnerModId))
+            subscription.NotifyPackUnregistered(pack);
+    }
+
+    private static ProviderLifecycleSubscription[] GetProviderHooks(string ownerModId)
+    {
+        lock (ProviderHooks)
+            return ProviderHooks
+                .Where(subscription => subscription.Matches(ownerModId))
+                .ToArray();
     }
 
     internal static void EnsureMainThread()
@@ -305,7 +336,7 @@ public static class Live2DApi
     {
         var directory = Path.Combine(Path.GetTempPath(), "Live2D", "api-imports");
         Directory.CreateDirectory(directory);
-        return Path.Combine(directory, $"{Guid.NewGuid():N}.live2dpack");
+        return Path.Combine(directory, $"{Guid.NewGuid():N}{PackageFileExtension}");
     }
 
     private static Live2DPackImportResult ConvertResult(Live2DPackImportSummary summary)
@@ -319,4 +350,63 @@ public static class Live2DApi
     };
 
     internal readonly record struct Live2DModelKey(string ModelId, Live2DScene Scene);
+
+    private sealed class ProviderLifecycleSubscription : IDisposable
+    {
+        private readonly string _ownerModId;
+        private readonly ILive2DProviderLifecycleHook _hook;
+        private bool _disposed;
+
+        internal ProviderLifecycleSubscription(
+            string ownerModId,
+            ILive2DProviderLifecycleHook hook)
+        {
+            _ownerModId = ownerModId;
+            _hook = hook;
+        }
+
+        public void Dispose()
+        {
+            lock (ProviderHooks)
+            {
+                if (_disposed)
+                    return;
+                _disposed = true;
+                ProviderHooks.Remove(this);
+            }
+        }
+
+        internal bool Matches(string ownerModId)
+            => !_disposed && string.Equals(
+                ownerModId,
+                _ownerModId,
+                StringComparison.OrdinalIgnoreCase);
+
+        internal void NotifyPackRegistered(ILive2DPackHandle pack)
+            => Invoke("pack registered", () => _hook.OnPackRegistered(pack));
+
+        internal void NotifyModelAvailable(ILive2DModelHandle model)
+            => Invoke("model available", () => _hook.OnModelAvailable(model));
+
+        internal void NotifyModelUnavailable(ILive2DModelHandle model)
+            => Invoke("model unavailable", () => _hook.OnModelUnavailable(model));
+
+        internal void NotifyPackUnregistered(ILive2DPackHandle pack)
+            => Invoke("pack unregistered", () => _hook.OnPackUnregistered(pack));
+
+        private void Invoke(string stage, Action callback)
+        {
+            if (_disposed)
+                return;
+            try
+            {
+                callback();
+            }
+            catch (Exception ex)
+            {
+                Entry.Logger.Error(
+                    $"[{Entry.ModId}] Provider lifecycle hook '{stage}' for '{_ownerModId}' failed: {ex}");
+            }
+        }
+    }
 }

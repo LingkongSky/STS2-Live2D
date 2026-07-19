@@ -54,20 +54,44 @@ jobs:
           echo "value=$version" >> "$GITHUB_OUTPUT"
 
       - name: Package committed reference assets
-        shell: pwsh
+        shell: bash
         run: >-
-          ./Tools/pack-nuget.ps1
-          -OutputDirectory "${{ github.workspace }}/artifacts"
-          -RequireClean
+          dotnet pack NuGet/STS2.Live2D.Package.csproj
+          --configuration Release
+          --output artifacts
+          -p:PackageVersion="${{ steps.version.outputs.value }}"
 
       - name: Test package consumption
-        shell: pwsh
+        shell: bash
         env:
           NUGET_PACKAGES: ${{ runner.temp }}/live2d-nuget-cache
-        run: >-
-          ./Tools/test-nuget-package.ps1
-          -PackagePath "artifacts/STS2.Live2D.${{ steps.version.outputs.value }}.nupkg"
-          -ExpectedVersion "${{ steps.version.outputs.value }}"
+        run: |
+          set -euo pipefail
+          package="artifacts/STS2.Live2D.${{ steps.version.outputs.value }}.nupkg"
+          entries="$(unzip -Z1 "$package")"
+          grep -qx 'ref/net9.0/Live2D.dll' <<<"$entries"
+          grep -qx 'ref/net9.0/Live2D.xml' <<<"$entries"
+          if grep -Eq '^(lib|runtimes)/' <<<"$entries"; then
+            echo 'Runtime assets are not allowed in the ref-only package.' >&2
+            exit 1
+          fi
+          consumer="${{ runner.temp }}/live2d-consumer"
+          dotnet new classlib --name Consumer --output "$consumer" --framework net9.0
+          dotnet add "$consumer/Consumer.csproj" package STS2.Live2D \
+            --version "${{ steps.version.outputs.value }}" \
+            --source "${{ github.workspace }}/artifacts" \
+            --no-restore
+          printf '%s\n' \
+            'using Live2D.Api;' \
+            'public static class ApiConsumer' \
+            '{' \
+            '    public static int Version => Live2DApi.RuntimeApiVersion;' \
+            '}' > "$consumer/Class1.cs"
+          dotnet restore "$consumer/Consumer.csproj" \
+            --source "${{ github.workspace }}/artifacts" \
+            --source https://api.nuget.org/v3/index.json
+          dotnet build "$consumer/Consumer.csproj" --configuration Release --no-restore
+          test ! -f "$consumer/bin/Release/net9.0/Live2D.dll"
 
       - name: Upload validated package
         uses: actions/upload-artifact@v7.0.1

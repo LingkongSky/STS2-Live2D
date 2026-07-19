@@ -28,7 +28,7 @@ features:
     linkText: 導入手順を見る
   - title: モデル Pack
     details: >-
-      .live2dpack を PCK に同梱し、モデルを読み取り専用で登録して、独立した実行時インスタンスを作成します。
+      .live2dpack を PCK に同梱し、Live2D の統一モデルライブラリへ登録します。
     link: /ja/integration/packs
     linkText: モデルを同梱する
   - title: API リファレンス
@@ -44,7 +44,7 @@ features:
 `STS2.Live2D` NuGet パッケージは他の Mod 向けのコンパイル時 API のみを提供します。プレイヤーは Live2D ランタイム Mod を別途インストールする必要があります。
 :::
 
-- **ランタイムバージョン：** `0.4.1`
+- **ランタイムバージョン：** `0.5.5`
 - **公開 API：** `4`
 - **Pack 形式：** `1`
 - **対応プラットフォーム：** Windows x86_64

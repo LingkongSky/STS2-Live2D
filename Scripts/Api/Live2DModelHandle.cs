@@ -1,6 +1,5 @@
 using Godot;
 using Live2D.Scripts.Configuration;
-using Live2D.Scripts.Packs;
 using Live2D.Scripts.Runtime;
 using MegaCrit.Sts2.Core.Nodes;
 
@@ -17,7 +16,6 @@ internal sealed class Live2DModelHandle : ILive2DModelHandle
     private IReadOnlyList<Live2DActionInfo> _actions = Array.Empty<Live2DActionInfo>();
     private Live2DModelInstance? _instance;
     private Live2DModelSnapshot _snapshot;
-    private Action? _destroy;
 
     public Live2DModelHandle(Live2DRuntimeModelDefinition definition)
     {
@@ -39,7 +37,6 @@ internal sealed class Live2DModelHandle : ILive2DModelHandle
     public string InstanceId => _identity.InstanceId;
     public Live2DScene Scene => _identity.Scene;
     public bool IsAvailable => _availability.IsAvailable;
-    public bool CanDestroy => _destroy is not null;
     public IReadOnlyList<Live2DActionInfo> Actions => _actions;
     public Live2DModelSnapshot Snapshot
     {
@@ -97,8 +94,6 @@ internal sealed class Live2DModelHandle : ILive2DModelHandle
                 action.ExpressionId))
             .ToArray());
     }
-
-    internal void SetDestroyAction(Action? destroy) => _destroy = destroy;
 
     internal void Unbind()
     {
@@ -281,15 +276,6 @@ internal sealed class Live2DModelHandle : ILive2DModelHandle
 
     public void QueuePartOpacities(IReadOnlyDictionary<string, float> values)
         => _queuedPartOpacities.Queue(values);
-
-    public void Destroy()
-    {
-        Live2DApi.EnsureMainThread();
-        var destroy = _destroy ?? throw new InvalidOperationException(
-            $"Live2D model '{ModelId}' cannot be destroyed through this handle or was already removed.");
-        _destroy = null;
-        destroy();
-    }
 
     private Live2DModelInstance RequireInstance()
         => _instance?.IsAlive == true

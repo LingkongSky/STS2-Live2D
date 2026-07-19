@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>true</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="SmokeTests.cs" />
+    <Compile Include="..\Scripts\Configuration\Live2DSettings.cs" Link="Live2DSettings.cs" />
+    <Compile Include="..\Scripts\Configuration\Live2DConfigResolver.cs" Link="Live2DConfigResolver.cs" />
+    <Compile Include="..\Scripts\Configuration\Live2DConfigMigration.cs" Link="Live2DConfigMigration.cs" />
+    <Compile Include="..\Scripts\Models\Live2DModelManifestParser.cs" Link="Live2DModelManifestParser.cs" />
+    <Compile Include="..\Scripts\Packs\Live2DPackArchive.cs" Link="Live2DPackArchive.cs" />
+  </ItemGroup>
+</Project>

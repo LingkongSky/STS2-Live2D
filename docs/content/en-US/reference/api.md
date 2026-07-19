@@ -1,6 +1,6 @@
 # Public API Reference
 
-The current runtime reports `Live2DApi.RuntimeVersion == "0.4.1"` and `Live2DApi.RuntimeApiVersion == 4`. Only `Live2D.Api` is stable public API.
+The current runtime reports `Live2DApi.RuntimeVersion == "0.5.5"` and `Live2DApi.RuntimeApiVersion == 9`. Only `Live2D.Api` is stable public API.
 
 ## Thread rules
 
@@ -9,8 +9,8 @@ The current runtime reports `Live2DApi.RuntimeVersion == "0.4.1"` and `Live2DApi
 | `Post`, `InvokeAsync` | Any |
 | Model queries, handle identity, `Actions`, availability, async waits | Any |
 | `QueueUpdate`, Parameter/Part Queue APIs | Any |
-| Pack import, registration, creation, unregistration | Godot main thread |
-| `Snapshot`, `Apply`, `Set*`, playback, dynamic reads, `Destroy` | Godot main thread |
+| Pack import, registration, unregistration, provider hook registration | Godot main thread |
+| `Snapshot`, `Apply`, `Set*`, playback, dynamic reads | Godot main thread |
 
 All API events are raised on the Godot main thread. Async continuations are not guaranteed to resume there.
 
@@ -18,10 +18,10 @@ All API events are raised on the Godot main thread. Async continuations are not 
 
 ### Runtime state and queries
 
-- `RuntimeApiVersion`, `RuntimeVersion`, `IsDispatcherReady`, `IsMainThread`.
+- `RuntimeApiVersion`, `RuntimeVersion`, `PackageFileExtension`, `IsDispatcherReady`, `IsMainThread`.
 - `GetModels()` and `GetModels(ownerModId)` return array snapshots.
 - `GetModel` and `TryGetModel` query by runtime model ID and scene.
-- `ModelAvailable` is raised when any model first becomes available.
+- `RegisterProviderHook(ownerModId, hook)` registers a provider-scoped four-stage lifecycle hook and replays existing state.
 
 ### Dispatch
 
@@ -32,23 +32,38 @@ All API events are raised on the Godot main thread. Async continuations are not 
 ### Packs
 
 - `ImportPack(path/data)` persists models and reports imported and duplicate counts.
-- `RegisterPack(ownerModId, path/data)` registers a read-only Pack.
+- `RegisterPack(ownerModId, path/data)` exposes provider-owned assets in the central Live2D library; Live2D owns settings and instances.
+- `RegisterProviderHook(ownerModId, hook)` adds character-specific behavior without transferring settings or instance ownership.
 - Paths may be OS, `res://`, or `user://`; data overloads accept `ReadOnlyMemory<byte>`.
 
+Every path-based import and registration requires the `.live2dpack` extension. Other extensions are rejected even when their content is a ZIP archive.
+
 `res://`, `user://`, and in-memory inputs are materialized to an OS temporary file. It is deleted after success or failure. Read-only registration
-copies required assets into its session cache and does not depend on the temporary file afterward.
+copies required assets into its session cache and does not depend on the temporary file afterward. Managed registration persists user configuration,
+not provider-owned assets.
 
 ## ILive2DPackHandle
 
-`OwnerModId`, `PackId`, `Name`, `IsRegistered`, and `Models` expose Pack identity and metadata. `CreateModel` creates an idempotent runtime instance;
-`Unregister` removes every instance from the Pack. Identifiers are limited to 128 characters and cannot contain control characters.
+`OwnerModId`, `PackId`, `Name`, `IsRegistered`, and `Models` expose Pack identity and metadata. `Unregister` removes the provider assets while
+keeping player configuration. Identifiers are limited to 128 characters and cannot contain control characters.
+
+## ILive2DProviderLifecycleHook
+
+| Stage | Timing and purpose |
+| --- | --- |
+| `OnPackRegistered` | Pack registered before model refresh; inspect resource metadata |
+| `OnModelAvailable` | Scene model bound; provider playback is safe |
+| `OnModelUnavailable` | Scene model unbound; cancel pending asynchronous behavior |
+| `OnPackUnregistered` | Provider assets removed from the current session |
+
+Hooks are isolated by `ownerModId` and run on the Godot main thread. Exceptions are logged without interrupting other hooks. Late registration
+replays existing packs before currently available models. The provider must retain the returned `IDisposable`.
 
 ## ILive2DModelHandle
 
 ### Identity and availability
 
-`ModelId`, `OwnerModId`, `PackId`, `ModelKey`, `InstanceId`, and `Scene` form stable identity. `IsAvailable` reports binding state and `CanDestroy`
-reports lifecycle authority.
+`ModelId`, `OwnerModId`, `PackId`, `ModelKey`, `InstanceId`, and `Scene` form stable identity. `IsAvailable` reports binding state.
 
 Scene changes and node rebuilds do not invalidate the handle. Identity and `Actions` remain readable while unavailable; `Snapshot` is main-thread-only
 and returns the last-known state when no live node is bound.
@@ -56,7 +71,6 @@ and returns the last-known state when no live node is bound.
 - Availability events support continuous observation.
 - Async availability waits are cancellable and race-free.
 - `Snapshot` exposes transform, visibility, playback, and rendering state.
-- `Destroy` removes a permitted Pack runtime instance.
 
 ### Updates
 

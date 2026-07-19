@@ -15,16 +15,18 @@ The NuGet package is compile-time only and does not contain the player runtime. 
 
 ## Install a development build
 
-The build discovers the Steam game directory automatically. Run:
+Installing a development build requires Godot 4.5.1 Mono and the .NET 9 SDK. Godot exports the shader PCK; the .NET CLI creates the complete Mod directory:
 
 ```powershell
-dotnet build -c Release
+$Godot = "C:\Tools\Godot\Godot_v4.5.1-stable_mono_win64_console.exe"
+$env:STS2_DIR = "D:\SteamLibrary\steamapps\common\Slay the Spire 2"
+
+& $Godot --headless --editor --path $PWD --quit
+& $Godot --headless --path $PWD --export-pack Live2D "$PWD\Live2D.pck"
+dotnet publish .\Live2D.csproj -c Release -o .\artifacts\Live2D -p:BundleMod=true
 ```
 
-If discovery fails, set the `STS2_DIR` environment variable or run
-`dotnet build -c Release -p:Sts2Dir="game directory"`.
-
-The build copies the runtime to `mods/Live2D`. That directory must contain at least:
+Copy the entire `artifacts/Live2D` directory to `mods/Live2D`. It must contain at least:
 
 ```text
 Live2D.json
@@ -33,7 +35,7 @@ Live2D.pck
 addons/gd_cubism/
 ```
 
-Fully exit and restart the game after installing or replacing the DLL.
+A normal `dotnet build` only compiles and does not install the Mod. Replace the DLL, PCK, and native files as one build set, then fully exit and restart the game.
 
 ## Import your first model
 

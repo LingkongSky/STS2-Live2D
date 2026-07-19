@@ -1,0 +1,21 @@
+<Project Sdk="Godot.NET.Sdk/4.5.1">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>true</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <NoWarn>$(NoWarn);CS0436</NoWarn>
+    <Sts2Dir Condition="'$(Sts2Dir)' == '' and '$(STS2_DIR)' != ''">$(STS2_DIR)</Sts2Dir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove=".godot\**\*.cs" />
+    <ProjectReference Include="..\..\Live2D.csproj" />
+    <PackageReference Include="STS2.RitsuLib.Compat.0.107.1" Version="0.4.56" />
+    <Reference Include="sts2" HintPath="$(Sts2Dir)\data_sts2_windows_x86_64\sts2.dll" Private="true" />
+  </ItemGroup>
+
+  <Target Name="ValidateSts2Assembly" BeforeTargets="ResolveAssemblyReferences">
+    <Error Condition="!Exists('$(Sts2Dir)\data_sts2_windows_x86_64\sts2.dll')"
+           Text="Could not find sts2.dll. Set STS2_DIR or pass /p:Sts2Dir=GAME_DIRECTORY." />
+  </Target>
+</Project>

@@ -676,9 +676,6 @@
         <member name="P:Live2D.Api.ILive2DModelHandle.IsAvailable">
             <summary>Whether the handle is currently bound to a live scene instance.</summary>
         </member>
-        <member name="P:Live2D.Api.ILive2DModelHandle.CanDestroy">
-            <summary>Whether <see cref="M:Live2D.Api.ILive2DModelHandle.Destroy"/> is currently permitted.</summary>
-        </member>
         <member name="P:Live2D.Api.ILive2DModelHandle.Actions">
             <summary>Actions declared by the model, available even before scene binding.</summary>
         </member>
@@ -840,12 +837,6 @@
         <member name="M:Live2D.Api.ILive2DModelHandle.QueuePartOpacities(System.Collections.Generic.IReadOnlyDictionary{System.String,System.Single})">
             <summary>Queues and coalesces a batch of Cubism part opacity values.</summary>
         </member>
-        <member name="M:Live2D.Api.ILive2DModelHandle.Destroy">
-            <summary>
-            Destroys this registered runtime instance.
-            <para>中文：仅注册 Pack 创建且 <see cref="P:Live2D.Api.ILive2DModelHandle.CanDestroy"/> 为 true 的实例允许销毁。</para>
-            </summary>
-        </member>
         <member name="T:Live2D.Api.Live2DActionType">
             <summary>Kind of action declared by a model.</summary>
         </member>
@@ -912,28 +903,10 @@
         <member name="P:Live2D.Api.Live2DPackModelInfo.Actions">
             <summary>Actions declared by this model.</summary>
         </member>
-        <member name="T:Live2D.Api.Live2DCreateOptions">
-            <summary>
-            Options used to create one runtime instance from a registered pack model.
-            <para>中文：从已注册 Pack 创建运行时模型实例时使用的选项。</para>
-            </summary>
-        </member>
-        <member name="P:Live2D.Api.Live2DCreateOptions.Scene">
-            <summary>Scene in which the model should be instantiated.</summary>
-        </member>
-        <member name="P:Live2D.Api.Live2DCreateOptions.InstanceId">
-            <summary>
-            Owner-defined stable instance ID. When omitted, a new random ID is generated.
-            Reusing an ID with the same model is idempotent.
-            </summary>
-        </member>
-        <member name="P:Live2D.Api.Live2DCreateOptions.InitialState">
-            <summary>Transient state applied when the scene instance becomes available.</summary>
-        </member>
         <member name="T:Live2D.Api.ILive2DPackHandle">
             <summary>
-            Handle for a read-only Live2D pack registered by another mod.
-            <para>中文：其他 Mod 注册的只读 Pack 句柄；不会写入玩家模型库。</para>
+            Handle for a provider-owned Live2D pack registered in the central model library.
+            <para>中文：其他 Mod 注册到统一模型库的只读资源 Pack 句柄。</para>
             </summary>
         </member>
         <member name="P:Live2D.Api.ILive2DPackHandle.OwnerModId">
@@ -951,17 +924,29 @@
         <member name="P:Live2D.Api.ILive2DPackHandle.Models">
             <summary>Read-only models declared by this pack.</summary>
         </member>
-        <member name="M:Live2D.Api.ILive2DPackHandle.CreateModel(System.String,Live2D.Api.Live2DCreateOptions)">
-            <summary>
-            Creates or retrieves an idempotent runtime model instance.
-            <para>中文：相同模型与 InstanceId 重复调用会返回同一稳定实例。</para>
-            </summary>
-        </member>
         <member name="M:Live2D.Api.ILive2DPackHandle.Unregister">
             <summary>
-            Removes all runtime instances created by this pack and unregisters it.
-            <para>中文：注销后会同时移除该 Pack 创建的全部运行时实例。</para>
+            Unregisters the provider assets. User configuration remains in the model library.
+            <para>中文：注销提供方资源；玩家在模型库中的配置会保留。</para>
             </summary>
+        </member>
+        <member name="T:Live2D.Api.ILive2DProviderLifecycleHook">
+            <summary>
+            Provider-scoped lifecycle hooks for custom character behavior. Live2D retains
+            ownership of model configuration and scene instances.
+            </summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DProviderLifecycleHook.OnPackRegistered(Live2D.Api.ILive2DPackHandle)">
+            <summary>Called after provider assets are registered, before model instances are refreshed.</summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DProviderLifecycleHook.OnModelAvailable(Live2D.Api.ILive2DModelHandle)">
+            <summary>Called when a provider model is bound and can accept playback commands.</summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DProviderLifecycleHook.OnModelUnavailable(Live2D.Api.ILive2DModelHandle)">
+            <summary>Called after a provider model is unbound; cancel pending custom behavior here.</summary>
+        </member>
+        <member name="M:Live2D.Api.ILive2DProviderLifecycleHook.OnPackUnregistered(Live2D.Api.ILive2DPackHandle)">
+            <summary>Called after provider assets are removed from the current session.</summary>
         </member>
         <member name="T:Live2D.Api.Live2DApi">
             <summary>
@@ -972,6 +957,9 @@
         <member name="F:Live2D.Api.Live2DApi.ApiVersion">
             <summary>Compile-time API capability number.</summary>
         </member>
+        <member name="F:Live2D.Api.Live2DApi.PackageFileExtension">
+            <summary>The only supported filename extension for a Live2D package.</summary>
+        </member>
         <member name="P:Live2D.Api.Live2DApi.RuntimeApiVersion">
             <summary>
             Runtime API capability version. Prefer this property over the compile-time
@@ -980,9 +968,6 @@
         </member>
         <member name="P:Live2D.Api.Live2DApi.RuntimeVersion">
             <summary>Version of the currently loaded Live2D runtime Mod.</summary>
-        </member>
-        <member name="E:Live2D.Api.Live2DApi.ModelAvailable">
-            <summary>Raised when a model instance becomes available in a loaded scene.</summary>
         </member>
         <member name="P:Live2D.Api.Live2DApi.IsDispatcherReady">
             <summary>Whether the Live2D Godot main-thread dispatcher is ready.</summary>
@@ -1015,6 +1000,14 @@
         <member name="M:Live2D.Api.Live2DApi.GetModels(System.String)">
             <summary>Returns handles owned by one mod, including currently unavailable handles.</summary>
         </member>
+        <member name="M:Live2D.Api.Live2DApi.RegisterProviderHook(System.String,Live2D.Api.ILive2DProviderLifecycleHook)">
+            <summary>
+            Registers provider-scoped lifecycle hooks for custom character behavior.
+            Existing packs and available models are replayed immediately in lifecycle
+            order. Call on the Godot main thread; callbacks also run on that thread.
+            Dispose the returned subscription to stop receiving callbacks.
+            </summary>
+        </member>
         <member name="M:Live2D.Api.Live2DApi.GetModel(System.String,Live2D.Api.Live2DScene)">
             <summary>Returns a stable handle, or null if this model/scene has not been created yet.</summary>
         </member>
@@ -1023,9 +1016,8 @@
         </member>
         <member name="M:Live2D.Api.Live2DApi.ImportPack(System.String)">
             <summary>
-            Imports a user-managed Live2D pack from an operating-system path or a
-            Godot <c>res://</c>/<c>user://</c> path. Both .live2dpack and .livepck
-            file names are accepted.
+            Imports a user-managed <c>.live2dpack</c> from an operating-system path
+            or a Godot <c>res://</c>/<c>user://</c> path.
             </summary>
         </member>
         <member name="M:Live2D.Api.Live2DApi.ImportPack(System.ReadOnlyMemory{System.Byte})">
@@ -1033,12 +1025,12 @@
         </member>
         <member name="M:Live2D.Api.Live2DApi.RegisterPack(System.String,System.String)">
             <summary>
-            Registers a read-only pack owned by another mod. Registered assets remain
-            in a session cache and are not added to the user's managed model library.
+            Registers a provider-owned pack in the central Live2D model library. Live2D
+            owns visibility, layout, actions, hotkeys and scene instances.
             </summary>
         </member>
         <member name="M:Live2D.Api.Live2DApi.RegisterPack(System.String,System.ReadOnlyMemory{System.Byte})">
-            <summary>Registers a read-only pack from in-memory archive data.</summary>
+            <summary>Registers an in-memory provider-owned pack in the central model library.</summary>
         </member>
         <member name="T:Live2D.Api.Live2DMainThreadDispatcher.MethodName">
             <summary>
@@ -1419,6 +1411,14 @@
         </member>
         <member name="F:Live2D.Api.Live2DScene.InGame">
             <summary>Map and combat scenes, which share one configuration.</summary>
+        </member>
+        <member name="M:Live2D.Scripts.Runtime.Live2DHotkeyManager.TryNormalizeBinding(System.String,System.String@)">
+            <summary>
+            RitsuLib currently parses a bare numeric token through Enum.TryParse, so
+            "1" becomes enum value 1 instead of Godot Key.Key1 (49). Use Godot's
+            explicit KeyN enum name for runtime registration while keeping the stored
+            and displayed form user-friendly.
+            </summary>
         </member>
         <member name="T:Live2D.Scripts.Runtime.Live2DPlaybackController.MethodName">
             <summary>

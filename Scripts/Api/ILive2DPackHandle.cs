@@ -34,27 +34,8 @@ public sealed record Live2DPackModelInfo(
     IReadOnlyList<Live2DActionInfo> Actions);
 
 /// <summary>
-/// Options used to create one runtime instance from a registered pack model.
-/// <para>中文：从已注册 Pack 创建运行时模型实例时使用的选项。</para>
-/// </summary>
-public sealed class Live2DCreateOptions
-{
-    /// <summary>Scene in which the model should be instantiated.</summary>
-    public Live2DScene Scene { get; set; } = Live2DScene.InGame;
-
-    /// <summary>
-    /// Owner-defined stable instance ID. When omitted, a new random ID is generated.
-    /// Reusing an ID with the same model is idempotent.
-    /// </summary>
-    public string? InstanceId { get; set; }
-
-    /// <summary>Transient state applied when the scene instance becomes available.</summary>
-    public Live2DModelUpdate InitialState { get; set; } = new();
-}
-
-/// <summary>
-/// Handle for a read-only Live2D pack registered by another mod.
-/// <para>中文：其他 Mod 注册的只读 Pack 句柄；不会写入玩家模型库。</para>
+/// Handle for a provider-owned Live2D pack registered in the central model library.
+/// <para>中文：其他 Mod 注册到统一模型库的只读资源 Pack 句柄。</para>
 /// </summary>
 public interface ILive2DPackHandle
 {
@@ -70,13 +51,8 @@ public interface ILive2DPackHandle
     IReadOnlyList<Live2DPackModelInfo> Models { get; }
 
     /// <summary>
-    /// Creates or retrieves an idempotent runtime model instance.
-    /// <para>中文：相同模型与 InstanceId 重复调用会返回同一稳定实例。</para>
-    /// </summary>
-    ILive2DModelHandle CreateModel(string modelKey, Live2DCreateOptions? options = null);
-    /// <summary>
-    /// Removes all runtime instances created by this pack and unregisters it.
-    /// <para>中文：注销后会同时移除该 Pack 创建的全部运行时实例。</para>
+    /// Unregisters the provider assets. User configuration remains in the model library.
+    /// <para>中文：注销提供方资源；玩家在模型库中的配置会保留。</para>
     /// </summary>
     void Unregister();
 }

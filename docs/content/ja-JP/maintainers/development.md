@@ -39,7 +39,7 @@ Live2DRuntimeManager
 - 公開 API は `Live2D.Api` だけです。
 - NuGet は `ref/net9.0` の参照アセンブリと XML 文書だけを含みます。
 - 順序を持つ再生コマンドを統合キューへ入れません。
-- 設定は Schema 6 のみを受け付け、移行レイヤーはありません。
+- 設定 Schema は `6` です。
 
 ## PCK と Shader
 
@@ -62,7 +62,7 @@ RitsuLib の `CreatePatcher`、`IPatchMethod`、`ApplyRequiredPatcher` を使用
 Scripts/Api/            公開 API
 Scripts/Configuration/  設定、正規化、保存、解決
 Scripts/Models/         model3 パーサーと管理リポジトリ
-Scripts/Packs/          Pack インポートと読み取り専用登録
+Scripts/Packs/          Pack インポートとモデルライブラリ登録
 Scripts/Runtime/        シーンホスト、Cubism、モデルインスタンス
 Scripts/UI/             設定とプレビュー
 docs/.vitepress/        サイト設定とテーマ

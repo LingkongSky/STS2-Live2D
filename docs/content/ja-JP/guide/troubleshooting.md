@@ -35,6 +35,10 @@
 - モデル資源は `models/<OriginalId>/` 配下に置きます。
 - 絶対パス、`..`、シンボリックリンク、重複パス、異常な圧縮は拒否されます。
 
+ログに `JSON value could not be converted to List<Live2DModelConfig>` がある場合、Pack 内の `settings/models.json` のルートが配列ではないか、
+ゲームが古い PCK を読み込んでいます。起動ログの実際の読み込みパスを確認し、publish ディレクトリと `mods/<ModId>` のタイムスタンプと
+SHA-256 を比較して、同じ publish の DLL/PCK 一式を置換してください。
+
 完全な規則は [Pack 形式](../reference/pack-format) を参照してください。
 
 ## 問題を報告する

@@ -35,6 +35,10 @@
 - 所有模型资源必须位于对应 `models/<OriginalId>/` 下。
 - 绝对路径、`..`、符号链接、重复路径和异常压缩内容都会被拒绝。
 
+如果日志包含 `JSON value could not be converted to List<Live2DModelConfig>`，说明 Pack 内的
+`settings/models.json` 根节点不是数组，或者游戏仍在加载修复前的旧 PCK。检查启动日志中的实际加载路径，比较发布目录与
+`mods/<ModId>` 内 DLL/PCK 的时间和 SHA-256，并整体替换同一次发布的文件。
+
 完整规则见 [Pack 格式](../reference/pack-format)。
 
 ## 报告问题

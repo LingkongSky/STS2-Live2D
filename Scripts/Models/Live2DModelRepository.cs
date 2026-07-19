@@ -1,5 +1,6 @@
 using Godot;
 using Live2D.Scripts.Configuration;
+using Live2D.Scripts.Packs;
 
 namespace Live2D.Scripts.Models;
 
@@ -47,6 +48,15 @@ internal static class Live2DModelRepository
 
     public static string GetAbsoluteModelPath(Live2DModelConfig model)
     {
+        if (model.IsExternalPackModel)
+        {
+            if (Live2DRegisteredPackRegistry.TryGetLibraryModelAsset(model, out var assetPath))
+                return assetPath;
+            throw new FileNotFoundException(
+                $"External Live2D pack model is not registered: " +
+                $"{model.ExternalOwnerModId}/{model.ExternalPackId}/{model.ExternalModelKey}");
+        }
+
         var fullPath = Path.GetFullPath(Path.Combine(ModelsDirectory, model.ModelRelativePath));
         EnsureContained(ModelsDirectory, fullPath);
         return fullPath;

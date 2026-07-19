@@ -1,6 +1,6 @@
 # Pack 格式
 
-`.live2dpack` 与 `.livepck` 都是 ZIP，内容完全相同。本文只描述当前 `FormatVersion = 1`；运行时不迁移旧格式。
+`.live2dpack` 是 Live2D 资源包后缀，文件内容为 ZIP，格式版本为 `FormatVersion = 1`。其他文件后缀不属于 Live2D 资源包。
 
 ## 目录结构
 
@@ -33,7 +33,7 @@ JSON 属性名不区分大小写，推荐 PascalCase：
   "Author": "ExampleMod",
   "Description": "Characters bundled with ExampleMod",
   "CreatedAt": "2026-07-15T00:00:00+08:00",
-  "MinimumModVersion": "0.4.1",
+  "MinimumModVersion": "0.5.5",
   "SettingsSchemaVersion": 6,
   "IncludesGlobalConfig": false,
   "Models": [
@@ -95,13 +95,13 @@ JSON 属性名不区分大小写，推荐 PascalCase：
 ]
 ```
 
-Motion 动作使用 `MotionGroup` 与 `MotionIndex`；Expression 使用 `ExpressionId`。只读注册不需要快捷键，
-`ActionBindings` 可以为空。
+Motion 动作使用 `MotionGroup` 与 `MotionIndex`；Expression 使用 `ExpressionId`。`ActionBindings` 可以为空，
+也可以提供首次注册时使用的默认快捷键。
 
 ## settings/global.json
 
-只在 `IncludesGlobalConfig=true` 时存在，结构对应 [配置结构](./configuration) 的 `Global`。`RegisterPack` 不会写入
-玩家设置；`ImportPack` 可以持久导入全局配置。
+只在 `IncludesGlobalConfig=true` 时存在，结构对应 [配置结构](./configuration) 的 `Global`。`RegisterPack` 不导入全局配置；
+`ImportPack` 可以持久导入全局配置。
 
 ## 安全限制
 

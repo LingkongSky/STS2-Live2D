@@ -1,6 +1,6 @@
 # 公開 API リファレンス
 
-現在のランタイムは `Live2DApi.RuntimeVersion == "0.4.1"`、能力バージョンは `Live2DApi.RuntimeApiVersion == 4` です。
+現在のランタイムは `Live2DApi.RuntimeVersion == "0.5.5"`、能力バージョンは `Live2DApi.RuntimeApiVersion == 9` です。
 安定した公開 API は `Live2D.Api` だけです。
 
 ## スレッド規則
@@ -10,8 +10,8 @@
 | `Post`、`InvokeAsync` | 任意 |
 | モデル検索、ハンドル ID、`Actions`、利用可能状態、非同期待機 | 任意 |
 | `QueueUpdate`、Parameter/Part Queue API | 任意 |
-| Pack のインポート、登録、作成、解除 | Godot メインスレッド |
-| `Snapshot`、`Apply`、`Set*`、再生、動的値の取得、`Destroy` | Godot メインスレッド |
+| Pack のインポート、登録、解除、提供側 Hook 登録 | Godot メインスレッド |
+| `Snapshot`、`Apply`、`Set*`、再生、動的値の取得 | Godot メインスレッド |
 
 すべての API イベントは Godot メインスレッドで発生します。非同期待機後の継続処理はメインスレッドとは限りません。
 
@@ -19,10 +19,10 @@
 
 ### ランタイム状態と検索
 
-- `RuntimeApiVersion`、`RuntimeVersion`、`IsDispatcherReady`、`IsMainThread`。
+- `RuntimeApiVersion`、`RuntimeVersion`、`PackageFileExtension`、`IsDispatcherReady`、`IsMainThread`。
 - `GetModels()` と所有者指定版は配列スナップショットを返します。
 - `GetModel` / `TryGetModel` はモデル ID とシーンで検索します。
-- `ModelAvailable` は任意モデルが初めて利用可能になった時に発生します。
+- `RegisterProviderHook(ownerModId, hook)` は提供側ごとの 4 段階ライフサイクル Hook を登録し、既存状態も通知します。
 
 ### ディスパッチ
 
@@ -33,23 +33,37 @@
 ### Pack
 
 - `ImportPack(path/data)` はプレイヤーライブラリへ永続インポートします。
-- `RegisterPack(ownerModId, path/data)` は読み取り専用登録です。
+- `RegisterPack(ownerModId, path/data)` は提供側資源を Live2D の統一ライブラリへ登録し、設定とインスタンスを Live2D が管理します。
+- `RegisterProviderHook(ownerModId, hook)` は設定やインスタンスの所有権を移さずにキャラクター固有動作を追加します。
 - OS、`res://`、`user://` パス、および `ReadOnlyMemory<byte>` に対応します。
 
+パス指定のインポートと登録は `.live2dpack` 拡張子のみ受け付けます。内容が ZIP でも他の拡張子は拒否されます。
+
 `res://`、`user://`、メモリ入力は OS の一時ファイルへ展開され、成功・失敗に関係なく処理後に削除されます。
-読み取り専用登録に必要な資源はセッションキャッシュへコピーされ、一時ファイルには依存しません。
+登録に必要な資源はセッションキャッシュへコピーされ、一時ファイルには依存しません。Managed 登録ではユーザー設定だけを永続化し、提供側資源はコピーしません。
 
 ## ILive2DPackHandle
 
-`OwnerModId`、`PackId`、`Name`、`IsRegistered`、`Models` が ID とメタデータを公開します。`CreateModel` は再実行可能な
-ランタイムインスタンスを作成し、`Unregister` は Pack の全インスタンスを削除します。ID は 128 文字以内で制御文字を含められません。
+`OwnerModId`、`PackId`、`Name`、`IsRegistered`、`Models` が ID とメタデータを公開します。`Unregister` はプレイヤー設定を保持したまま
+提供側資源を解除します。ID は 128 文字以内で制御文字を含められません。
+
+## ILive2DProviderLifecycleHook
+
+| 段階 | タイミングと用途 |
+| --- | --- |
+| `OnPackRegistered` | モデル更新前に Pack 登録済み。資源メタデータを参照 |
+| `OnModelAvailable` | シーンモデル接続済み。提供側 Motion を安全に再生可能 |
+| `OnModelUnavailable` | シーンモデル切断済み。待機中の非同期動作をキャンセル |
+| `OnPackUnregistered` | 提供側資源が現在のセッションから削除済み |
+
+Hook は `ownerModId` ごとに分離され、Godot メインスレッドで実行されます。例外はログへ記録され、他の Hook を中断しません。
+後から登録した場合は既存 Pack、現在利用可能なモデルの順で通知されます。返された `IDisposable` を保持してください。
 
 ## ILive2DModelHandle
 
 ### ID と利用可能状態
 
 `ModelId`、`OwnerModId`、`PackId`、`ModelKey`、`InstanceId`、`Scene` が安定 ID を構成します。`IsAvailable` は接続状態、
-`CanDestroy` は破棄権限を表します。
 
 シーン切り替えやノード再生成でもハンドルは無効になりません。利用不可の間も ID と `Actions` は読み取り可能です。
 `Snapshot` はメインスレッド専用で、ノード未接続時は最後に確認した状態を返します。
@@ -57,7 +71,6 @@
 - 利用可能状態イベントは継続監視向けです。
 - 2 つの非同期待機はキャンセル可能で、購読競合がありません。
 - `Snapshot` は変換、表示、再生、描画状態を返します。
-- `Destroy` は許可された Pack インスタンスを削除します。
 
 ### 状態更新
 

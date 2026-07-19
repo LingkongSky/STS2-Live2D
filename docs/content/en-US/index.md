@@ -28,7 +28,7 @@ features:
     linkText: Follow the setup
   - title: Model Packs
     details: >-
-      Bundle a .live2dpack in your PCK, register its models read-only, and create isolated runtime instances.
+      Bundle a .live2dpack in your PCK and register its models in the central Live2D library.
     link: /en/integration/packs
     linkText: Bundle models
   - title: API Reference
@@ -44,7 +44,7 @@ features:
 The `STS2.Live2D` NuGet package provides compile-time APIs for other Mods only. Players must install the Live2D runtime Mod separately; the NuGet package is not a runtime distribution.
 :::
 
-- **Runtime version:** `0.4.1`
+- **Runtime version:** `0.5.5`
 - **Public API:** `4`
 - **Pack format:** `1`
 - **Supported platform:** Windows x86_64

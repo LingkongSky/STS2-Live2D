@@ -1,6 +1,6 @@
 # 公共 API 参考
 
-当前运行时版本为 `Live2DApi.RuntimeVersion == "0.4.1"`，能力版本为 `Live2DApi.RuntimeApiVersion == 4`。
+当前运行时版本为 `Live2DApi.RuntimeVersion == "0.5.5"`，能力版本为 `Live2DApi.RuntimeApiVersion == 9`。
 只有 `Live2D.Api` 命名空间属于稳定第三方 API；`Live2D.Scripts.*` 与 gd_cubism 类型是实现细节。
 
 ## 线程规则
@@ -11,8 +11,8 @@
 | `GetModels`、`GetModel`、`TryGetModel` | 任意线程 |
 | 句柄身份、`Actions`、`IsAvailable`、异步等待 | 任意线程 |
 | `QueueUpdate`、Parameter/Part Queue API | 任意线程 |
-| Pack 导入、注册、创建、注销 | Godot 主线程 |
-| `Snapshot`、`Apply`、`Set*`、播放、动态值读取、`Destroy` | Godot 主线程 |
+| Pack 导入、注册、注销和提供方 Hook 注册 | Godot 主线程 |
+| `Snapshot`、`Apply`、`Set*`、播放、动态值读取 | Godot 主线程 |
 
 所有 API 事件都在 Godot 主线程触发。异步等待完成后的 continuation 不保证仍在主线程。
 
@@ -24,9 +24,10 @@
 | --- | --- |
 | `RuntimeApiVersion` | 当前 API 能力版本 |
 | `RuntimeVersion` | 当前 Live2D Mod 版本 |
+| `PackageFileExtension` | 唯一支持的资源包后缀：`.live2dpack` |
 | `IsDispatcherReady` | 主线程调度器是否就绪 |
 | `IsMainThread` | 当前代码是否位于记录的 Godot 主线程 |
-| `ModelAvailable` | 任意模型首次进入可用状态时触发 |
+| `RegisterProviderHook(ownerModId, hook)` | 注册提供方四阶段生命周期 Hook，并回放已有状态 |
 
 ### 查询模型
 
@@ -46,11 +47,14 @@
 ### Pack
 
 - `ImportPack(path/data)`：持久导入玩家模型库，返回导入和重复跳过数量。
-- `RegisterPack(ownerModId, path/data)`：只读注册其他 Mod 的 Pack。
+- `RegisterPack(ownerModId, path/data)`：将提供方拥有的只读资源注册进 Live2D 统一模型库，由 Live2D 管理设置和实例。
+- `RegisterProviderHook(ownerModId, hook)`：注册角色专属行为入口，不转移模型配置或实例所有权。
 - 路径支持操作系统路径、`res://`、`user://`；数据重载接受 `ReadOnlyMemory<byte>`。
 
+所有路径式导入和注册都要求 `.live2dpack` 后缀；其他后缀即使内容是 ZIP 也会拒绝。
+
 `res://`、`user://` 与内存数据会先复制到操作系统临时文件，导入或注册结束后无论成功失败都会删除。
-只读注册需要保留的资源会复制到会话缓存，不依赖该临时文件继续存在。
+注册需要保留的资源会复制到会话缓存，不依赖该临时文件继续存在。Managed Pack 只持久保存用户配置，不复制提供方资源。
 
 ## ILive2DPackHandle
 
@@ -61,17 +65,28 @@
 | `Name` | Pack 显示名称 |
 | `IsRegistered` | 是否仍处于注册状态 |
 | `Models` | 模型元数据与动作列表 |
-| `CreateModel` | 创建或获取幂等运行时实例 |
-| `Unregister` | 移除该 Pack 的全部实例 |
+| `Unregister` | 注销提供方资源并保留玩家配置 |
 
-标识符最多 128 个字符，不能包含控制字符。未提供 `InstanceId` 时会生成随机 ID。
+标识符最多 128 个字符，不能包含控制字符。
+
+## ILive2DProviderLifecycleHook
+
+| 阶段 | 时机与用途 |
+| --- | --- |
+| `OnPackRegistered` | Pack 已登记、模型刷新前；读取资源元数据 |
+| `OnModelAvailable` | 场景模型已绑定；可以安全播放角色专属动作 |
+| `OnModelUnavailable` | 场景模型已解绑；取消尚未执行的异步行为 |
+| `OnPackUnregistered` | 提供方资源已从当前会话移除 |
+
+Hook 按 `ownerModId` 隔离，回调在 Godot 主线程运行，单个 Hook 抛出的异常会记录到 Live2D 日志，不会中断其他 Hook。
+晚注册时先回放已有 Pack，再回放当前可用模型。返回的 `IDisposable` 必须由提供方长期保存。
 
 ## ILive2DModelHandle
 
 ### 身份与状态
 
 `ModelId`、`OwnerModId`、`PackId`、`ModelKey`、`InstanceId` 和 `Scene` 描述稳定身份。
-`IsAvailable` 表示底层场景实例是否存在，`CanDestroy` 表示是否允许销毁。
+`IsAvailable` 表示底层场景实例是否存在。
 
 场景切换或节点重建不会使句柄失效。不可用期间仍可读取身份与 `Actions`；`Snapshot` 必须在主线程读取，
 此时返回最后一次已知状态。
@@ -79,7 +94,6 @@
 - `BecameAvailable` / `BecameUnavailable`：持续监听绑定变化。
 - `WaitUntilAvailableAsync` / `WaitUntilUnavailableAsync`：无订阅竞态的可取消等待。
 - `Snapshot`：当前变换、显示、播放和渲染快照。
-- `Destroy()`：销毁 Pack 运行时实例。
 
 ### 状态更新
 

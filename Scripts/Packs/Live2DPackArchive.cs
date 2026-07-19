@@ -1,5 +1,6 @@
 using System.IO.Compression;
 using System.Text.Json;
+using Live2D.Api;
 using Live2D.Scripts.Configuration;
 
 namespace Live2D.Scripts.Packs;
@@ -58,6 +59,7 @@ internal static class Live2DPackArchive
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(destinationPath);
         ArgumentNullException.ThrowIfNull(settings);
+        ValidatePackageExtension(destinationPath);
         var fullDestination = Path.GetFullPath(destinationPath);
         Directory.CreateDirectory(Path.GetDirectoryName(fullDestination)!);
         var temporaryPath = fullDestination + ".tmp-" + Guid.NewGuid().ToString("N");
@@ -118,6 +120,7 @@ internal static class Live2DPackArchive
 
     public static Live2DPackManifest ReadManifest(string packagePath)
     {
+        ValidatePackageExtension(packagePath);
         var fullPackagePath = Path.GetFullPath(packagePath);
         if (!File.Exists(fullPackagePath))
             throw new FileNotFoundException("Live2D package does not exist.", fullPackagePath);
@@ -136,6 +139,7 @@ internal static class Live2DPackArchive
 
     public static Live2DPackReadResult ReadToStaging(string packagePath, string stagingDirectory)
     {
+        ValidatePackageExtension(packagePath);
         var fullPackagePath = Path.GetFullPath(packagePath);
         if (!File.Exists(fullPackagePath))
             throw new FileNotFoundException("Live2D package does not exist.", fullPackagePath);
@@ -218,6 +222,14 @@ internal static class Live2DPackArchive
         }
 
         return new Live2DPackReadResult(manifest, global, models, extractedEntries);
+    }
+
+    internal static void ValidatePackageExtension(string packagePath)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(packagePath);
+        if (!packagePath.EndsWith(Live2DApi.PackageFileExtension, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidDataException(
+                $"Live2D packages must use the '{Live2DApi.PackageFileExtension}' extension.");
     }
 
     private static void WriteJson<T>(ZipArchive archive, string name, T value)

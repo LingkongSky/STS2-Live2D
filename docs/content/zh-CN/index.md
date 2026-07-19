@@ -28,7 +28,7 @@ features:
     linkText: 查看接入流程
   - title: 模型 Pack
     details: >-
-      将 .live2dpack 放入自己的 PCK，以只读方式注册模型并创建相互隔离的运行时实例。
+      将 .live2dpack 放入自己的 PCK，注册到 Live2D 统一模型库。
     link: /integration/packs
     linkText: 分发模型
   - title: API 参考
@@ -44,7 +44,7 @@ features:
 `STS2.Live2D` NuGet 包只提供第三方 Mod 的编译期 API。玩家仍需单独安装 Live2D 运行时 Mod；请勿把 NuGet 包当作运行时文件。
 :::
 
-- **运行时版本：** `0.4.1`
+- **运行时版本：** `0.5.5`
 - **公共 API：** `4`
 - **Pack 格式：** `1`
 - **支持平台：** Windows x86_64

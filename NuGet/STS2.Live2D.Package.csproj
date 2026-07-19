@@ -11,8 +11,8 @@
     <!-- Ref-only packages do not use packages.config reference groups. -->
     <NoWarn>$(NoWarn);NU5131</NoWarn>
     <PackageId>STS2.Live2D</PackageId>
-    <!-- Keep synchronized with Live2D.csproj; Tools/pack-nuget.ps1 enforces it. -->
-    <Version>0.4.1</Version>
+    <!-- Keep synchronized with Live2D.csproj; the release workflow verifies the tag. -->
+    <Version>0.5.5</Version>
     <Title>STS2 Live2D API</Title>
     <Authors>LingkongSky</Authors>
     <Copyright>Copyright (c) 2026 OLC</Copyright>

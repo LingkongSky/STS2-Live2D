@@ -9,8 +9,9 @@ runtime DLL. After changing the public API or XML comments, refresh both files
 from a verified local game installation:
 
 ```powershell
-.\Tools\update-nuget-reference.ps1 `
-  -Sts2Dir "D:\Program Files\Steam\steamapps\common\Slay the Spire 2"
+$env:STS2_DIR = "D:\Program Files\Steam\steamapps\common\Slay the Spire 2"
+dotnet build .\Live2D.csproj -c Release -t:RefreshNuGetReference
+dotnet pack .\NuGet\STS2.Live2D.Package.csproj -c Release -o .\artifacts
 ```
 
 Review and commit the changed DLL and XML together with the source changes.

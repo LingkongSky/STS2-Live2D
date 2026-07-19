@@ -1,53 +1,60 @@
 # Bundled Model Packs
 
-Another Mod can include a `.live2dpack` or `.livepck` in its PCK and ask the Live2D runtime to read it. Both extensions use the same ZIP format.
+Another Mod can include a `.live2dpack` in its PCK and register it in the central Live2D model library. `.live2dpack` is the only supported package extension.
 
-## Read-only registration or import
-
-| Goal | API | Writes to player library |
-| --- | --- | --- |
-| The model belongs to your Mod | `RegisterPack` | No |
-| The player should edit it permanently | `ImportPack` | Yes |
-
-Prefer read-only registration for character assets owned by another Mod.
-
-## Register and create
+## Register
 
 ```csharp
 var pack = Live2DApi.RegisterPack(
     "MyMod",
     "res://MyMod/live2d/characters.live2dpack");
-
-var info = pack.Models.First(model => model.ModelKey == "character-main");
-var model = pack.CreateModel(info.ModelKey, new Live2DCreateOptions
-{
-    Scene = Live2DScene.MainMenu,
-    InstanceId = "main-menu-character",
-    InitialState = new Live2DModelUpdate
-    {
-        Position = new Vector2(1350f, 760f),
-        Scale = Vector2.One * 0.4f,
-        Opacity = 0.9f,
-    },
-});
 ```
 
-`OwnerModId / PackId / Scene / InstanceId` identifies an instance. Creating the same identity for the same model is idempotent; pointing it at a
-different `ModelKey` is rejected.
+Pack models immediately appear in Live2D Model Management. Live2D owns visibility, layout, rendering, actions, hotkeys, and scene instances.
+The provider Mod should not add a second model settings page, hotkey controller, or instance controller.
+
+Assets remain provider-owned and exist only in the session cache, so they cannot be deleted or exported from the library. Live2D persists only
+the player's configuration. If the provider is absent, the model becomes unavailable while its configuration remains saved.
+
+Providers can keep character-specific behavior such as intro motions, story reactions, or state integration. Implement
+`ILive2DProviderLifecycleHook` and register it before the Pack; do not create a second instance system:
+
+```csharp
+sealed class CharacterHook : ILive2DProviderLifecycleHook
+{
+    public void OnModelAvailable(ILive2DModelHandle model)
+    {
+        if (model.Scene == Live2DScene.MainMenu)
+            model.PlayMotion("Intro", 0);
+    }
+
+    public void OnModelUnavailable(ILive2DModelHandle model)
+    {
+        // Cancel pending provider-specific asynchronous behavior.
+    }
+}
+
+var lifecycle = Live2DApi.RegisterProviderHook("MyMod", new CharacterHook());
+var pack = Live2DApi.RegisterPack("MyMod", "res://MyMod/live2d/characters.live2dpack");
+```
+
+The four stages are `OnPackRegistered`, `OnModelAvailable`, `OnModelUnavailable`, and `OnPackUnregistered`. Late registration immediately replays
+existing packs and currently available models in order. Keep the returned `IDisposable` alive and dispose it when no longer needed.
 
 ## Lifecycle
 
-```csharp
-model.Destroy();
-pack.Unregister();
+`pack.Unregister()` removes the provider assets and refreshes the library. Player configuration remains available for the next registration of the
+same `OwnerModId + PackId + ModelKey`. Registering identical content twice returns the existing handle; different content under the same identity is rejected.
+
+## Paths and export
+
+Registration accepts OS paths, `res://`, `user://`, and `ReadOnlyMemory<byte>`. Include the Pack explicitly in the provider PCK:
+
+```ini
+export_filter="resources"
+include_filter="MyMod/live2d/*.live2dpack"
+exclude_filter="artifacts/**,Scripts/**,MyMod/src/**"
 ```
 
-Destroy removes one runtime instance. Unregister removes all instances from that Pack and releases its session cache. Neither deletes player models.
-
-## Sources
-
-Registration and import accept OS paths, `res://`, `user://`, and `ReadOnlyMemory<byte>`. Ensure the Pack is included in your PCK export. See the
-[Pack format reference](../reference/pack-format) for archive structure and security limits.
-
-The runtime materializes `res://`, `user://`, and memory inputs in the OS temporary directory. Temporary files are deleted after success or failure;
-`RegisterPack` copies required assets into an independent session cache that is released by `Unregister`.
+The root of `settings/models.json` must be an array, including for one model: `[{ ... }]`. See the
+[Pack format reference](../reference/pack-format) for the complete structure.

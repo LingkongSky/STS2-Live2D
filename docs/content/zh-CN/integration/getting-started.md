@@ -7,7 +7,7 @@
 推荐使用 ref-only NuGet 包：
 
 ```xml
-<PackageReference Include="STS2.Live2D" Version="0.4.1" />
+<PackageReference Include="STS2.Live2D" Version="0.5.5" />
 ```
 
 在同一工作区开发时也可以引用源码：
@@ -15,7 +15,7 @@
 ```xml
 <ProjectReference Include="..\STS2-Live2D\Live2D.csproj"
                   Private="false"
-                  AdditionalProperties="Live2DCopyToGame=false" />
+                  />
 ```
 
 两种方式都不会把第二份 `Live2D.dll` 复制到使用者输出目录。
@@ -27,7 +27,7 @@
 ```json
 {
   "dependencies": [
-    { "id": "Live2D", "min_version": "0.4.1" }
+    { "id": "Live2D", "min_version": "0.5.5" }
   ]
 }
 ```
