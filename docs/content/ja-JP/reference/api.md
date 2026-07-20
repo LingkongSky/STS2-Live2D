@@ -1,6 +1,6 @@
 # 公開 API リファレンス
 
-現在のランタイムは `Live2DApi.RuntimeVersion == "0.5.5"`、能力バージョンは `Live2DApi.RuntimeApiVersion == 9` です。
+現在のランタイムは `Live2DApi.RuntimeVersion == "0.5.6"`、能力バージョンは `Live2DApi.RuntimeApiVersion == 9` です。
 安定した公開 API は `Live2D.Api` だけです。
 
 ## スレッド規則

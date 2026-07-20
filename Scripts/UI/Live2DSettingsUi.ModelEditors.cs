@@ -15,19 +15,24 @@ internal static partial class Live2DSettingsUi
     private static Control CreateModelRow(
         Live2DModelConfig model,
         IModSettingsUiActionHost uiHost,
-        Action onDeleted)
+        Action onDeleted,
+        Action onEnabledChanged)
     {
+        var modelRow = new HBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        modelRow.AddThemeConstantOverride("separation", 16);
         var card = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
         card.AddThemeConstantOverride("separation", 10);
         var titleRow = new HBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
-        var enabled = new CheckBox
+        var enabled = new Button
         {
-            Text = L("field.enabled", "Enabled"),
+            ToggleMode = true,
             ButtonPressed = model.Enabled,
-            CustomMinimumSize = new Vector2(110f, 0f),
+            CustomMinimumSize = new Vector2(32f, 32f),
+            SizeFlagsHorizontal = Control.SizeFlags.ShrinkEnd,
+            SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
             TooltipText = L("field.enabled_tip", "Disabled models do not render, run, accept input, or register hotkeys."),
         };
-        titleRow.AddChild(enabled);
+        ApplyModelEnabledToggleStyle(enabled, model.Enabled);
         var name = new Label
         {
             Text = F("model.summary", "{0} · Actions/Expressions {1}", model.DisplayName, model.AvailableActions.Count),
@@ -37,38 +42,6 @@ internal static partial class Live2DSettingsUi
         name.Modulate = model.Enabled ? Colors.White : new Color(1f, 1f, 1f, 0.5f);
         titleRow.AddChild(name);
 
-        if (model.IsExternalPackModel)
-        {
-            var provider = new Label
-            {
-                Text = F("model.external_provider", "Provided by {0}", model.ExternalOwnerModId),
-                TooltipText = $"{model.ExternalOwnerModId}/{model.ExternalPackId}/{model.ExternalModelKey}",
-            };
-            provider.AddThemeColorOverride("font_color", new Color(0.55f, 0.8f, 1f));
-            titleRow.AddChild(provider);
-        }
-
-        var configure = new Button
-        {
-            Text = L("button.configure", "Configure"),
-            CustomMinimumSize = new Vector2(120f, 0f),
-        };
-        configure.Pressed += () =>
-        {
-            _selectedModelId = model.Id;
-            NavigateToPage(configure, ModelDetailPageId);
-        };
-        titleRow.AddChild(configure);
-        if (!model.IsExternalPackModel)
-        {
-            var exportModel = new Button
-            {
-                Text = L("button.export_model_pack", "Export Package"),
-                CustomMinimumSize = new Vector2(140f, 0f),
-            };
-            exportModel.Pressed += () => ShowModelPackExportDialog(model.Id, model.DisplayName);
-            titleRow.AddChild(exportModel);
-        }
         card.AddChild(titleRow);
 
         var actions = new HBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
@@ -88,6 +61,29 @@ internal static partial class Live2DSettingsUi
         previewEditor.Pressed += () => Live2DPreviewEditor.Show(model.Id, uiHost);
         actions.AddChild(previewEditor);
 
+        var configure = new Button
+        {
+            Text = L("button.configure", "Configure"),
+            CustomMinimumSize = new Vector2(120f, 0f),
+        };
+        configure.Pressed += () =>
+        {
+            _selectedModelId = model.Id;
+            NavigateToPage(configure, ModelDetailPageId);
+        };
+        actions.AddChild(configure);
+
+        if (!model.IsExternalPackModel)
+        {
+            var exportModel = new Button
+            {
+                Text = L("button.export_model_pack", "Export Package"),
+                CustomMinimumSize = new Vector2(140f, 0f),
+            };
+            exportModel.Pressed += () => ShowModelPackExportDialog(model.Id, model.DisplayName);
+            actions.AddChild(exportModel);
+        }
+
         enabled.Toggled += active =>
         {
             try
@@ -95,6 +91,7 @@ internal static partial class Live2DSettingsUi
                 enabled.Disabled = true;
                 ModifyModel(model.Id, target => target.Enabled = active);
                 model.Enabled = active;
+                ApplyModelEnabledToggleStyle(enabled, active);
                 name.Modulate = active ? Colors.White : new Color(1f, 1f, 1f, 0.5f);
                 previewEditor.Disabled = !active ||
                     (model.IsExternalPackModel &&
@@ -104,10 +101,12 @@ internal static partial class Live2DSettingsUi
                     : previewEditor.Disabled
                         ? L("model.external_unavailable", "The provider Mod is not loaded.")
                         : "";
+                onEnabledChanged();
             }
             catch (Exception ex)
             {
                 enabled.SetPressedNoSignal(!active);
+                ApplyModelEnabledToggleStyle(enabled, !active);
                 Entry.Logger.Error($"[{Entry.ModId}] Failed to set model {model.Id} enabled={active}: {ex}");
             }
             finally
@@ -118,6 +117,7 @@ internal static partial class Live2DSettingsUi
 
         PanelContainer? modelCard = null;
         var delete = new Button { Text = L("button.delete", "Delete") };
+        ApplyDangerButtonStyle(delete);
         delete.Pressed += () =>
         {
             delete.Disabled = true;
@@ -142,9 +142,109 @@ internal static partial class Live2DSettingsUi
         };
         actions.AddChild(delete);
         card.AddChild(actions);
-        modelCard = WrapCard(card);
+        modelRow.AddChild(card);
+        if (model.IsExternalPackModel)
+        {
+            var provider = new Label
+            {
+                Text = F("model.external_provider", "Provided by {0}", model.ExternalOwnerModId),
+                TooltipText = $"{model.ExternalOwnerModId}/{model.ExternalPackId}/{model.ExternalModelKey}",
+                SizeFlagsHorizontal = Control.SizeFlags.ShrinkEnd,
+                SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+            provider.AddThemeColorOverride("font_color", new Color(0.55f, 0.8f, 1f));
+            modelRow.AddChild(provider);
+        }
+        modelRow.AddChild(enabled);
+        modelCard = WrapCard(modelRow);
         return modelCard;
     }
+
+    private static void ApplyModelEnabledToggleStyle(Button toggle, bool active)
+    {
+        var border = active
+            ? new Color(0.25f, 0.7f, 1f)
+            : new Color(0.55f, 0.6f, 0.7f);
+        var background = active
+            ? new Color(0.12f, 0.5f, 0.82f)
+            : new Color(0.04f, 0.05f, 0.07f, 0.9f);
+
+        toggle.Text = active ? "✓" : "";
+        toggle.AddThemeFontSizeOverride("font_size", 22);
+        toggle.AddThemeColorOverride("font_color", Colors.White);
+        toggle.AddThemeColorOverride("font_hover_color", Colors.White);
+        toggle.AddThemeColorOverride("font_pressed_color", Colors.White);
+        toggle.AddThemeStyleboxOverride("normal", CreateModelEnabledToggleBox(background, border));
+        toggle.AddThemeStyleboxOverride("hover", CreateModelEnabledToggleBox(
+            background.Lightened(0.12f), border.Lightened(0.12f)));
+        toggle.AddThemeStyleboxOverride("pressed", CreateModelEnabledToggleBox(
+            active ? background : new Color(0.12f, 0.5f, 0.82f),
+            active ? border : new Color(0.25f, 0.7f, 1f)));
+        toggle.AddThemeStyleboxOverride("disabled", CreateModelEnabledToggleBox(
+            new Color(background.R, background.G, background.B, 0.55f),
+            new Color(border.R, border.G, border.B, 0.55f)));
+        toggle.AddThemeStyleboxOverride("focus", CreateModelEnabledToggleBox(
+            Colors.Transparent, new Color(0.75f, 0.88f, 1f)));
+    }
+
+    private static StyleBoxFlat CreateModelEnabledToggleBox(Color background, Color border) => new()
+    {
+        BgColor = background,
+        BorderColor = border,
+        BorderWidthLeft = 2,
+        BorderWidthTop = 2,
+        BorderWidthRight = 2,
+        BorderWidthBottom = 2,
+        CornerRadiusTopLeft = 3,
+        CornerRadiusTopRight = 3,
+        CornerRadiusBottomLeft = 3,
+        CornerRadiusBottomRight = 3,
+        ContentMarginLeft = 3f,
+        ContentMarginTop = 1f,
+        ContentMarginRight = 3f,
+        ContentMarginBottom = 3f,
+    };
+
+    private static void ApplyDangerButtonStyle(Button button)
+    {
+        var background = new Color(0.48f, 0.08f, 0.11f);
+        var border = new Color(0.86f, 0.24f, 0.3f);
+        button.AddThemeColorOverride("font_color", Colors.White);
+        button.AddThemeColorOverride("font_hover_color", Colors.White);
+        button.AddThemeColorOverride("font_pressed_color", Colors.White);
+        button.AddThemeColorOverride("font_disabled_color", new Color(1f, 1f, 1f, 0.55f));
+        button.AddThemeStyleboxOverride("normal", CreateDangerButtonBox(background, border));
+        button.AddThemeStyleboxOverride("hover", CreateDangerButtonBox(
+            background.Lightened(0.12f), border.Lightened(0.12f)));
+        button.AddThemeStyleboxOverride("pressed", CreateDangerButtonBox(
+            background.Darkened(0.12f), border.Darkened(0.08f)));
+        button.AddThemeStyleboxOverride("hover_pressed", CreateDangerButtonBox(
+            background.Darkened(0.06f), border));
+        button.AddThemeStyleboxOverride("disabled", CreateDangerButtonBox(
+            new Color(background.R, background.G, background.B, 0.5f),
+            new Color(border.R, border.G, border.B, 0.5f)));
+        button.AddThemeStyleboxOverride("focus", CreateDangerButtonBox(
+            Colors.Transparent, new Color(1f, 0.62f, 0.66f)));
+    }
+
+    private static StyleBoxFlat CreateDangerButtonBox(Color background, Color border) => new()
+    {
+        BgColor = background,
+        BorderColor = border,
+        BorderWidthLeft = 1,
+        BorderWidthTop = 1,
+        BorderWidthRight = 1,
+        BorderWidthBottom = 1,
+        CornerRadiusTopLeft = 4,
+        CornerRadiusTopRight = 4,
+        CornerRadiusBottomLeft = 4,
+        CornerRadiusBottomRight = 4,
+        ContentMarginLeft = 12f,
+        ContentMarginTop = 6f,
+        ContentMarginRight = 12f,
+        ContentMarginBottom = 6f,
+    };
 
     private static Control CreateSelectedModelDetails(IModSettingsUiActionHost uiHost)
     {

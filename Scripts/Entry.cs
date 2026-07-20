@@ -21,7 +21,7 @@ namespace Live2D;
 internal static class Entry
 {
     public const string ModId = "Live2D";
-    public const string ModVersion = "0.5.5";
+    public const string ModVersion = "0.5.6";
     public static readonly MegaCrit.Sts2.Core.Logging.Logger Logger = RitsuLibFramework.CreateLogger(ModId);
 
     public static void Initialize()

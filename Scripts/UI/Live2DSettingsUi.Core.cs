@@ -142,6 +142,14 @@ internal static partial class Live2DSettingsUi
         var modelList = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
         modelList.AddThemeConstantOverride("separation", 14);
         Button restoreExternalButton = null!;
+        Action updateModelSummary = () =>
+        {
+            if (!GodotObject.IsInstanceValid(summaryText))
+                return;
+            var latestSettings = Live2DConfigStore.Get();
+            summaryText.Text = F("models.summary_status", "{0} models · {1} enabled",
+                latestSettings.Models.Count, latestSettings.Models.Count(model => model.Enabled));
+        };
         Action rebuildModelList = null!;
         rebuildModelList = () =>
         {
@@ -154,8 +162,7 @@ internal static partial class Live2DSettingsUi
             }
 
             var latestSettings = Live2DConfigStore.Get();
-            summaryText.Text = F("models.summary_status", "{0} models · {1} enabled",
-                latestSettings.Models.Count, latestSettings.Models.Count(model => model.Enabled));
+            updateModelSummary();
             restoreExternalButton.Disabled = latestSettings.RemovedExternalModelIds.Count == 0;
             restoreExternalButton.Text = F(
                 "button.restore_external_models",
@@ -168,7 +175,8 @@ internal static partial class Live2DSettingsUi
             else
             {
                 foreach (var model in latestSettings.Models.OrderBy(value => value.DisplayOrder))
-                    modelList.AddChild(CreateModelRow(model, uiHost, rebuildModelList));
+                    modelList.AddChild(CreateModelRow(
+                        model, uiHost, rebuildModelList, updateModelSummary));
             }
             Entry.Logger.Info($"[{Entry.ModId}] Rebuilt model list in place: {latestSettings.Models.Count} model(s).");
         };

@@ -30,7 +30,7 @@ Each model and all of its dependencies must remain under its own `models/<Origin
   "Name": "Example Characters",
   "Author": "ExampleMod",
   "CreatedAt": "2026-07-15T00:00:00+08:00",
-  "MinimumModVersion": "0.5.5",
+  "MinimumModVersion": "0.5.6",
   "SettingsSchemaVersion": 6,
   "IncludesGlobalConfig": false,
   "Models": [{

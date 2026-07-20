@@ -47,7 +47,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Deterministic>true</Deterministic>
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
-    <Version>0.5.5</Version>
+    <Version>0.5.6</Version>
     <IsPackable>false</IsPackable>
     <!-- Godot injects this reference from Sdk.targets, after project-level
          PackageReference Update items have already been evaluated. Re-add it

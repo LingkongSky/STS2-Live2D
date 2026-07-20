@@ -2,7 +2,7 @@
 
 《杀戮尖塔 2》的 Live2D 运行时 Mod，同时为其他 Mod 提供稳定的模型控制 API。
 
-> 当前为开发预览版本。运行时 Mod 版本：`0.5.5`；公共 API 版本：`9`。
+> 当前为开发预览版本。运行时 Mod 版本：`0.5.6`；公共 API 版本：`9`。
 
 ## 能力
 
@@ -32,7 +32,7 @@ npm run dev
 ## 最小引用
 
 ```xml
-<PackageReference Include="STS2.Live2D" Version="0.5.5" />
+<PackageReference Include="STS2.Live2D" Version="0.5.6" />
 ```
 
 NuGet 只提供编译期引用，不会安装或复制 `Live2D.dll`。使用者仍需在 Mod 清单中声明并要求玩家安装

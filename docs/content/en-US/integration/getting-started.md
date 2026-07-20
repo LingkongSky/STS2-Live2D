@@ -7,7 +7,7 @@ This guide adds a compile-time reference, declares the runtime dependency, and p
 Use the ref-only NuGet package:
 
 ```xml
-<PackageReference Include="STS2.Live2D" Version="0.5.5" />
+<PackageReference Include="STS2.Live2D" Version="0.5.6" />
 ```
 
 For development in the same workspace:
@@ -25,7 +25,7 @@ Neither option copies a second `Live2D.dll` to the consumer output.
 ```json
 {
   "dependencies": [
-    { "id": "Live2D", "min_version": "0.5.5" }
+    { "id": "Live2D", "min_version": "0.5.6" }
   ]
 }
 ```
