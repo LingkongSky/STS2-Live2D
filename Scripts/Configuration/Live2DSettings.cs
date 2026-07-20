@@ -35,6 +35,7 @@ internal sealed class Live2DSettings
     public int SchemaVersion { get; set; } = CurrentSchemaVersion;
     public GlobalLive2DConfig Global { get; set; } = new();
     public List<Live2DModelConfig> Models { get; set; } = [];
+    public List<string> RemovedExternalModelIds { get; set; } = [];
 }
 
 internal sealed class GlobalLive2DConfig
@@ -158,6 +159,7 @@ internal sealed class CanvasMaskConfig
 internal sealed class Live2DModelConfig
 {
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
+    public bool Enabled { get; set; } = true;
     public string DisplayName { get; set; } = "Live2D Model";
     public string ModelRelativePath { get; set; } = "";
     public string SourcePath { get; set; } = "";

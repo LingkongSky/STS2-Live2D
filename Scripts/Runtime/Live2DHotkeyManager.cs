@@ -18,6 +18,8 @@ internal static class Live2DHotkeyManager
         RegisterGlobalHotkeys(settings.Global.Hotkeys);
         foreach (var model in settings.Models)
         {
+            if (!model.Enabled)
+                continue;
             if (model.IsExternalPackModel &&
                 !Live2DRegisteredPackRegistry.TryGetLibraryModelAsset(model, out _))
                 continue;

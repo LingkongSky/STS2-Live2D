@@ -13,8 +13,9 @@ var pack = Live2DApi.RegisterPack(
 Pack models immediately appear in Live2D Model Management. Live2D owns visibility, layout, rendering, actions, hotkeys, and scene instances.
 The provider Mod should not add a second model settings page, hotkey controller, or instance controller.
 
-Assets remain provider-owned and exist only in the session cache, so they cannot be deleted or exported from the library. Live2D persists only
-the player's configuration. If the provider is absent, the model becomes unavailable while its configuration remains saved.
+Assets remain provider-owned and exist only in the session cache, so they cannot be exported from the library. A player may remove the local
+library entry without deleting provider assets and can restore it later. Live2D persists only the player's configuration. If the provider is absent
+or the player disables the model, it becomes unavailable while its configuration remains saved.
 
 Providers can keep character-specific behavior such as intro motions, story reactions, or state integration. Implement
 `ILive2DProviderLifecycleHook` and register it before the Pack; do not create a second instance system:

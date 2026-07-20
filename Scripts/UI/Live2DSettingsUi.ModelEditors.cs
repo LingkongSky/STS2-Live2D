@@ -20,12 +20,21 @@ internal static partial class Live2DSettingsUi
         var card = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
         card.AddThemeConstantOverride("separation", 10);
         var titleRow = new HBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        var enabled = new CheckBox
+        {
+            Text = L("field.enabled", "Enabled"),
+            ButtonPressed = model.Enabled,
+            CustomMinimumSize = new Vector2(110f, 0f),
+            TooltipText = L("field.enabled_tip", "Disabled models do not render, run, accept input, or register hotkeys."),
+        };
+        titleRow.AddChild(enabled);
         var name = new Label
         {
             Text = F("model.summary", "{0} · Actions/Expressions {1}", model.DisplayName, model.AvailableActions.Count),
             SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
         };
         name.AddThemeFontSizeOverride("font_size", 20);
+        name.Modulate = model.Enabled ? Colors.White : new Color(1f, 1f, 1f, 0.5f);
         titleRow.AddChild(name);
 
         if (model.IsExternalPackModel)
@@ -65,7 +74,12 @@ internal static partial class Live2DSettingsUi
         var actions = new HBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
 
         var previewEditor = new Button { Text = L("button.preview_adjust", "Preview & Adjust") };
-        if (model.IsExternalPackModel &&
+        if (!model.Enabled)
+        {
+            previewEditor.Disabled = true;
+            previewEditor.TooltipText = L("model.disabled", "Enable this model before opening its preview.");
+        }
+        else if (model.IsExternalPackModel &&
             !Live2DRegisteredPackRegistry.TryGetLibraryModelAsset(model, out _))
         {
             previewEditor.Disabled = true;
@@ -74,13 +88,41 @@ internal static partial class Live2DSettingsUi
         previewEditor.Pressed += () => Live2DPreviewEditor.Show(model.Id, uiHost);
         actions.AddChild(previewEditor);
 
-        PanelContainer? modelCard = null;
-        if (!model.IsExternalPackModel)
+        enabled.Toggled += active =>
         {
-            var delete = new Button { Text = L("button.delete", "Delete") };
-            delete.Pressed += () =>
+            try
             {
-                delete.Disabled = true;
+                enabled.Disabled = true;
+                ModifyModel(model.Id, target => target.Enabled = active);
+                model.Enabled = active;
+                name.Modulate = active ? Colors.White : new Color(1f, 1f, 1f, 0.5f);
+                previewEditor.Disabled = !active ||
+                    (model.IsExternalPackModel &&
+                     !Live2DRegisteredPackRegistry.TryGetLibraryModelAsset(model, out _));
+                previewEditor.TooltipText = !active
+                    ? L("model.disabled", "Enable this model before opening its preview.")
+                    : previewEditor.Disabled
+                        ? L("model.external_unavailable", "The provider Mod is not loaded.")
+                        : "";
+            }
+            catch (Exception ex)
+            {
+                enabled.SetPressedNoSignal(!active);
+                Entry.Logger.Error($"[{Entry.ModId}] Failed to set model {model.Id} enabled={active}: {ex}");
+            }
+            finally
+            {
+                enabled.Disabled = false;
+            }
+        };
+
+        PanelContainer? modelCard = null;
+        var delete = new Button { Text = L("button.delete", "Delete") };
+        delete.Pressed += () =>
+        {
+            delete.Disabled = true;
+            ShowDeleteModelConfirmation(model, () =>
+            {
                 try
                 {
                     if (_selectedModelId == model.Id)
@@ -96,9 +138,9 @@ internal static partial class Live2DSettingsUi
                     delete.Disabled = false;
                     Entry.Logger.Error($"[{Entry.ModId}] Failed to delete model {model.Id}: {ex}");
                 }
-            };
-            actions.AddChild(delete);
-        }
+            }, () => delete.Disabled = false);
+        };
+        actions.AddChild(delete);
         card.AddChild(actions);
         modelCard = WrapCard(card);
         return modelCard;
@@ -161,6 +203,9 @@ internal static partial class Live2DSettingsUi
         });
         header.AddChild(identity);
         var preview = new Button { Text = L("button.preview_adjust", "Preview & Adjust") };
+        preview.Disabled = !model.Enabled;
+        if (!model.Enabled)
+            preview.TooltipText = L("model.disabled", "Enable this model before opening its preview.");
         preview.Pressed += () => Live2DPreviewEditor.Show(model.Id, uiHost);
         header.AddChild(preview);
         details.AddChild(WrapCard(header, new Color(0.72f, 0.55f, 0.25f)));
@@ -186,6 +231,56 @@ internal static partial class Live2DSettingsUi
         tabs.AddChild(CreateModelTab(L("actions.tab", "Hotkeys"), CreateActionEditor(model), scroll: true));
         details.AddChild(tabs);
         return details;
+    }
+
+    private static void ShowDeleteModelConfirmation(
+        Live2DModelConfig model,
+        Action confirmed,
+        Action canceled)
+    {
+        if (Engine.GetMainLoop() is not SceneTree tree)
+        {
+            canceled();
+            Entry.Logger.Error($"[{Entry.ModId}] Cannot show the model deletion confirmation without a SceneTree.");
+            return;
+        }
+
+        var dialog = new ConfirmationDialog
+        {
+            Title = L("dialog.delete_model_title", "Delete Model?"),
+            DialogText = model.IsExternalPackModel
+                ? F("dialog.delete_external_model", "Remove ‘{0}’ from the library? Provider-owned files will not be deleted. You can restore the model later.", model.DisplayName)
+                : F("dialog.delete_local_model", "Permanently delete ‘{0}’, its settings, and its managed files? This cannot be undone.", model.DisplayName),
+            OkButtonText = L("button.delete", "Delete"),
+            CancelButtonText = L("button.cancel", "Cancel"),
+            MinSize = new Vector2I(520, 160),
+            Exclusive = true,
+        };
+        var completed = false;
+        dialog.Confirmed += () =>
+        {
+            if (completed)
+                return;
+            completed = true;
+            try
+            {
+                confirmed();
+            }
+            finally
+            {
+                dialog.QueueFree();
+            }
+        };
+        dialog.Canceled += () =>
+        {
+            if (completed)
+                return;
+            completed = true;
+            canceled();
+            dialog.QueueFree();
+        };
+        tree.Root.AddChild(dialog);
+        dialog.PopupCentered();
     }
 
     private static void NavigateToPage(Control source, string pageId)

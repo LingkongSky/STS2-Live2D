@@ -61,6 +61,10 @@ internal static class Live2DConfigStore
         {
             foreach (var source in pack.Models.Values)
             {
+                var externalModelId = CreateExternalModelId(pack.Key.OwnerModId, pack.Key.PackId, source.ModelKey);
+                if (settings.RemovedExternalModelIds.Contains(externalModelId, StringComparer.OrdinalIgnoreCase))
+                    continue;
+
                 var model = settings.Models.FirstOrDefault(value =>
                     value.IsExternalPackModel &&
                     string.Equals(value.ExternalOwnerModId, pack.Key.OwnerModId, StringComparison.OrdinalIgnoreCase) &&
@@ -69,7 +73,7 @@ internal static class Live2DConfigStore
                 if (model == null)
                 {
                     model = Clone(source.Config);
-                    model.Id = CreateExternalModelId(pack.Key.OwnerModId, pack.Key.PackId, source.ModelKey);
+                    model.Id = externalModelId;
                     model.DisplayOrder = settings.Models.Count;
                     model.ExternalOwnerModId = pack.Key.OwnerModId;
                     model.ExternalPackId = pack.Key.PackId;
@@ -93,6 +97,24 @@ internal static class Live2DConfigStore
         store.Save(SettingsKey);
         Live2DRuntimeManager.RefreshAll();
         Live2DHotkeyManager.Refresh();
+    }
+
+    internal static int RestoreRemovedExternalModels()
+    {
+        var store = RitsuLibFramework.GetDataStore(Entry.ModId);
+        var restoredCount = 0;
+        store.Modify<Live2DSettings>(SettingsKey, settings =>
+        {
+            restoredCount = settings.RemovedExternalModelIds.Count;
+            settings.RemovedExternalModelIds.Clear();
+        });
+        if (restoredCount == 0)
+            return 0;
+
+        store.Save(SettingsKey);
+        foreach (var pack in Live2DRegisteredPackRegistry.GetRegisteredPacksSnapshot())
+            UpsertExternalPack(pack);
+        return restoredCount;
     }
 
     public static int PruneMissingModels()

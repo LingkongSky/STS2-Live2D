@@ -292,12 +292,33 @@ internal static partial class Live2DSettingsUi
     private static void RemoveModel(string modelId)
     {
         var store = RitsuLibFramework.GetDataStore(Entry.ModId);
-        store.Modify<Live2DSettings>(Live2DConfigStore.SettingsKey,
-            settings => settings.Models.RemoveAll(value => value.Id == modelId));
+        Live2DModelConfig? removedModel = null;
+        store.Modify<Live2DSettings>(Live2DConfigStore.SettingsKey, settings =>
+        {
+            removedModel = settings.Models.FirstOrDefault(value => value.Id == modelId);
+            if (removedModel == null)
+                return;
+            if (removedModel.IsExternalPackModel &&
+                !settings.RemovedExternalModelIds.Contains(modelId, StringComparer.OrdinalIgnoreCase))
+                settings.RemovedExternalModelIds.Add(modelId);
+            settings.Models.RemoveAll(value => value.Id == modelId);
+            for (var index = 0; index < settings.Models.Count; index++)
+                settings.Models[index].DisplayOrder = index;
+        });
+        if (removedModel == null)
+            return;
         store.Save(Live2DConfigStore.SettingsKey);
         Live2DRuntimeManager.RefreshAll();
         Live2DHotkeyManager.Refresh();
-        DeleteModelFilesAfterRuntimeRefresh(modelId);
+        if (removedModel.IsExternalPackModel)
+        {
+            Entry.Logger.Info(
+                $"[{Entry.ModId}] Removed provider model {modelId} from the library without deleting provider-owned files.");
+        }
+        else
+        {
+            DeleteModelFilesAfterRuntimeRefresh(modelId);
+        }
     }
 
     private static async void DeleteModelFilesAfterRuntimeRefresh(string modelId)

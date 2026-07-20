@@ -30,6 +30,11 @@ internal static class Live2DConfigNormalizer
         settings.Global.Rendering.Filter ??= new FilterConfig();
         settings.Global.Rendering.Mask ??= new CanvasMaskConfig();
         settings.Models ??= [];
+        settings.RemovedExternalModelIds ??= [];
+        settings.RemovedExternalModelIds = settings.RemovedExternalModelIds
+            .Where(id => !string.IsNullOrWhiteSpace(id))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
         foreach (var model in settings.Models)
         {
             model.Overrides ??= new Live2DModelOverrides();

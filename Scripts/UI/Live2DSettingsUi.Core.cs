@@ -130,7 +130,8 @@ internal static partial class Live2DSettingsUi
         var summary = new HBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
         var summaryText = new Label
         {
-            Text = F("models.summary", "{0} models", settings.Models.Count),
+            Text = F("models.summary_status", "{0} models · {1} enabled",
+                settings.Models.Count, settings.Models.Count(model => model.Enabled)),
             SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
         };
         summaryText.AddThemeFontSizeOverride("font_size", 20);
@@ -140,6 +141,7 @@ internal static partial class Live2DSettingsUi
 
         var modelList = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
         modelList.AddThemeConstantOverride("separation", 14);
+        Button restoreExternalButton = null!;
         Action rebuildModelList = null!;
         rebuildModelList = () =>
         {
@@ -152,7 +154,13 @@ internal static partial class Live2DSettingsUi
             }
 
             var latestSettings = Live2DConfigStore.Get();
-            summaryText.Text = F("models.summary", "{0} models", latestSettings.Models.Count);
+            summaryText.Text = F("models.summary_status", "{0} models · {1} enabled",
+                latestSettings.Models.Count, latestSettings.Models.Count(model => model.Enabled));
+            restoreExternalButton.Disabled = latestSettings.RemovedExternalModelIds.Count == 0;
+            restoreExternalButton.Text = F(
+                "button.restore_external_models",
+                "Restore Provider Models ({0})",
+                latestSettings.RemovedExternalModelIds.Count);
             if (latestSettings.Models.Count == 0)
             {
                 modelList.AddChild(CreateEmptyModelCard());
@@ -175,6 +183,17 @@ internal static partial class Live2DSettingsUi
         var openFolderButton = new Button { Text = L("button.open_folder", "Open Model Folder") };
         openFolderButton.Pressed += () => OS.ShellOpen(Live2DModelRepository.ModelsDirectory);
         modelToolbar.AddChild(openFolderButton);
+        restoreExternalButton = new Button();
+        restoreExternalButton.Pressed += () =>
+        {
+            var restored = Live2DConfigStore.RestoreRemovedExternalModels();
+            if (restored <= 0)
+                return;
+            rebuildModelList();
+            uiHost.RequestRefreshAfterDataModelBatchChange();
+            Entry.Logger.Info($"[{Entry.ModId}] Restored {restored} removed provider model(s).");
+        };
+        modelToolbar.AddChild(restoreExternalButton);
         root.AddChild(WrapCard(modelToolbar));
 
         var packageToolbar = new HBoxContainer();

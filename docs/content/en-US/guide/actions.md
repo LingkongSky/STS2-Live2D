@@ -23,8 +23,8 @@ Multiple actions can share one hotkey. They may run together, and the UI shows a
 
 ## Global visibility hotkey
 
-The global visibility binding is the only master switch. The first press hides all models; the next restores each model's configured scene
-visibility. It never edits model configuration.
+The global visibility binding is a temporary visibility master control. The first press hides all enabled models; the next restores each model's
+configured scene visibility. It never edits model configuration or enables a model disabled in the model list.
 
 ## Playback settings
 

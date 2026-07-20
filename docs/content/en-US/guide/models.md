@@ -21,14 +21,16 @@ canvas masks are inherited as whole objects rather than merged field by field.
 
 ## Main Menu and In Game
 
+- The list's **Enabled** checkbox is a persistent per-model master switch. A disabled model creates no scene instance, runs no physics, accepts no input, registers no action hotkeys, and cannot be previewed.
 - **Main Menu** affects only the Main Menu host.
 - **In Game** is shared by Map and Combat.
 - The global visibility hotkey temporarily hides or restores every model without rewriting model settings.
 
 ## Rename and delete
 
-Renaming changes only the display name, not the stable model ID. Deleting removes a player-imported model and its configuration. A
-`RegisterPack` models show their provider and cannot be deleted or exported because the provider owns their assets.
+Renaming changes only the display name, not the stable model ID. Every delete requires confirmation. Deleting a player-imported model removes
+its configuration and managed files. A `RegisterPack` model can also be removed from the library, but this removes only Live2D's local entry and
+never touches provider-owned assets; **Restore Provider Models** adds it again. Provider assets cannot be exported here.
 
 ## Configuration packs
 

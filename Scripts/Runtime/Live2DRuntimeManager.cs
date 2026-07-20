@@ -161,6 +161,8 @@ internal static class Live2DRuntimeManager
         {
             try
             {
+                if (!model.Enabled)
+                    continue;
                 if (model.IsExternalPackModel &&
                     !Live2DRegisteredPackRegistry.TryGetLibraryModelAsset(model, out _))
                     continue;

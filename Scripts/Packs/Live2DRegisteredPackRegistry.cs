@@ -129,6 +129,12 @@ internal static class Live2DRegisteredPackRegistry
                 .ToArray();
     }
 
+    internal static IReadOnlyList<RegisteredPack> GetRegisteredPacksSnapshot()
+    {
+        lock (Gate)
+            return Packs.Values.ToArray();
+    }
+
     internal static void Unregister(RegisteredPack pack)
     {
         Live2DApi.EnsureMainThread();

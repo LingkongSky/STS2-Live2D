@@ -5,7 +5,7 @@ using System.IO.Compression;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-var workspace = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
+var workspace = FindWorkspace(AppContext.BaseDirectory);
 
 var miSide = Live2DModelManifestParser.Parse(
     Path.Combine(workspace, "examples", "MiSide", "mita.model3.json"));
@@ -24,9 +24,12 @@ Assert(Math.Abs(global.MainMenu.OffsetY - 616.9355f) < 0.0001f,
     "Main-menu default vertical offset did not match MiSide.");
 Assert(Math.Abs(global.MainMenu.Scale - 0.5f) < 0.0001f,
     "Main-menu default scale did not match MiSide.");
-var settingsJson = JsonSerializer.Serialize(new Live2DSettings());
-Assert(!Regex.IsMatch(settingsJson, "\\\"Enabled\\\"\\s*:"),
-    "Settings still serialized a competing global or per-model Enabled switch.");
+var defaultModel = new Live2DModelConfig();
+Assert(defaultModel.Enabled, "A newly created model was not enabled by default.");
+defaultModel.Enabled = false;
+var disabledModelJson = JsonSerializer.Serialize(defaultModel);
+Assert(Regex.IsMatch(disabledModelJson, "\\\"Enabled\\\"\\s*:\\s*false"),
+    "The per-model Enabled switch was not serialized.");
 global.MainMenu.Scale = 0.42f;
 global.MainMenu.Visible = false;
 var overrides = new Live2DModelOverrides();
@@ -49,39 +52,16 @@ Assert(!restored.MainMenu.Visible, "Clearing visibility override did not restore
 Console.WriteLine($"PASS MiSide files={miSide.RelativeFiles.Count}, actions={miSide.Actions.Count}");
 Console.WriteLine("PASS global inheritance -> override -> restored inheritance");
 Console.WriteLine("PASS MiSide-equivalent responsive main-menu defaults");
-Console.WriteLine("PASS global hotkey is the only model enable/disable control");
+Console.WriteLine("PASS per-model enabled default and serialization");
 
-var legacyScenes = new Live2DSettings
+var normalizedSettings = new Live2DSettings
 {
-    SchemaVersion = 4,
-    Global = new GlobalLive2DConfig
-    {
-        Map = new SceneDisplayConfig { Scale = 0.28f },
-        Combat = new SceneDisplayConfig { Scale = 0.73f },
-    },
-    Models =
-    [
-        new Live2DModelConfig
-        {
-            Overrides = new Live2DModelOverrides
-            {
-                Map = new SceneDisplayOverrides { Visible = false },
-                Combat = new SceneDisplayOverrides { Scale = 0.81f },
-            },
-            ActionBindings = [new ActionBindingConfig { Map = false, Combat = true }],
-        },
-    ],
+    RemovedExternalModelIds = ["extlib_example", "", "EXTLIB_EXAMPLE"],
 };
-Live2DConfigMigration.NormalizeInPlace(legacyScenes);
-Assert(Math.Abs(legacyScenes.Global.InGame.Scale - 0.73f) < 0.0001f,
-    "Legacy combat global settings were not migrated to InGame.");
-Assert(legacyScenes.Models[0].Overrides.InGame.Scale == 0.81f,
-    "Legacy combat model overrides were not migrated to InGame.");
-Assert(legacyScenes.Models[0].ActionBindings[0].InGame,
-    "Legacy map/combat action scope was not merged into InGame.");
-Assert(legacyScenes.Global.Map == null && legacyScenes.Global.Combat == null,
-    "Legacy global scene fields remained after migration.");
-Console.WriteLine("PASS map/combat -> in-game schema migration");
+Live2DConfigNormalizer.NormalizeInPlace(normalizedSettings);
+Assert(normalizedSettings.RemovedExternalModelIds.SequenceEqual(["extlib_example"]),
+    "Removed external model IDs were not cleaned and deduplicated.");
+Console.WriteLine("PASS removed provider model identity normalization");
 
 var staleModels = new Live2DSettings
 {
@@ -92,7 +72,7 @@ var staleModels = new Live2DSettings
         new Live2DModelConfig { Id = "present-b", DisplayOrder = 2 },
     ],
 };
-var removedStaleModels = Live2DConfigMigration.RemoveUnavailableModels(
+var removedStaleModels = Live2DConfigNormalizer.RemoveUnavailableModels(
     staleModels,
     model => model.Id != "missing");
 Assert(removedStaleModels.Count == 1 && removedStaleModels[0].Id == "missing",
@@ -154,6 +134,7 @@ try
     };
     packSettings.Global.MainMenu.Scale = 0.66f;
     packSettings.Global.Hotkeys.ToggleVisibility = "Ctrl+Shift+L";
+    packSettings.Models[0].Enabled = false;
     packSettings.Models[0].Overrides.InGame.Scale = 0.88f;
     packSettings.Models[0].ActionBindings.Add(new ActionBindingConfig
     {
@@ -176,6 +157,8 @@ try
         "Package global visibility hotkey did not round-trip.");
     Assert(roundtrip.Models[0].Overrides.InGame.Scale == 0.88f,
         "Package model override did not round-trip.");
+    Assert(!roundtrip.Models[0].Enabled,
+        "Package model enabled state did not round-trip.");
     Assert(roundtrip.Models[0].ActionBindings.Single().KeyBinding == "Ctrl+Key1",
         "Package action binding did not round-trip.");
     Assert(roundtrip.ExtractedEntryPaths.Values.All(File.Exists),
@@ -229,6 +212,16 @@ static void CopyDirectory(string source, string destination)
         Directory.CreateDirectory(Path.GetDirectoryName(target)!);
         File.Copy(file, target);
     }
+}
+
+static string FindWorkspace(string startDirectory)
+{
+    for (var directory = new DirectoryInfo(startDirectory); directory != null; directory = directory.Parent)
+    {
+        if (File.Exists(Path.Combine(directory.FullName, "Live2D.csproj")))
+            return directory.FullName;
+    }
+    throw new DirectoryNotFoundException("Unable to locate the Live2D workspace from the test output directory.");
 }
 
 static HashSet<string> GetPlaceholders(string value)
