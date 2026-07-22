@@ -27,7 +27,7 @@ internal static partial class Live2DSettingsUi
             value => ModifyGlobal(target => target.Playback.AutoPlayIdle = value));
         AddGlobalFloat(grid, L("field.cooldown", "Action Cooldown (seconds)"), global.Playback.ActionCooldownSeconds, 0, 10, 0.05,
             value => ModifyGlobal(target => target.Playback.ActionCooldownSeconds = value));
-        AddGlobalInt(grid, L("field.mask_size", "Mask Viewport Size (0 = Auto)"), global.Rendering.MaskViewportSize, 0, 4096,
+        AddGlobalMaskViewportSize(grid, L("field.mask_size", "Mask Viewport Size (0 = Auto)"), global.Rendering.MaskViewportSize,
             value => ModifyGlobal(target => target.Rendering.MaskViewportSize = value));
         AddGlobalEnum(grid, L("field.blend_mode", "Blend Mode"), global.Rendering.BlendMode,
             value => ModifyGlobal(target => target.Rendering.BlendMode = value));
@@ -43,34 +43,42 @@ internal static partial class Live2DSettingsUi
                 target.Rendering.Filter.TintB = value.B;
                 target.Rendering.Filter.TintA = value.A;
             }));
-        AddGlobalFloat(grid, L("field.brightness", "Brightness"), global.Rendering.Filter.Brightness, -1, 1, 0.01,
+        AddGlobalRenderingFloat(grid, L("field.brightness", "Brightness"), global.Rendering.Filter.Brightness, -1, 1, 0.01,
             value => ModifyGlobal(target => target.Rendering.Filter.Brightness = value));
-        AddGlobalFloat(grid, L("field.contrast", "Contrast"), global.Rendering.Filter.Contrast, 0, 4, 0.01,
+        AddGlobalRenderingFloat(grid, L("field.contrast", "Contrast"), global.Rendering.Filter.Contrast, 0, 4, 0.01,
             value => ModifyGlobal(target => target.Rendering.Filter.Contrast = value));
-        AddGlobalFloat(grid, L("field.saturation", "Saturation"), global.Rendering.Filter.Saturation, 0, 4, 0.01,
+        AddGlobalRenderingFloat(grid, L("field.saturation", "Saturation"), global.Rendering.Filter.Saturation, 0, 4, 0.01,
             value => ModifyGlobal(target => target.Rendering.Filter.Saturation = value));
-        AddGlobalFloat(grid, L("field.grayscale", "Grayscale"), global.Rendering.Filter.Grayscale, 0, 1, 0.01,
+        AddGlobalRenderingFloat(grid, L("field.grayscale", "Grayscale"), global.Rendering.Filter.Grayscale, 0, 1, 0.01,
             value => ModifyGlobal(target => target.Rendering.Filter.Grayscale = value));
-        AddGlobalFloat(grid, L("field.hue", "Hue Shift (degrees)"), global.Rendering.Filter.HueShiftDegrees, -180, 180, 1,
-            value => ModifyGlobal(target => target.Rendering.Filter.HueShiftDegrees = value));
-        AddGlobalFloat(grid, L("field.invert", "Invert"), global.Rendering.Filter.Invert, 0, 1, 0.01,
+        AddGlobalRenderingFloat(grid, L("field.hue", "Hue Shift (degrees)"), global.Rendering.Filter.HueShiftDegrees, -180, 180, 1,
+            value => ModifyGlobal(target => target.Rendering.Filter.HueShiftDegrees = value), "°");
+        AddGlobalRenderingFloat(grid, L("field.invert", "Invert"), global.Rendering.Filter.Invert, 0, 1, 0.01,
             value => ModifyGlobal(target => target.Rendering.Filter.Invert = value));
-        AddGlobalFloat(grid, L("field.gamma", "Gamma"), global.Rendering.Filter.Gamma, 0.01, 10, 0.01,
+        AddGlobalRenderingFloat(grid, L("field.gamma", "Gamma"), global.Rendering.Filter.Gamma, 0.01, 10, 0.01,
             value => ModifyGlobal(target => target.Rendering.Filter.Gamma = value));
-        AddGlobalEnum(grid, L("field.canvas_mask", "Canvas Mask"), global.Rendering.Mask.Type,
+        var maskTypeInput = AddGlobalEnum(grid, L("field.canvas_mask", "Canvas Mask"), global.Rendering.Mask.Type,
             value => ModifyGlobal(target => target.Rendering.Mask.Type = value));
-        AddGlobalFloat(grid, L("field.mask_x", "Mask X"), global.Rendering.Mask.X, -8000, 8000, 1,
+        AddGlobalRenderingFloat(grid, L("field.mask_x", "Mask X"), global.Rendering.Mask.X, -8000, 8000, 1,
             value => ModifyGlobal(target => target.Rendering.Mask.X = value));
-        AddGlobalFloat(grid, L("field.mask_y", "Mask Y"), global.Rendering.Mask.Y, -8000, 8000, 1,
+        AddGlobalRenderingFloat(grid, L("field.mask_y", "Mask Y"), global.Rendering.Mask.Y, -8000, 8000, 1,
             value => ModifyGlobal(target => target.Rendering.Mask.Y = value));
-        AddGlobalFloat(grid, L("field.mask_width", "Mask Width"), global.Rendering.Mask.Width, 1, 16000, 1,
+        AddGlobalRenderingFloat(grid, L("field.mask_width", "Mask Width"), global.Rendering.Mask.Width, 1, 16000, 1,
             value => ModifyGlobal(target => target.Rendering.Mask.Width = value));
-        AddGlobalFloat(grid, L("field.mask_height", "Mask Height"), global.Rendering.Mask.Height, 1, 16000, 1,
+        AddGlobalRenderingFloat(grid, L("field.mask_height", "Mask Height"), global.Rendering.Mask.Height, 1, 16000, 1,
             value => ModifyGlobal(target => target.Rendering.Mask.Height = value));
-        AddGlobalFloat(grid, L("field.corner_radius", "Corner Radius"), global.Rendering.Mask.CornerRadius, 0, 8000, 1,
-            value => ModifyGlobal(target => target.Rendering.Mask.CornerRadius = value));
-        AddGlobalInt(grid, L("field.mask_segments", "Mask Edge Segments"), global.Rendering.Mask.SegmentsPerCorner, 2, 64,
-            value => ModifyGlobal(target => target.Rendering.Mask.SegmentsPerCorner = value));
+        AddGlobalRenderingFloat(grid, L("field.corner_radius", "Corner Radius"), global.Rendering.Mask.CornerRadius, 0, 8000, 1,
+            value =>
+            {
+                maskTypeInput.Selected = Array.IndexOf(
+                    Enum.GetValues<Live2DMaskType>(),
+                    Live2DMaskType.RoundedRectangle);
+                ModifyGlobal(target =>
+                {
+                    target.Rendering.Mask.Type = Live2DMaskType.RoundedRectangle;
+                    target.Rendering.Mask.CornerRadius = value;
+                });
+            });
         root.AddChild(grid);
         return root;
     }
@@ -172,7 +180,7 @@ internal static partial class Live2DSettingsUi
         grid.AddChild(input);
     }
 
-    private static void AddGlobalEnum<T>(
+    private static OptionButton AddGlobalEnum<T>(
         GridContainer grid,
         string label,
         T value,
@@ -186,6 +194,7 @@ internal static partial class Live2DSettingsUi
         input.Selected = Array.IndexOf(values, value);
         input.ItemSelected += index => changed(values[index]);
         grid.AddChild(input);
+        return input;
     }
 
     private static void AddGlobalColor(
@@ -195,13 +204,7 @@ internal static partial class Live2DSettingsUi
         Action<Color> changed)
     {
         grid.AddChild(new Label { Text = label });
-        var input = new ColorPickerButton
-        {
-            Color = value,
-            EditAlpha = true,
-            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
-        };
-        input.ColorChanged += color => changed(color);
+        var input = CreateRenderingColorPicker(value, true, changed);
         grid.AddChild(input);
     }
 

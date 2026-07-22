@@ -1,6 +1,6 @@
 # Public API Reference
 
-The runtime reports `Live2DApi.RuntimeVersion == "0.6.0"` and `Live2DApi.RuntimeApiVersion == 9`. `Live2D.Api` is the stable public API.
+The runtime reports `Live2DApi.RuntimeVersion == "0.6.1"` and `Live2DApi.RuntimeApiVersion == 9`. `Live2D.Api` is the stable public API.
 
 ## Thread rules
 
@@ -115,8 +115,8 @@ Unknown IDs throw `KeyNotFoundException`. Synchronous batches validate every ID 
 | Invert | `0..1` / 0 |
 | Gamma | `0.01..10` / 1 |
 
-Masks are `None`, `Rectangle`, `Ellipse`, or `RoundedRectangle`. Enabled rectangles require positive size, non-negative corner radius, and
-`SegmentsPerCorner` from `2..64`.
+Masks are `None`, `Rectangle`, `Ellipse`, or `RoundedRectangle`. Enabled masks require a positive size and non-negative corner radius. Rendered
+ellipse and rounded edges are analytic; `SegmentsPerCorner` only controls preview-outline sampling and does not change the rendered edge.
 
 ## Common exceptions
 

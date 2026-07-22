@@ -7,7 +7,7 @@ This guide adds a compile-time reference, declares the runtime dependency, and p
 Use the ref-only NuGet package:
 
 ```xml
-<PackageReference Include="STS2.Live2D" Version="0.6.0" />
+<PackageReference Include="STS2.Live2D" Version="0.6.1" />
 ```
 
 For development in the same workspace:
@@ -25,7 +25,7 @@ Both options use a compile-time reference assembly; the manifest's `Live2D` Mod 
 ```json
 {
   "dependencies": [
-    { "id": "Live2D", "min_version": "0.6.0" }
+    { "id": "Live2D", "min_version": "0.6.1" }
   ]
 }
 ```

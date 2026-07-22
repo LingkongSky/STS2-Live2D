@@ -2,14 +2,16 @@
 
 《杀戮尖塔 2》的 Live2D 运行时 Mod，同时为其他 Mod 提供稳定的模型控制 API。
 
-运行时 Mod 版本：`0.6.0`；公共 API 版本：`9`。
+运行时 Mod 版本：`0.6.1`；公共 API 版本：`9`。
 
 ## 能力
 
 - 导入和管理 Live2D Cubism 模型。
 - 分别配置主菜单与游戏内的位置、大小、旋转、透明度和显示状态。
 - 播放 Motion、Expression，绑定快捷键并控制 Parameter 与 Part。
-- 支持混合模式、常用颜色滤镜和画布裁切。
+- 支持混合模式、颜色滤镜，以及矩形、椭圆和圆角矩形画布蒙版。
+- 提供滑条与数字同步输入、颜色选择器和实时模型/蒙版画布预览。
+- 中性渲染直接使用模型原始分辨率；需要合成效果时按显示尺寸动态分配高分辨率画布。
 - 通过 NuGet 或 `ProjectReference` 为其他 Mod 提供编译期 API。
 - 将其他 Mod 自带的 `.live2dpack` 注册到统一模型库。
 
@@ -32,7 +34,7 @@ npm run dev
 ## 最小引用
 
 ```xml
-<PackageReference Include="STS2.Live2D" Version="0.6.0" />
+<PackageReference Include="STS2.Live2D" Version="0.6.1" />
 ```
 
 NuGet 提供编译期引用程序集。使用者在 Mod 清单中声明 `Live2D` 运行时依赖；完整示例见

@@ -2,7 +2,7 @@ namespace Live2D
 {
     internal static class Entry
     {
-        internal const string ModVersion = "0.6.0";
+        internal const string ModVersion = "0.6.1";
     }
 }
 

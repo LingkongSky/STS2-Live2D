@@ -44,7 +44,7 @@ features:
 The `STS2.Live2D` NuGet package provides compile-time APIs for other Mods; the `Live2D` runtime Mod provides the player runtime.
 :::
 
-- **Runtime version:** `0.6.0`
+- **Runtime version:** `0.6.1`
 - **Public API:** `9`
 - **Pack format:** `1`
 - **Supported platform:** Windows x86_64
@@ -53,7 +53,8 @@ The `STS2.Live2D` NuGet package provides compile-time APIs for other Mods; the `
 
 - **Scene integration:** Manage Main Menu and in-game models independently while preserving visibility across Map, Combat, and UI transitions.
 - **Model control:** Update position, scale, rotation, opacity, layer, motions, expressions, Parameters, and Parts in real time.
-- **Rendering control:** Apply blend modes, common color filters, and rectangular, elliptical, or rounded-rectangle canvas clipping.
+- **Rendering control:** Apply blend modes, color filters, three canvas-mask shapes, and edit them with sliders, numeric fields, color pickers, and a live canvas.
+- **Clear output:** Render neutral models directly and dynamically size effect-composite targets up to 8192 pixels per side.
 - **Third-party extensions:** Use stable handles, main-thread dispatch, coalesced high-frequency updates, and APIs for Mod-bundled model Packs.
 
 ## Scope and requirements

@@ -7,7 +7,7 @@
 ref-only NuGet パッケージを推奨します。
 
 ```xml
-<PackageReference Include="STS2.Live2D" Version="0.6.0" />
+<PackageReference Include="STS2.Live2D" Version="0.6.1" />
 ```
 
 同じワークスペースで開発する場合：
@@ -25,7 +25,7 @@ ref-only NuGet パッケージを推奨します。
 ```json
 {
   "dependencies": [
-    { "id": "Live2D", "min_version": "0.6.0" }
+    { "id": "Live2D", "min_version": "0.6.1" }
   ]
 }
 ```

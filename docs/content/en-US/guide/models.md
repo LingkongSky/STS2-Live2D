@@ -27,6 +27,11 @@ canvas masks are inherited as whole objects rather than merged field by field.
 - **In Game** is shared by Map and Combat.
 - The global visibility hotkey temporarily hides or restores every model while preserving model settings.
 
+## Preview and edit
+
+**Preview and edit** on a model card loads that model with the selected scene configuration. The canvas shows final rendering while the inspector
+edits position, scale, rotation, blending, filters, and masks. Changes remain a live draft until **Save Changes** is pressed; Cancel discards the draft.
+
 ## Rename and delete
 
 Renaming updates the display name and preserves the stable model ID. Every delete requires confirmation. Deleting a player-imported model removes

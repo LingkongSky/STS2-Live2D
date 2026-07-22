@@ -16,6 +16,19 @@ Fully restart the game first, then search the log for `[Live2D]`.
 - Reset filters, use Normal blending, and temporarily disable canvas clipping.
 - Check the target scene, opacity, scale, and master visibility state.
 
+## The model or mask looks blurred
+
+- Restore Normal blending, neutral filters, and no canvas mask first. This state renders the model directly without a composite target.
+- Canvas masks and `MaskViewportSize` are separate. Raise the latter only when Cubism drawable-mask edges are blurred.
+- Prefer Auto for `MaskViewportSize`; forcing 4096 uses more GPU memory but cannot increase the source texture resolution.
+- In **Preview and edit**, choose a reference resolution close to the actual window and verify model scale before judging clarity.
+
+## Mask controls appear to do nothing
+
+- Enable the model mask override or press **Enable mask and fit model bounds**.
+- Make sure the type is not None. Corner radius applies only to Rounded Rectangle; changing the radius switches the type automatically.
+- Enable **Edit mask directly on canvas**, drag to move the mask, use the wheel to resize it, and confirm the sliders and numbers move together.
+
 ## The model appears in only one scene
 
 Main Menu and In Game use separate settings; Map and Combat share In Game. A Main Menu model is temporarily hidden while another menu page or

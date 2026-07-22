@@ -9,7 +9,7 @@
     <NoWarn>$(NoWarn);NU5131</NoWarn>
     <PackageId>STS2.Live2D</PackageId>
     <!-- Keep synchronized with Live2D.csproj; the release workflow verifies the tag. -->
-    <Version>0.6.0</Version>
+    <Version>0.6.1</Version>
     <Title>STS2 Live2D API</Title>
     <Authors>LingkongSky</Authors>
     <Copyright>Copyright (c) 2026 OLC</Copyright>

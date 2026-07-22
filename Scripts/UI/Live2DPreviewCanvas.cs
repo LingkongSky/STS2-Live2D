@@ -15,9 +15,14 @@ internal sealed partial class Live2DPreviewCanvas : Control
     private Vector2 _simulationSize = Live2DLayout.ReferenceViewportSize;
     private float _canvasScale = 1f;
     private Rect2 _displayRect;
+    private bool _maskEditing;
+
+    public float CanvasScale => _canvasScale;
     public event Action<Vector2>? Dragged;
     public event Action<float>? ScaleRequested;
     public event Action<float>? RotateRequested;
+    public event Action<Vector2>? MaskDragged;
+    public event Action<float>? MaskResizeRequested;
 
     public override void _Ready()
     {
@@ -36,6 +41,13 @@ internal sealed partial class Live2DPreviewCanvas : Control
         _simulationSize = size;
         UpdateStageTransform();
         QueueRedraw();
+    }
+
+    public void SetMaskEditing(bool enabled)
+    {
+        _maskEditing = enabled;
+        _dragging = false;
+        MouseDefaultCursorShape = CursorShape.Drag;
     }
 
     public void AddPreview(Node2D preview)
@@ -68,16 +80,20 @@ internal sealed partial class Live2DPreviewCanvas : Control
                 AcceptEvent();
                 break;
             case InputEventMouseMotion motion when _dragging:
-                Dragged?.Invoke(motion.Relative / Math.Max(0.001f, _canvasScale));
+                var delta = motion.Relative / Math.Max(0.001f, _canvasScale);
+                if (_maskEditing) MaskDragged?.Invoke(delta);
+                else Dragged?.Invoke(delta);
                 AcceptEvent();
                 break;
             case InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.WheelUp } wheelUp:
-                if (wheelUp.ShiftPressed) RotateRequested?.Invoke(2f);
+                if (_maskEditing) MaskResizeRequested?.Invoke(1.05f);
+                else if (wheelUp.ShiftPressed) RotateRequested?.Invoke(2f);
                 else ScaleRequested?.Invoke(0.05f);
                 AcceptEvent();
                 break;
             case InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.WheelDown } wheelDown:
-                if (wheelDown.ShiftPressed) RotateRequested?.Invoke(-2f);
+                if (_maskEditing) MaskResizeRequested?.Invoke(0.95f);
+                else if (wheelDown.ShiftPressed) RotateRequested?.Invoke(-2f);
                 else ScaleRequested?.Invoke(-0.05f);
                 AcceptEvent();
                 break;

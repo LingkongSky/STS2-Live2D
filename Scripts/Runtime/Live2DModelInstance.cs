@@ -7,11 +7,18 @@ namespace Live2D.Scripts.Runtime;
 
 internal sealed class Live2DModelInstance
 {
+    private const int MaximumCompositeDimension = 8192;
     private readonly GDCubismUserModelCS _userModel;
+    private readonly Node2D _userModelNode;
     private readonly Live2DModelConfig _model;
     private readonly Live2DRuntimeModelIdentity _identity;
-    private readonly Polygon2D _maskNode;
-    private readonly CanvasGroup _filterGroup;
+    private readonly SubViewport _modelViewport;
+    private readonly Sprite2D _compositeSprite;
+    private readonly Vector2 _compositeCanvasSize;
+    private readonly Vector2 _compositeCanvasCenter;
+    private readonly Vector2 _compositeCanvasOrigin;
+    private float _compositeRenderScale;
+    private bool _compositeMode = true;
     private Live2DPlaybackController? _playbackController;
     private ShaderMaterial? _renderMaterial;
     private Live2DBlendMode _blendMode = Live2DBlendMode.Normal;
@@ -23,6 +30,7 @@ internal sealed class Live2DModelInstance
     private string _activeExpression = "";
 
     public Node2D Root { get; }
+    internal Rect2 CanvasBounds => new(-_compositeCanvasOrigin, _compositeCanvasSize);
     public string ModelId => _identity.RuntimeId;
     internal Live2DRuntimeModelIdentity Identity => _identity;
     public bool IsAlive => GodotObject.IsInstanceValid(Root) && Root.IsInsideTree();
@@ -33,15 +41,24 @@ internal sealed class Live2DModelInstance
 
     private Live2DModelInstance(
         Node2D root,
-        Polygon2D maskNode,
-        CanvasGroup filterGroup,
+        SubViewport modelViewport,
+        Sprite2D compositeSprite,
+        Vector2 canvasSize,
+        Vector2 canvasOrigin,
+        float compositeRenderScale,
+        Vector2 compositeCanvasCenter,
         GDCubismUserModelCS userModel,
         Live2DRuntimeModelDefinition definition)
     {
         Root = root;
-        _maskNode = maskNode;
-        _filterGroup = filterGroup;
+        _modelViewport = modelViewport;
+        _compositeSprite = compositeSprite;
+        _compositeCanvasSize = canvasSize;
+        _compositeCanvasOrigin = canvasOrigin;
+        _compositeRenderScale = compositeRenderScale;
+        _compositeCanvasCenter = compositeCanvasCenter;
         _userModel = userModel;
+        _userModelNode = userModel.GetInternalObject();
         _model = definition.Config;
         _identity = definition.Identity;
         _userModel.MotionFinished += OnNativeMotionFinished;
@@ -70,30 +87,22 @@ internal sealed class Live2DModelInstance
             Modulate = new Color(1f, 1f, 1f, Math.Clamp(sceneConfig.Opacity, 0f, 1f)),
         };
 
-        var maskNode = new Polygon2D
+        var modelViewport = new SubViewport
         {
-            Name = "Live2DCanvasMask",
+            Name = "Live2DModelViewport",
             ProcessMode = Node.ProcessModeEnum.Always,
-            Color = Colors.White,
-            ClipChildren = CanvasItem.ClipChildrenMode.Disabled,
+            Disable3D = true,
+            TransparentBg = true,
+            RenderTargetClearMode = SubViewport.ClearMode.Always,
+            RenderTargetUpdateMode = SubViewport.UpdateMode.Always,
         };
-        root.AddChild(maskNode);
-
-        var filterGroup = new CanvasGroup
-        {
-            Name = "Live2DFilterGroup",
-            ProcessMode = Node.ProcessModeEnum.Always,
-            FitMargin = 0f,
-            ClearMargin = 10f,
-            UseMipmaps = false,
-        };
-        maskNode.AddChild(filterGroup);
+        root.AddChild(modelViewport);
 
         var userModel = new GDCubismUserModelCS();
         var userModelNode = userModel.GetInternalObject();
         userModelNode.Name = "GDCubismUserModel";
         userModelNode.ProcessMode = Node.ProcessModeEnum.Always;
-        filterGroup.AddChild(userModelNode);
+        modelViewport.AddChild(userModelNode);
 
         userModel.LoadExpressions = true;
         userModel.LoadMotions = true;
@@ -106,7 +115,41 @@ internal sealed class Live2DModelInstance
         AddEffectNode(userModelNode, "GDCubismEffectEyeBlink");
         userModel.Assets = definition.AssetPath;
 
-        var result = new Live2DModelInstance(root, maskNode, filterGroup, userModel, definition);
+        var canvasInfo = userModel.GetCanvasInfo();
+        var canvasSize = canvasInfo["size_in_pixels"].AsVector2();
+        var canvasOrigin = canvasInfo["origin_in_pixels"].AsVector2();
+        canvasSize = new Vector2(Math.Max(1f, canvasSize.X), Math.Max(1f, canvasSize.Y));
+        var compositeRenderScale = ResolveCompositeRenderScale(canvasSize, root.Scale);
+        var compositeSize = new Vector2I(
+            Math.Max(1, (int)Math.Ceiling(canvasSize.X * compositeRenderScale)),
+            Math.Max(1, (int)Math.Ceiling(canvasSize.Y * compositeRenderScale)));
+        var compositeCanvasCenter = canvasSize * 0.5f - canvasOrigin;
+        modelViewport.Size = compositeSize;
+        userModelNode.Position = canvasOrigin * compositeRenderScale;
+        userModelNode.Scale = Vector2.One * compositeRenderScale;
+
+        var compositeSprite = new Sprite2D
+        {
+            Name = "Live2DComposite",
+            ProcessMode = Node.ProcessModeEnum.Always,
+            Texture = modelViewport.GetTexture(),
+            Position = compositeCanvasCenter,
+            Scale = Vector2.One / compositeRenderScale,
+            Centered = true,
+            TextureFilter = CanvasItem.TextureFilterEnum.Linear,
+        };
+        root.AddChild(compositeSprite);
+
+        var result = new Live2DModelInstance(
+            root,
+            modelViewport,
+            compositeSprite,
+            canvasSize,
+            canvasOrigin,
+            compositeRenderScale,
+            compositeCanvasCenter,
+            userModel,
+            definition);
         var playbackController = new Live2DPlaybackController
         {
             Name = "Live2DPlaybackController",
@@ -183,7 +226,10 @@ internal sealed class Live2DModelInstance
         if (update.Position is { } position)
             Root.Position = position;
         if (update.Scale is { } scale)
+        {
             Root.Scale = scale;
+            UpdateCompositeResolution();
+        }
         if (update.RotationDegrees is { } rotation)
             Root.RotationDegrees = rotation;
         if (update.Opacity is { } opacity)
@@ -210,36 +256,83 @@ internal sealed class Live2DModelInstance
             _filter = filter;
         if (update.Mask is { } mask)
             _mask = mask;
-        if (update.BlendMode is not null || update.Filter is not null)
-            ApplyFilter();
-        if (update.Mask is not null)
-            ApplyMask();
+        if (update.BlendMode is not null || update.Filter is not null || update.Mask is not null)
+            ApplyRendering();
     }
 
-    private void ApplyFilter()
+    private void ApplyRendering()
     {
-        if (_blendMode == Live2DBlendMode.Normal && _filter.IsNeutral)
-        {
-            _filterGroup.Material = null;
+        var requiresComposite = Live2DRenderPipeline.RequiresCompositeRendering(
+            _blendMode,
+            _filter,
+            _mask);
+        SetCompositeMode(requiresComposite);
+        if (!requiresComposite)
             return;
-        }
 
         _renderMaterial ??= Live2DRenderPipeline.CreateMaterial(_blendMode);
         Live2DRenderPipeline.UpdateMaterial(_renderMaterial, _blendMode, _filter);
-        _filterGroup.Material = _renderMaterial;
+        Live2DRenderPipeline.UpdateMask(_renderMaterial, _mask);
+        Live2DRenderPipeline.UpdateCompositeGeometry(
+            _renderMaterial,
+            _compositeRenderScale,
+            _compositeCanvasCenter);
+        _compositeSprite.Material = _renderMaterial;
     }
 
-    private void ApplyMask()
+    private void SetCompositeMode(bool enabled)
     {
-        if (_mask.Type == Live2DMaskType.None)
+        if (_compositeMode == enabled)
+            return;
+
+        _compositeMode = enabled;
+        if (enabled)
         {
-            _maskNode.ClipChildren = CanvasItem.ClipChildrenMode.Disabled;
-            _maskNode.Polygon = [];
+            UpdateCompositeResolution();
+            _userModelNode.Reparent(_modelViewport, keepGlobalTransform: false);
+            _userModelNode.Position = _compositeCanvasOrigin * _compositeRenderScale;
+            _userModelNode.Scale = Vector2.One * _compositeRenderScale;
+            _modelViewport.RenderTargetUpdateMode = SubViewport.UpdateMode.Always;
+            _compositeSprite.Visible = true;
             return;
         }
 
-        _maskNode.Polygon = Live2DRenderPipeline.BuildMaskPolygon(_mask);
-        _maskNode.ClipChildren = CanvasItem.ClipChildrenMode.Only;
+        _userModelNode.Reparent(Root, keepGlobalTransform: false);
+        _userModelNode.Position = Vector2.Zero;
+        _userModelNode.Scale = Vector2.One;
+        _compositeSprite.Visible = false;
+        _modelViewport.RenderTargetUpdateMode = SubViewport.UpdateMode.Disabled;
+    }
+
+    private void UpdateCompositeResolution()
+    {
+        var renderScale = ResolveCompositeRenderScale(_compositeCanvasSize, Root.Scale);
+        var compositeSize = new Vector2I(
+            Math.Max(1, (int)Math.Ceiling(_compositeCanvasSize.X * renderScale)),
+            Math.Max(1, (int)Math.Ceiling(_compositeCanvasSize.Y * renderScale)));
+        if (_modelViewport.Size != compositeSize)
+            _modelViewport.Size = compositeSize;
+
+        _compositeRenderScale = renderScale;
+        _compositeSprite.Scale = Vector2.One / renderScale;
+        if (_compositeMode)
+        {
+            _userModelNode.Position = _compositeCanvasOrigin * renderScale;
+            _userModelNode.Scale = Vector2.One * renderScale;
+        }
+        if (_renderMaterial != null)
+            Live2DRenderPipeline.UpdateCompositeGeometry(
+                _renderMaterial,
+                renderScale,
+                _compositeCanvasCenter);
+    }
+
+    internal static float ResolveCompositeRenderScale(Vector2 canvasSize, Vector2 displayScale)
+    {
+        var canvasMaximum = Math.Max(1f, Math.Max(canvasSize.X, canvasSize.Y));
+        var displayMaximum = Math.Max(Math.Abs(displayScale.X), Math.Abs(displayScale.Y));
+        var desiredScale = Math.Clamp(displayMaximum, 0.01f, 1f);
+        return Math.Min(desiredScale, MaximumCompositeDimension / canvasMaximum);
     }
 
     internal void PlayMotion(string group, int index, bool loop)

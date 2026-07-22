@@ -7,7 +7,7 @@
 推荐使用 ref-only NuGet 包：
 
 ```xml
-<PackageReference Include="STS2.Live2D" Version="0.6.0" />
+<PackageReference Include="STS2.Live2D" Version="0.6.1" />
 ```
 
 在同一工作区开发时也可以引用源码：
@@ -27,7 +27,7 @@
 ```json
 {
   "dependencies": [
-    { "id": "Live2D", "min_version": "0.6.0" }
+    { "id": "Live2D", "min_version": "0.6.1" }
   ]
 }
 ```

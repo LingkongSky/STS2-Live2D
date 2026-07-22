@@ -9,7 +9,6 @@ internal static class Live2DRenderPipeline
         shader_type canvas_item;
         render_mode unshaded, __BLEND_MODE__;
 
-        uniform sampler2D screen_texture : hint_screen_texture, repeat_disable, filter_nearest;
         uniform vec4 tint_color : source_color = vec4(1.0);
         uniform float brightness = 0.0;
         uniform float contrast = 1.0;
@@ -18,6 +17,19 @@ internal static class Live2DRenderPipeline
         uniform float hue_shift = 0.0;
         uniform float invert_amount = 0.0;
         uniform float gamma_value = 1.0;
+        uniform int canvas_mask_type = 0;
+        uniform vec4 canvas_mask_rect = vec4(-500.0, -500.0, 1000.0, 1000.0);
+        uniform float canvas_mask_corner_radius = 32.0;
+        uniform float composite_render_scale = 1.0;
+        uniform vec2 composite_canvas_center = vec2(0.0);
+
+        varying vec2 canvas_mask_local_position;
+        varying vec4 model_modulate;
+
+        void vertex() {
+            canvas_mask_local_position = VERTEX / composite_render_scale + composite_canvas_center;
+            model_modulate = COLOR;
+        }
 
         vec3 rotate_hue(vec3 color, float angle) {
             vec3 axis = normalize(vec3(1.0));
@@ -29,7 +41,33 @@ internal static class Live2DRenderPipeline
         }
 
         void fragment() {
-            vec4 c = textureLod(screen_texture, SCREEN_UV, 0.0);
+            if (canvas_mask_type != 0) {
+                vec2 rect_position = canvas_mask_rect.xy;
+                vec2 rect_size = canvas_mask_rect.zw;
+                vec2 relative = canvas_mask_local_position - rect_position;
+                bool outside_rect = relative.x < 0.0 || relative.y < 0.0
+                    || relative.x > rect_size.x || relative.y > rect_size.y;
+                if (outside_rect) {
+                    discard;
+                }
+                if (canvas_mask_type == 2) {
+                    vec2 normalized = (relative - rect_size * 0.5) / (rect_size * 0.5);
+                    if (dot(normalized, normalized) > 1.0) {
+                        discard;
+                    }
+                } else if (canvas_mask_type == 3) {
+                    vec2 half_size = rect_size * 0.5;
+                    float radius = min(canvas_mask_corner_radius, min(half_size.x, half_size.y));
+                    vec2 rounded = abs(relative - half_size) - (half_size - vec2(radius));
+                    float distance_to_edge = length(max(rounded, vec2(0.0)))
+                        + min(max(rounded.x, rounded.y), 0.0) - radius;
+                    if (distance_to_edge > 0.0) {
+                        discard;
+                    }
+                }
+            }
+
+            vec4 c = texture(TEXTURE, UV) * model_modulate;
             if (c.a > 0.0001) {
                 c.rgb /= c.a;
             }
@@ -45,7 +83,7 @@ internal static class Live2DRenderPipeline
             c.rgb = pow(max(c.rgb, vec3(0.0)), vec3(1.0 / gamma_value));
             c.a *= tint_color.a;
             __PREMULTIPLY__
-            COLOR *= c;
+            COLOR = c;
         }
         """;
 
@@ -53,6 +91,14 @@ internal static class Live2DRenderPipeline
 
     public static ShaderMaterial CreateMaterial(Live2DBlendMode blendMode)
         => new() { Shader = GetShader(blendMode) };
+
+    public static bool RequiresCompositeRendering(
+        Live2DBlendMode blendMode,
+        Live2DFilterSettings filter,
+        Live2DMaskSettings mask)
+        => blendMode != Live2DBlendMode.Normal ||
+           !filter.IsNeutral ||
+           mask.Type != Live2DMaskType.None;
 
     public static void UpdateMaterial(
         ShaderMaterial material,
@@ -68,6 +114,26 @@ internal static class Live2DRenderPipeline
         material.SetShaderParameter("hue_shift", Mathf.DegToRad(filter.HueShiftDegrees));
         material.SetShaderParameter("invert_amount", filter.Invert);
         material.SetShaderParameter("gamma_value", filter.Gamma);
+    }
+
+    public static void UpdateMask(ShaderMaterial material, Live2DMaskSettings mask)
+    {
+        material.SetShaderParameter("canvas_mask_type", (int)mask.Type);
+        material.SetShaderParameter("canvas_mask_rect", new Vector4(
+            mask.Rect.Position.X,
+            mask.Rect.Position.Y,
+            mask.Rect.Size.X,
+            mask.Rect.Size.Y));
+        material.SetShaderParameter("canvas_mask_corner_radius", mask.CornerRadius);
+    }
+
+    public static void UpdateCompositeGeometry(
+        ShaderMaterial material,
+        float renderScale,
+        Vector2 canvasCenter)
+    {
+        material.SetShaderParameter("composite_render_scale", renderScale);
+        material.SetShaderParameter("composite_canvas_center", canvasCenter);
     }
 
     public static Vector2[] BuildMaskPolygon(Live2DMaskSettings mask) => mask.Type switch

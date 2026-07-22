@@ -68,8 +68,8 @@ Live2D 使用 RitsuLib 全局数据存储，键为 `settings`，文件名为 `se
 | `Filter` | 整模型合成后的颜色滤镜 |
 | `Mask` | 模型局部坐标画布裁切 |
 
-Filter 范围与公共 API 相同。Mask 包含 `Type`、`X/Y`、`Width/Height`、`CornerRadius` 和
-`SegmentsPerCorner`。非法持久值会被限制到有效范围或恢复安全默认值。
+Filter 范围与公共 API 相同。Mask 的用户可配置字段为 `Type`、`X/Y`、`Width/Height` 和 `CornerRadius`。
+椭圆与圆角边缘由着色器连续计算，不存在需要手动调节的渲染分段。非法持久值会被限制到有效范围或恢复安全默认值。
 
 ## Models
 

@@ -104,8 +104,8 @@ public sealed record Live2DFilterSettings
 }
 
 /// <summary>
-/// Canvas crop/mask applied in model-local coordinates. Rounded and elliptical masks
-/// approximate their edges with <see cref="SegmentsPerCorner"/> line segments.
+/// Canvas crop/mask applied in model-local coordinates. Rendered ellipse and rounded-rectangle
+/// edges are evaluated analytically by the composite shader.
 /// </summary>
 public sealed record Live2DMaskSettings
 {
@@ -118,7 +118,7 @@ public sealed record Live2DMaskSettings
     public Rect2 Rect { get; init; } = new(-500f, -500f, 1000f, 1000f);
     /// <summary>Rounded-rectangle corner radius; must be non-negative.</summary>
     public float CornerRadius { get; init; } = 32f;
-    /// <summary>Curve segments per corner, from 2 through 64.</summary>
+    /// <summary>Preview-outline sampling density, from 2 through 64; rendered crop edges are analytic.</summary>
     public int SegmentsPerCorner { get; init; } = 12;
 
     internal void Validate()

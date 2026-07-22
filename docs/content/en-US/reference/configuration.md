@@ -52,8 +52,9 @@ Defaults are `Speed=1`, Physics and Pose enabled, automatic Idle enabled, and a 
 
 ### Rendering
 
-`MaskViewportSize` controls Cubism mask texture size. `BlendMode` supports Normal, Add, Subtract, Multiply, and PremultipliedAlpha. `Filter` and
-`Mask` match the public API ranges. Invalid persisted values are clamped or replaced with safe defaults.
+`MaskViewportSize` controls Cubism mask texture size. `BlendMode` supports Normal, Add, Subtract, Multiply, and PremultipliedAlpha. User-facing
+mask fields are `Type`, `X/Y`, `Width/Height`, and `CornerRadius`; ellipse and rounded edges are evaluated analytically without a rendering-segment
+setting. `Filter` and `Mask` otherwise match the public API ranges. Invalid persisted values are clamped or replaced with safe defaults.
 
 ## Models
 

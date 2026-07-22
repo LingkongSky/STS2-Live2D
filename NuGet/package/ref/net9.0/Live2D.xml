@@ -1384,8 +1384,8 @@
         </member>
         <member name="T:Live2D.Api.Live2DMaskSettings">
             <summary>
-            Canvas crop/mask applied in model-local coordinates. Rounded and elliptical masks
-            approximate their edges with <see cref="P:Live2D.Api.Live2DMaskSettings.SegmentsPerCorner"/> line segments.
+            Canvas crop/mask applied in model-local coordinates. Rendered ellipse and rounded-rectangle
+            edges are evaluated analytically by the composite shader.
             </summary>
         </member>
         <member name="P:Live2D.Api.Live2DMaskSettings.None">
@@ -1401,7 +1401,7 @@
             <summary>Rounded-rectangle corner radius; must be non-negative.</summary>
         </member>
         <member name="P:Live2D.Api.Live2DMaskSettings.SegmentsPerCorner">
-            <summary>Curve segments per corner, from 2 through 64.</summary>
+            <summary>Preview-outline sampling density, from 2 through 64; rendered crop edges are analytic.</summary>
         </member>
         <member name="T:Live2D.Api.Live2DScene">
             <summary>Built-in host scenes currently supported by the Live2D runtime.</summary>
@@ -1717,6 +1717,11 @@
             Cached name for the 'SetSimulationSize' method.
             </summary>
         </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewCanvas.MethodName.SetMaskEditing">
+            <summary>
+            Cached name for the 'SetMaskEditing' method.
+            </summary>
+        </member>
         <member name="F:Live2D.Scripts.UI.Live2DPreviewCanvas.MethodName.AddPreview">
             <summary>
             Cached name for the 'AddPreview' method.
@@ -1760,6 +1765,11 @@
             Cached StringNames for the properties and fields contained in this class, for fast lookup.
             </summary>
         </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewCanvas.PropertyName.CanvasScale">
+            <summary>
+            Cached name for the 'CanvasScale' property.
+            </summary>
+        </member>
         <member name="F:Live2D.Scripts.UI.Live2DPreviewCanvas.PropertyName._dragging">
             <summary>
             Cached name for the '_dragging' field.
@@ -1783,6 +1793,11 @@
         <member name="F:Live2D.Scripts.UI.Live2DPreviewCanvas.PropertyName._displayRect">
             <summary>
             Cached name for the '_displayRect' field.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewCanvas.PropertyName._maskEditing">
+            <summary>
+            Cached name for the '_maskEditing' field.
             </summary>
         </member>
         <member name="M:Live2D.Scripts.UI.Live2DPreviewCanvas.SetGodotClassPropertyValue(Godot.NativeInterop.godot_string_name@,Godot.NativeInterop.godot_variant@)">
@@ -1869,6 +1884,66 @@
             Cached name for the 'ChangeRotation' method.
             </summary>
         </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.MethodName.CreateRenderingEditor">
+            <summary>
+            Cached name for the 'CreateRenderingEditor' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.MethodName.AddMaskInput">
+            <summary>
+            Cached name for the 'AddMaskInput' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.MethodName.ChangeMaskOverride">
+            <summary>
+            Cached name for the 'ChangeMaskOverride' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.MethodName.ChangeCornerRadius">
+            <summary>
+            Cached name for the 'ChangeCornerRadius' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.MethodName.FitMaskToModel">
+            <summary>
+            Cached name for the 'FitMaskToModel' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.MethodName.ToggleMaskCanvasEditing">
+            <summary>
+            Cached name for the 'ToggleMaskCanvasEditing' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.MethodName.MoveMask">
+            <summary>
+            Cached name for the 'MoveMask' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.MethodName.ResizeMask">
+            <summary>
+            Cached name for the 'ResizeMask' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.MethodName.UpdateMaskControls">
+            <summary>
+            Cached name for the 'UpdateMaskControls' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.MethodName.SetMaskInputsEnabled">
+            <summary>
+            Cached name for the 'SetMaskInputsEnabled' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.MethodName.SetControlEnabled">
+            <summary>
+            Cached name for the 'SetControlEnabled' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.MethodName.ApplyPreviewRendering">
+            <summary>
+            Cached name for the 'ApplyPreviewRendering' method.
+            </summary>
+        </member>
         <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.MethodName.UpdateControls">
             <summary>
             Cached name for the 'UpdateControls' method.
@@ -1899,6 +1974,16 @@
             Cached name for the 'CreateSectionTitle' method.
             </summary>
         </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.MethodName.MaskTypeName">
+            <summary>
+            Cached name for the 'MaskTypeName' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.MethodName.BlendModeName">
+            <summary>
+            Cached name for the 'BlendModeName' method.
+            </summary>
+        </member>
         <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.MethodName.CreatePanelStyle">
             <summary>
             Cached name for the 'CreatePanelStyle' method.
@@ -1927,6 +2012,26 @@
             Cached StringNames for the properties and fields contained in this class, for fast lookup.
             </summary>
         </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.PropertyName._globalMaskViewportSize">
+            <summary>
+            Cached name for the '_globalMaskViewportSize' field.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.PropertyName._maskViewportDraft">
+            <summary>
+            Cached name for the '_maskViewportDraft' field.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.PropertyName._globalBlendMode">
+            <summary>
+            Cached name for the '_globalBlendMode' field.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.PropertyName._blendDraft">
+            <summary>
+            Cached name for the '_blendDraft' field.
+            </summary>
+        </member>
         <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.PropertyName._canvas">
             <summary>
             Cached name for the '_canvas' field.
@@ -1935,6 +2040,11 @@
         <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.PropertyName._previewError">
             <summary>
             Cached name for the '_previewError' field.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.PropertyName._maskOutline">
+            <summary>
+            Cached name for the '_maskOutline' field.
             </summary>
         </member>
         <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.PropertyName._sceneChoice">
@@ -1977,6 +2087,36 @@
             Cached name for the '_rotationInput' field.
             </summary>
         </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.PropertyName._maskViewportOverride">
+            <summary>
+            Cached name for the '_maskViewportOverride' field.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.PropertyName._maskViewportInput">
+            <summary>
+            Cached name for the '_maskViewportInput' field.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.PropertyName._filterOverride">
+            <summary>
+            Cached name for the '_filterOverride' field.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.PropertyName._maskOverride">
+            <summary>
+            Cached name for the '_maskOverride' field.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.PropertyName._maskCanvasEdit">
+            <summary>
+            Cached name for the '_maskCanvasEdit' field.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.PropertyName._maskTypeInput">
+            <summary>
+            Cached name for the '_maskTypeInput' field.
+            </summary>
+        </member>
         <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.PropertyName._currentScene">
             <summary>
             Cached name for the '_currentScene' field.
@@ -1985,6 +2125,26 @@
         <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.PropertyName._previewViewportSize">
             <summary>
             Cached name for the '_previewViewportSize' field.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.PropertyName._maskViewportOverrideEnabled">
+            <summary>
+            Cached name for the '_maskViewportOverrideEnabled' field.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.PropertyName._blendOverrideEnabled">
+            <summary>
+            Cached name for the '_blendOverrideEnabled' field.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.PropertyName._filterOverrideEnabled">
+            <summary>
+            Cached name for the '_filterOverrideEnabled' field.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.PropertyName._maskOverrideEnabled">
+            <summary>
+            Cached name for the '_maskOverrideEnabled' field.
             </summary>
         </member>
         <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.PropertyName._updatingControls">

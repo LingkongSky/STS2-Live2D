@@ -2,6 +2,7 @@ using System.Reflection;
 using Godot;
 using Live2D.Api;
 using Live2D.Scripts.Configuration;
+using Live2D.Scripts.Runtime;
 using Live2D.Scripts.UI;
 
 public partial class Main : Node2D
@@ -24,6 +25,7 @@ public partial class Main : Node2D
             TestBareDigitActionHotkey();
             TestConfigSanitization();
             TestMaskGeometry();
+            TestCompositeResolution();
             TestShaderVariants();
             _dispatcherTest = Task.Run(TestDispatcherFromWorkerAsync);
         }
@@ -507,12 +509,39 @@ public partial class Main : Node2D
         }
     }
 
+    private static void TestCompositeResolution()
+    {
+        VerifyCompositeScale(new Vector2(4096f, 4096f), new Vector2(0.5f, 0.5f), 0.5f);
+        VerifyCompositeScale(new Vector2(4096f, 4096f), Vector2.One, 1f);
+        VerifyCompositeScale(new Vector2(16384f, 16384f), Vector2.One, 0.5f);
+
+        if (Live2DRenderPipeline.RequiresCompositeRendering(
+                Live2DBlendMode.Normal,
+                Live2DFilterSettings.Default,
+                Live2DMaskSettings.None))
+            throw new InvalidOperationException("Neutral rendering should bypass offscreen composition.");
+        if (!Live2DRenderPipeline.RequiresCompositeRendering(
+                Live2DBlendMode.Normal,
+                Live2DFilterSettings.Default,
+                new Live2DMaskSettings { Type = Live2DMaskType.Rectangle }))
+            throw new InvalidOperationException("Canvas masks must enable offscreen composition.");
+    }
+
+    private static void VerifyCompositeScale(Vector2 canvasSize, Vector2 displayScale, float expected)
+    {
+        var actual = Live2DModelInstance.ResolveCompositeRenderScale(canvasSize, displayScale);
+        if (!Mathf.IsEqualApprox(actual, expected))
+            throw new InvalidOperationException(
+                $"Composite scale for {canvasSize}/{displayScale} was {actual}; expected {expected}.");
+    }
+
     private void TestShaderVariants()
     {
         var pipeline = GetPipelineType();
         var createMaterial = RequireMethod(pipeline, "CreateMaterial");
         var updateMaterial = RequireMethod(pipeline, "UpdateMaterial");
-        var buildMask = RequireMethod(pipeline, "BuildMaskPolygon");
+        var updateMask = RequireMethod(pipeline, "UpdateMask");
+        var updateGeometry = RequireMethod(pipeline, "UpdateCompositeGeometry");
 
         var index = 0;
         foreach (var blendMode in Enum.GetValues<Live2DBlendMode>())
@@ -551,26 +580,16 @@ public partial class Main : Node2D
                 CornerRadius = 18f,
                 SegmentsPerCorner = 12,
             };
-            var maskNode = new Polygon2D
+            updateMask.Invoke(null, [material, mask]);
+            updateGeometry.Invoke(null, [material, 1f, Vector2.Zero]);
+
+            var image = Image.CreateEmpty(80, 120, false, Image.Format.Rgba8);
+            image.Fill(new Color(0.3f + index * 0.1f, 0.6f, 0.9f));
+            AddChild(new Sprite2D
             {
                 Position = new Vector2(70f + index * 110f, 180f),
-                Polygon = (Vector2[])buildMask.Invoke(null, [mask])!,
-                ClipChildren = CanvasItem.ClipChildrenMode.Only,
-                Color = Colors.White,
-            };
-            AddChild(maskNode);
-            var group = new CanvasGroup { Material = material };
-            maskNode.AddChild(group);
-            group.AddChild(new Polygon2D
-            {
-                Polygon =
-                [
-                    new Vector2(-40f, -60f),
-                    new Vector2(40f, -60f),
-                    new Vector2(40f, 60f),
-                    new Vector2(-40f, 60f),
-                ],
-                Color = new Color(0.3f + index * 0.1f, 0.6f, 0.9f),
+                Texture = ImageTexture.CreateFromImage(image),
+                Material = material,
             });
             index++;
         }

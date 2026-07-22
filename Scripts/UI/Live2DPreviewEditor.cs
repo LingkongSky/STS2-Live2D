@@ -15,9 +15,18 @@ internal sealed partial class Live2DPreviewEditor : CanvasLayer
     private IModSettingsUiActionHost _uiHost = null!;
     private Live2DModelConfig _model = null!;
     private ResolvedLive2DConfig _resolved = null!;
+    private int _globalMaskViewportSize;
+    private int _maskViewportDraft;
+    private Live2DBlendMode _globalBlendMode;
+    private Live2DBlendMode _blendDraft;
+    private FilterConfig _globalFilter = null!;
+    private FilterConfig _filterDraft = null!;
+    private CanvasMaskConfig _globalMask = null!;
+    private CanvasMaskConfig _maskDraft = null!;
     private Live2DPreviewCanvas _canvas = null!;
     private Label _previewError = null!;
     private Live2DModelInstance? _preview;
+    private Line2D? _maskOutline;
     private OptionButton _sceneChoice = null!;
     private OptionButton _resolutionChoice = null!;
     private SpinBox _offsetX = null!;
@@ -26,8 +35,21 @@ internal sealed partial class Live2DPreviewEditor : CanvasLayer
     private HSlider _rotation = null!;
     private SpinBox _scaleInput = null!;
     private SpinBox _rotationInput = null!;
+    private CheckBox _maskViewportOverride = null!;
+    private OptionButton _maskViewportInput = null!;
+    private CheckBox _filterOverride = null!;
+    private CheckBox _maskOverride = null!;
+    private CheckBox _maskCanvasEdit = null!;
+    private OptionButton _maskTypeInput = null!;
+    private readonly List<Control> _filterInputs = [];
+    private readonly List<Control> _maskInputs = [];
+    private readonly List<Action<CanvasMaskConfig>> _maskControlRefreshers = [];
     private Live2DSceneKind _currentScene;
     private Vector2 _previewViewportSize = Live2DLayout.ReferenceViewportSize;
+    private bool _maskViewportOverrideEnabled;
+    private bool _blendOverrideEnabled;
+    private bool _filterOverrideEnabled;
+    private bool _maskOverrideEnabled;
     // 同步滑条和数字输入框时，阻止 ValueChanged 事件反向写回草稿。
     private bool _updatingControls;
 
@@ -59,6 +81,18 @@ internal sealed partial class Live2DPreviewEditor : CanvasLayer
         _model = model;
         _uiHost = uiHost;
         _resolved = Live2DConfigResolver.Resolve(global, model.Overrides);
+        _globalMaskViewportSize = global.Rendering.MaskViewportSize;
+        _maskViewportOverrideEnabled = model.Overrides.Rendering.MaskViewportSize.HasValue;
+        _maskViewportDraft = model.Overrides.Rendering.MaskViewportSize ?? global.Rendering.MaskViewportSize;
+        _globalBlendMode = global.Rendering.BlendMode;
+        _blendOverrideEnabled = model.Overrides.Rendering.BlendMode.HasValue;
+        _blendDraft = model.Overrides.Rendering.BlendMode ?? global.Rendering.BlendMode;
+        _globalFilter = CloneFilter(global.Rendering.Filter);
+        _filterOverrideEnabled = model.Overrides.Rendering.Filter is not null;
+        _filterDraft = CloneFilter(model.Overrides.Rendering.Filter ?? global.Rendering.Filter);
+        _globalMask = CloneMask(global.Rendering.Mask);
+        _maskOverrideEnabled = model.Overrides.Rendering.Mask is not null;
+        _maskDraft = CloneMask(model.Overrides.Rendering.Mask ?? global.Rendering.Mask);
         if (Engine.GetMainLoop() is SceneTree tree)
         {
             var currentSize = tree.Root.GetVisibleRect().Size;
@@ -177,6 +211,8 @@ internal sealed partial class Live2DPreviewEditor : CanvasLayer
         _canvas.Dragged += MovePreview;
         _canvas.ScaleRequested += delta => ChangeScale(CurrentDraft.Scale + delta);
         _canvas.RotateRequested += delta => ChangeRotation(CurrentDraft.RotationDegrees + delta);
+        _canvas.MaskDragged += MoveMask;
+        _canvas.MaskResizeRequested += ResizeMask;
         _canvas.Resized += ApplyPreviewTransform;
         previewPanel.AddChild(_canvas);
         previewColumn.AddChild(previewPanel);
@@ -192,9 +228,18 @@ internal sealed partial class Live2DPreviewEditor : CanvasLayer
         foreach (var side in new[] { "margin_left", "margin_top", "margin_right", "margin_bottom" })
             inspectorMargin.AddThemeConstantOverride(side, 18);
         inspectorPanel.AddChild(inspectorMargin);
-        var inspector = new VBoxContainer();
+        var inspectorScroll = new ScrollContainer
+        {
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+            SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+        };
+        inspectorMargin.AddChild(inspectorScroll);
+        var inspector = new VBoxContainer
+        {
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+        };
         inspector.AddThemeConstantOverride("separation", 12);
-        inspectorMargin.AddChild(inspector);
+        inspectorScroll.AddChild(inspector);
         inspector.AddChild(CreateSectionTitle(L("preview.transform_title", "Transform")));
 
         _offsetX = CreateSpinBox(-4000, 4000, 1, value => ChangeOffset(x: (float)value));
@@ -218,6 +263,8 @@ internal sealed partial class Live2DPreviewEditor : CanvasLayer
             AutowrapMode = TextServer.AutowrapMode.WordSmart,
             Modulate = new Color(0.78f, 0.8f, 0.84f),
         });
+        inspector.AddChild(new HSeparator());
+        inspector.AddChild(CreateRenderingEditor());
         content.AddChild(inspectorPanel);
 
         var footer = new HBoxContainer
@@ -266,6 +313,7 @@ internal sealed partial class Live2DPreviewEditor : CanvasLayer
         if (_preview != null && GodotObject.IsInstanceValid(_preview.Root))
             _preview.Root.QueueFree();
         _preview = null;
+        _maskOutline = null;
         _previewError.Visible = false;
         _previewError.Text = "";
         UpdateControls();
@@ -300,6 +348,16 @@ internal sealed partial class Live2DPreviewEditor : CanvasLayer
                 _model,
                 Live2DModelRepository.GetAbsoluteModelPath(_model));
             _preview = Live2DModelInstance.Create(definition, _resolved, config, _previewViewportSize);
+            _maskOutline = new Line2D
+            {
+                Name = "Live2DPreviewMaskOutline",
+                Width = 2f,
+                Closed = true,
+                DefaultColor = new Color(0.2f, 0.85f, 1f, 0.95f),
+                ZIndex = 4090,
+            };
+            _preview.Root.AddChild(_maskOutline);
+            ApplyPreviewRendering();
             _canvas.AddPreview(_preview.Root);
             Entry.Logger.Info(
                 $"[{Entry.ModId}] Opened preview for model {_model.Id} in {_currentScene} " +
@@ -320,13 +378,16 @@ internal sealed partial class Live2DPreviewEditor : CanvasLayer
         if (_preview == null || !GodotObject.IsInstanceValid(_preview.Root))
             return;
         var draft = CurrentDraft;
-        _preview.Root.Position = Live2DLayout.ResolvePosition(
-            _previewViewportSize,
-            draft.Anchor,
-            draft.OffsetX,
-            draft.OffsetY);
-        _preview.Root.Scale = Vector2.One * Live2DLayout.ResolveModelScale(draft.Scale, _previewViewportSize);
-        _preview.Root.RotationDegrees = draft.RotationDegrees;
+        _preview.Apply(new Live2DModelUpdate
+        {
+            Position = Live2DLayout.ResolvePosition(
+                _previewViewportSize,
+                draft.Anchor,
+                draft.OffsetX,
+                draft.OffsetY),
+            Scale = Vector2.One * Live2DLayout.ResolveModelScale(draft.Scale, _previewViewportSize),
+            RotationDegrees = draft.RotationDegrees,
+        });
     }
 
     private void MovePreview(Vector2 delta)
@@ -373,6 +434,386 @@ internal sealed partial class Live2DPreviewEditor : CanvasLayer
         UpdateControls();
     }
 
+    private Control CreateRenderingEditor()
+    {
+        var root = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        root.AddThemeConstantOverride("separation", 10);
+        root.AddChild(CreateSectionTitle(L("preview.rendering_title", "Rendering")));
+
+        _maskViewportOverride = new CheckBox
+        {
+            Text = L("preview.override_mask_size", "Override global mask viewport size"),
+            ButtonPressed = _maskViewportOverrideEnabled,
+        };
+        _maskViewportOverride.Toggled += enabled =>
+        {
+            if (_updatingControls)
+                return;
+            _maskViewportOverrideEnabled = enabled;
+            SetControlEnabled(_maskViewportInput, enabled);
+            ApplyPreviewRendering();
+        };
+        root.AddChild(_maskViewportOverride);
+        _maskViewportInput = Live2DSettingsUi.CreateMaskViewportSizeSelector(
+            _maskViewportDraft,
+            _maskViewportOverrideEnabled,
+            value =>
+        {
+            if (_updatingControls)
+                return;
+            _maskViewportDraft = value;
+            ApplyPreviewRendering();
+        });
+        root.AddChild(CreateField(L("field.mask_size", "Mask Viewport Size (0 = Auto)"), _maskViewportInput));
+
+        var blendModes = Enum.GetValues<Live2DBlendMode>();
+        var blend = new OptionButton { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        blend.AddItem(F(
+            "state.inherited_value",
+            "Inherited global value: {0}",
+            BlendModeName(_globalBlendMode)));
+        foreach (var mode in blendModes)
+            blend.AddItem(BlendModeName(mode));
+        blend.Selected = _blendOverrideEnabled ? Array.IndexOf(blendModes, _blendDraft) + 1 : 0;
+        blend.ItemSelected += index =>
+        {
+            if (_updatingControls)
+                return;
+            _blendOverrideEnabled = index > 0;
+            if (_blendOverrideEnabled)
+                _blendDraft = blendModes[index - 1];
+            ApplyPreviewRendering();
+        };
+        root.AddChild(CreateField(L("field.blend_mode", "Blend Mode"), blend));
+
+        root.AddChild(new HSeparator());
+        root.AddChild(CreateSectionTitle(L("preview.filter_title", "Filter")));
+        _filterOverride = new CheckBox
+        {
+            Text = L("rendering.override_filter", "Override global filter"),
+            ButtonPressed = _filterOverrideEnabled,
+        };
+        _filterOverride.Toggled += enabled =>
+        {
+            if (_updatingControls)
+                return;
+            _filterOverrideEnabled = enabled;
+            SetControlsEnabled(_filterInputs, enabled);
+            ApplyPreviewRendering();
+        };
+        root.AddChild(_filterOverride);
+
+        var tint = Live2DSettingsUi.CreateRenderingColorPicker(
+            new Color(
+                _filterDraft.TintR,
+                _filterDraft.TintG,
+                _filterDraft.TintB,
+                _filterDraft.TintA),
+            _filterOverrideEnabled,
+            color => ChangeFilter(filter =>
+            {
+                filter.TintR = color.R;
+                filter.TintG = color.G;
+                filter.TintB = color.B;
+                filter.TintA = color.A;
+            }));
+        AddRenderingInput(root, _filterInputs, L("field.tint", "Tint"), tint);
+        AddFilterSlider(root, L("field.brightness", "Brightness"), _filterDraft.Brightness, -1, 1, 0.01,
+            value => ChangeFilter(filter => filter.Brightness = (float)value));
+        AddFilterSlider(root, L("field.contrast", "Contrast"), _filterDraft.Contrast, 0, 4, 0.01,
+            value => ChangeFilter(filter => filter.Contrast = (float)value));
+        AddFilterSlider(root, L("field.saturation", "Saturation"), _filterDraft.Saturation, 0, 4, 0.01,
+            value => ChangeFilter(filter => filter.Saturation = (float)value));
+        AddFilterSlider(root, L("field.grayscale", "Grayscale"), _filterDraft.Grayscale, 0, 1, 0.01,
+            value => ChangeFilter(filter => filter.Grayscale = (float)value));
+        AddFilterSlider(root, L("field.hue", "Hue Shift (degrees)"), _filterDraft.HueShiftDegrees, -180, 180, 1,
+            value => ChangeFilter(filter => filter.HueShiftDegrees = (float)value), "°");
+        AddFilterSlider(root, L("field.invert", "Invert"), _filterDraft.Invert, 0, 1, 0.01,
+            value => ChangeFilter(filter => filter.Invert = (float)value));
+        AddFilterSlider(root, L("field.gamma", "Gamma"), _filterDraft.Gamma, 0.01, 10, 0.01,
+            value => ChangeFilter(filter => filter.Gamma = (float)value));
+        SetControlsEnabled(_filterInputs, _filterOverrideEnabled);
+
+        root.AddChild(new HSeparator());
+        root.AddChild(CreateSectionTitle(L("preview.mask_title", "Canvas Mask")));
+
+        _maskOverride = new CheckBox
+        {
+            Text = L("rendering.override_mask", "Override global canvas mask"),
+            ButtonPressed = _maskOverrideEnabled,
+        };
+        _maskOverride.Toggled += ChangeMaskOverride;
+        root.AddChild(_maskOverride);
+
+        var fitMask = new Button
+        {
+            Text = L("preview.mask_fit_model", "Enable and fit to model"),
+            CustomMinimumSize = new Vector2(0f, 38f),
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+        };
+        fitMask.Pressed += FitMaskToModel;
+        root.AddChild(fitMask);
+
+        _maskCanvasEdit = new CheckBox
+        {
+            Text = L("preview.mask_edit_canvas", "Edit mask directly on canvas"),
+        };
+        _maskCanvasEdit.Toggled += ToggleMaskCanvasEditing;
+        root.AddChild(_maskCanvasEdit);
+
+        var maskTypes = Enum.GetValues<Live2DMaskType>();
+        _maskTypeInput = new OptionButton { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        foreach (var type in maskTypes)
+            _maskTypeInput.AddItem(MaskTypeName(type));
+        _maskTypeInput.Selected = Math.Max(0, Array.IndexOf(maskTypes, _maskDraft.Type));
+        _maskTypeInput.ItemSelected += index => ChangeMask(mask => mask.Type = maskTypes[index]);
+        AddMaskInput(root, L("field.canvas_mask", "Canvas Mask"), _maskTypeInput);
+
+        AddMaskSlider(root, L("field.mask_x", "Mask X"), _maskDraft.X, -8000, 8000, 1,
+            value => ChangeMask(mask => mask.X = (float)value), mask => mask.X);
+        AddMaskSlider(root, L("field.mask_y", "Mask Y"), _maskDraft.Y, -8000, 8000, 1,
+            value => ChangeMask(mask => mask.Y = (float)value), mask => mask.Y);
+        AddMaskSlider(root, L("field.mask_width", "Mask Width"), _maskDraft.Width, 1, 16000, 1,
+            value => ChangeMask(mask => mask.Width = (float)value), mask => mask.Width);
+        AddMaskSlider(root, L("field.mask_height", "Mask Height"), _maskDraft.Height, 1, 16000, 1,
+            value => ChangeMask(mask => mask.Height = (float)value), mask => mask.Height);
+        AddMaskSlider(root, L("field.corner_radius", "Corner Radius"), _maskDraft.CornerRadius, 0, 8000, 1,
+            value => ChangeCornerRadius((float)value), mask => mask.CornerRadius);
+        SetMaskInputsEnabled(_maskOverrideEnabled);
+        return root;
+    }
+
+    private void AddFilterSlider(
+        VBoxContainer root,
+        string label,
+        double value,
+        double min,
+        double max,
+        double step,
+        Action<double> changed,
+        string suffix = "")
+    {
+        var row = Live2DSettingsUi.CreateRenderingSlider(
+            value,
+            min,
+            max,
+            step,
+            _filterOverrideEnabled,
+            changed,
+            out var slider,
+            out var input,
+            suffix);
+        _filterInputs.Add(slider);
+        _filterInputs.Add(input);
+        root.AddChild(CreateField(label, row));
+    }
+
+    private static void AddRenderingInput(
+        VBoxContainer root,
+        List<Control> inputs,
+        string label,
+        Control input)
+    {
+        inputs.Add(input);
+        root.AddChild(CreateField(label, input));
+    }
+
+    private void ChangeFilter(Action<FilterConfig> mutation)
+    {
+        if (_updatingControls)
+            return;
+        mutation(_filterDraft);
+        ApplyPreviewRendering();
+    }
+
+    private void AddMaskSlider(
+        VBoxContainer root,
+        string label,
+        double value,
+        double min,
+        double max,
+        double step,
+        Action<double> changed,
+        Func<CanvasMaskConfig, double> read,
+        bool rounded = false)
+    {
+        var row = Live2DSettingsUi.CreateRenderingSlider(
+            value,
+            min,
+            max,
+            step,
+            _maskOverrideEnabled,
+            changed,
+            out var slider,
+            out var input);
+        input.Rounded = rounded;
+        _maskInputs.Add(slider);
+        _maskInputs.Add(input);
+        _maskControlRefreshers.Add(mask =>
+        {
+            var next = read(mask);
+            slider.Value = next;
+            input.Value = next;
+        });
+        root.AddChild(CreateField(label, row));
+    }
+
+    private void AddMaskInput(VBoxContainer root, string label, Control input)
+    {
+        _maskInputs.Add(input);
+        root.AddChild(CreateField(label, input));
+    }
+
+    private void ChangeMaskOverride(bool enabled)
+    {
+        if (_updatingControls)
+            return;
+        _maskOverrideEnabled = enabled;
+        SetMaskInputsEnabled(enabled);
+        if (!enabled && _maskCanvasEdit.ButtonPressed)
+        {
+            _maskCanvasEdit.SetPressedNoSignal(false);
+            _canvas.SetMaskEditing(false);
+        }
+        ApplyPreviewRendering();
+    }
+
+    private void ChangeMask(Action<CanvasMaskConfig> mutation)
+    {
+        if (_updatingControls)
+            return;
+        mutation(_maskDraft);
+        ApplyPreviewRendering();
+    }
+
+    private void ChangeCornerRadius(float radius)
+    {
+        if (_updatingControls)
+            return;
+        _maskDraft.Type = Live2DMaskType.RoundedRectangle;
+        _maskDraft.CornerRadius = radius;
+        UpdateMaskControls();
+        ApplyPreviewRendering();
+    }
+
+    private void FitMaskToModel()
+    {
+        if (_preview == null || !GodotObject.IsInstanceValid(_preview.Root))
+            return;
+
+        var bounds = _preview.CanvasBounds;
+        _maskOverrideEnabled = true;
+        _maskOverride.SetPressedNoSignal(true);
+        _maskDraft.Type = Live2DMaskType.Rectangle;
+        _maskDraft.X = bounds.Position.X;
+        _maskDraft.Y = bounds.Position.Y;
+        _maskDraft.Width = Math.Max(1f, bounds.Size.X);
+        _maskDraft.Height = Math.Max(1f, bounds.Size.Y);
+        _maskDraft.CornerRadius = Math.Min(
+            _maskDraft.CornerRadius,
+            Math.Min(_maskDraft.Width, _maskDraft.Height) * 0.5f);
+        SetMaskInputsEnabled(true);
+        UpdateMaskControls();
+        ApplyPreviewRendering();
+    }
+
+    private void ToggleMaskCanvasEditing(bool enabled)
+    {
+        if (enabled)
+        {
+            if (!_maskOverrideEnabled)
+            {
+                _maskOverrideEnabled = true;
+                _maskOverride.SetPressedNoSignal(true);
+                SetMaskInputsEnabled(true);
+            }
+            if (_maskDraft.Type == Live2DMaskType.None)
+                FitMaskToModel();
+        }
+        _canvas.SetMaskEditing(enabled);
+        ApplyPreviewRendering();
+    }
+
+    private void MoveMask(Vector2 simulationDelta)
+    {
+        if (!_maskOverrideEnabled)
+            return;
+        var draft = CurrentDraft;
+        var modelScale = Math.Max(0.001f, Live2DLayout.ResolveModelScale(draft.Scale, _previewViewportSize));
+        var localDelta = simulationDelta.Rotated(-Mathf.DegToRad(draft.RotationDegrees)) / modelScale;
+        _maskDraft.X += localDelta.X;
+        _maskDraft.Y += localDelta.Y;
+        UpdateMaskControls();
+        ApplyPreviewRendering();
+    }
+
+    private void ResizeMask(float factor)
+    {
+        if (!_maskOverrideEnabled)
+            return;
+        var oldWidth = _maskDraft.Width;
+        var oldHeight = _maskDraft.Height;
+        _maskDraft.Width = Math.Clamp(oldWidth * factor, 1f, 16000f);
+        _maskDraft.Height = Math.Clamp(oldHeight * factor, 1f, 16000f);
+        _maskDraft.X += (oldWidth - _maskDraft.Width) * 0.5f;
+        _maskDraft.Y += (oldHeight - _maskDraft.Height) * 0.5f;
+        _maskDraft.CornerRadius = Math.Min(
+            _maskDraft.CornerRadius,
+            Math.Min(_maskDraft.Width, _maskDraft.Height) * 0.5f);
+        UpdateMaskControls();
+        ApplyPreviewRendering();
+    }
+
+    private void UpdateMaskControls()
+    {
+        _updatingControls = true;
+        var values = Enum.GetValues<Live2DMaskType>();
+        _maskTypeInput.Selected = Math.Max(0, Array.IndexOf(values, _maskDraft.Type));
+        foreach (var refresh in _maskControlRefreshers)
+            refresh(_maskDraft);
+        _updatingControls = false;
+    }
+
+    private void SetMaskInputsEnabled(bool enabled)
+        => SetControlsEnabled(_maskInputs, enabled);
+
+    private static void SetControlsEnabled(IEnumerable<Control> controls, bool enabled)
+    {
+        foreach (var control in controls)
+            SetControlEnabled(control, enabled);
+    }
+
+    private static void SetControlEnabled(Control? control, bool enabled)
+    {
+        if (control is SpinBox spinBox)
+            spinBox.Editable = enabled;
+        else if (control is Slider slider)
+            slider.Editable = enabled;
+        else if (control is BaseButton button)
+            button.Disabled = !enabled;
+    }
+
+    private void ApplyPreviewRendering()
+    {
+        var mask = ToMaskSettings(_maskOverrideEnabled ? _maskDraft : _globalMask);
+        if (_preview != null && GodotObject.IsInstanceValid(_preview.Root))
+            _preview.Apply(new Live2DModelUpdate
+            {
+                MaskViewportSize = _maskViewportOverrideEnabled
+                    ? _maskViewportDraft
+                    : _globalMaskViewportSize,
+                BlendMode = _blendOverrideEnabled ? _blendDraft : _globalBlendMode,
+                Filter = ToFilterSettings(_filterOverrideEnabled ? _filterDraft : _globalFilter),
+                Mask = mask,
+            });
+        if (_maskOutline == null || !GodotObject.IsInstanceValid(_maskOutline))
+            return;
+        _maskOutline.Points = Live2DRenderPipeline.BuildMaskPolygon(mask);
+        _maskOutline.Visible = mask.Type != Live2DMaskType.None;
+        var modelScale = Live2DLayout.ResolveModelScale(CurrentDraft.Scale, _previewViewportSize);
+        _maskOutline.Width = 2.5f / Math.Max(0.001f, modelScale * _canvas.CanvasScale);
+    }
+
     private void UpdateControls()
     {
         if (_sceneChoice == null)
@@ -413,11 +854,17 @@ internal sealed partial class Live2DPreviewEditor : CanvasLayer
                 if (draft.ScaleDirty) target.Scale = draft.Scale;
                 if (draft.RotationDirty) target.RotationDegrees = draft.RotationDegrees;
             }
+            model.Overrides.Rendering.MaskViewportSize = _maskViewportOverrideEnabled
+                ? _maskViewportDraft
+                : null;
+            model.Overrides.Rendering.BlendMode = _blendOverrideEnabled ? _blendDraft : null;
+            model.Overrides.Rendering.Filter = _filterOverrideEnabled ? CloneFilter(_filterDraft) : null;
+            model.Overrides.Rendering.Mask = _maskOverrideEnabled ? CloneMask(_maskDraft) : null;
         });
         store.Save(Live2DConfigStore.SettingsKey);
         Live2DRuntimeManager.RefreshAll();
         _uiHost.RequestRefresh();
-        Entry.Logger.Info($"[{Entry.ModId}] Saved preview transforms for model {_model.Id}.");
+        Entry.Logger.Info($"[{Entry.ModId}] Saved preview transforms and rendering for model {_model.Id}.");
         Close();
     }
 
@@ -491,6 +938,71 @@ internal sealed partial class Live2DPreviewEditor : CanvasLayer
         label.AddThemeColorOverride("font_color", new Color(0.96f, 0.82f, 0.45f));
         return label;
     }
+
+    private static string MaskTypeName(Live2DMaskType type) => type switch
+    {
+        Live2DMaskType.None => L("mask.none", "None"),
+        Live2DMaskType.Rectangle => L("mask.rectangle", "Rectangle"),
+        Live2DMaskType.Ellipse => L("mask.ellipse", "Ellipse"),
+        Live2DMaskType.RoundedRectangle => L("mask.rounded_rectangle", "Rounded Rectangle"),
+        _ => type.ToString(),
+    };
+
+    private static string BlendModeName(Live2DBlendMode mode) => mode switch
+    {
+        Live2DBlendMode.Normal => L("blend.normal", "Normal"),
+        Live2DBlendMode.Add => L("blend.add", "Add"),
+        Live2DBlendMode.Subtract => L("blend.subtract", "Subtract"),
+        Live2DBlendMode.Multiply => L("blend.multiply", "Multiply"),
+        Live2DBlendMode.PremultipliedAlpha => L("blend.premultiplied_alpha", "Premultiplied Alpha"),
+        _ => mode.ToString(),
+    };
+
+    private static FilterConfig CloneFilter(FilterConfig filter) => new()
+    {
+        TintR = filter.TintR,
+        TintG = filter.TintG,
+        TintB = filter.TintB,
+        TintA = filter.TintA,
+        Brightness = filter.Brightness,
+        Contrast = filter.Contrast,
+        Saturation = filter.Saturation,
+        Grayscale = filter.Grayscale,
+        HueShiftDegrees = filter.HueShiftDegrees,
+        Invert = filter.Invert,
+        Gamma = filter.Gamma,
+    };
+
+    private static Live2DFilterSettings ToFilterSettings(FilterConfig filter) => new()
+    {
+        Tint = new Color(filter.TintR, filter.TintG, filter.TintB, filter.TintA),
+        Brightness = Math.Clamp(filter.Brightness, -1f, 1f),
+        Contrast = Math.Clamp(filter.Contrast, 0f, 4f),
+        Saturation = Math.Clamp(filter.Saturation, 0f, 4f),
+        Grayscale = Math.Clamp(filter.Grayscale, 0f, 1f),
+        HueShiftDegrees = filter.HueShiftDegrees,
+        Invert = Math.Clamp(filter.Invert, 0f, 1f),
+        Gamma = Math.Clamp(filter.Gamma, 0.01f, 10f),
+    };
+
+    private static CanvasMaskConfig CloneMask(CanvasMaskConfig mask) => new()
+    {
+        Type = mask.Type,
+        X = mask.X,
+        Y = mask.Y,
+        Width = mask.Width,
+        Height = mask.Height,
+        CornerRadius = mask.CornerRadius,
+        SegmentsPerCorner = mask.SegmentsPerCorner,
+    };
+
+    private static Live2DMaskSettings ToMaskSettings(CanvasMaskConfig mask) => new()
+    {
+        Type = Enum.IsDefined(mask.Type) ? mask.Type : Live2DMaskType.None,
+        Rect = new Rect2(mask.X, mask.Y, Math.Max(1f, mask.Width), Math.Max(1f, mask.Height)),
+        CornerRadius = Math.Max(0f, mask.CornerRadius),
+        SegmentsPerCorner = Math.Clamp(mask.SegmentsPerCorner, 2, 64),
+    };
 
     private static StyleBoxFlat CreatePanelStyle(Color color) => new()
     {

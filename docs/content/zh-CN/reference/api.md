@@ -1,6 +1,6 @@
 # 公共 API 参考
 
-运行时版本为 `Live2DApi.RuntimeVersion == "0.6.0"`，能力版本为 `Live2DApi.RuntimeApiVersion == 9`。
+运行时版本为 `Live2DApi.RuntimeVersion == "0.6.1"`，能力版本为 `Live2DApi.RuntimeApiVersion == 9`。
 只有 `Live2D.Api` 命名空间属于稳定第三方 API；`Live2D.Scripts.*` 与 gd_cubism 类型是实现细节。
 
 ## 线程规则
@@ -147,8 +147,8 @@ Hook 按 `ownerModId` 隔离，回调在 Godot 主线程运行，单个 Hook 抛
 | `Invert` | `0..1`；0 |
 | `Gamma` | `0.01..10`；1 |
 
-蒙版类型为 `None`、`Rectangle`、`Ellipse`、`RoundedRectangle`。启用时 Rect 宽高必须为正，
-`CornerRadius >= 0`，`SegmentsPerCorner` 范围为 `2..64`。
+蒙版类型为 `None`、`Rectangle`、`Ellipse`、`RoundedRectangle`。启用时 Rect 宽高必须为正，`CornerRadius >= 0`。
+实际裁切的椭圆和圆角边缘由合成着色器连续计算；`SegmentsPerCorner` 仅控制预览轮廓采样密度，不改变渲染边缘。
 
 ## 常见异常
 

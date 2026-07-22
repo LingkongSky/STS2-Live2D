@@ -30,7 +30,7 @@ models/
   "Name": "Example Characters",
   "Author": "ExampleMod",
   "CreatedAt": "2026-07-15T00:00:00+08:00",
-  "MinimumModVersion": "0.6.0",
+  "MinimumModVersion": "0.6.1",
   "SettingsSchemaVersion": 6,
   "IncludesGlobalConfig": false,
   "Models": [{
