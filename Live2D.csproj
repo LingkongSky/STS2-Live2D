@@ -107,6 +107,15 @@
            Text="Could not find sts2.dll at '$(Sts2AssemblyPath)'. Set STS2_DIR, pass /p:Sts2Dir=..., or pass /p:Sts2ApiSignatureRoot=... with a $(Sts2ApiCompat)/sts2.dll signature." />
   </Target>
 
+  <Target Name="FilterBundledModPublishFiles"
+          AfterTargets="ComputeFilesToPublish"
+          Condition="'$(BundleMod)' == 'true'">
+    <ItemGroup>
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)"
+                             Condition="'%(ResolvedFileToPublish.RelativePath)' == 'GodotSharp.dll' or '%(ResolvedFileToPublish.RelativePath)' == '$(AssemblyName).deps.json'" />
+    </ItemGroup>
+  </Target>
+
   <Target Name="BundlePublishedMod" AfterTargets="Publish" Condition="'$(BundleMod)' == 'true'">
     <Error Condition="!Exists('$(MSBuildProjectDirectory)\Live2D.pck')"
            Text="Live2D.pck is missing. Export it with Godot before publishing the mod bundle." />
@@ -115,6 +124,8 @@
     <Copy SourceFiles="@(GdCubismAddonFiles)"
           DestinationFiles="@(GdCubismAddonFiles->'$(PublishDir)addons\gd_cubism\%(RecursiveDir)%(Filename)%(Extension)')"
           SkipUnchangedFiles="true" />
+    <!-- Remove files left behind by older publish runs in an existing Mod directory. -->
+    <Delete Files="$(PublishDir)GodotSharp.dll;$(PublishDir)$(AssemblyName).deps.json" />
   </Target>
 
   <Target Name="RefreshNuGetReference" DependsOnTargets="Build">

@@ -38,8 +38,6 @@ npm run dev
 NuGet 只提供编译期引用，不会安装或复制 `Live2D.dll`。使用者仍需在 Mod 清单中声明并要求玩家安装
 Live2D 运行时 Mod。完整示例见 [Mod 接入文档](https://lingkongsky.github.io/STS2-Live2D/integration/getting-started)。
 
-接口使用要点：稳定模型句柄可跨场景重建继续持有；`Snapshot`、立即更新、播放和 Pack 生命周期操作必须在
-Godot 主线程执行；`QueueUpdate` 及 Parameter/Part Queue API 可从任意线程提交并自动合并待处理值。
 
 ## 构建
 
@@ -60,15 +58,10 @@ dotnet publish .\Live2D.csproj -c Release -o .\artifacts\Live2D -p:BundleMod=tru
 将 `artifacts/Live2D` 整个目录复制到游戏的 `mods/Live2D`。不要混用不同构建批次的 DLL、PCK 或
 `addons/gd_cubism`。普通 `dotnet build` 只编译；Mod 部署产物由 `dotnet publish` 生成。
 
-刷新并打包 NuGet 引用程序集也直接使用 MSBuild/.NET CLI：
-
 ```powershell
 dotnet build .\Live2D.csproj -c Release -t:RefreshNuGetReference
 dotnet pack .\NuGet\STS2.Live2D.Package.csproj -c Release -o .\artifacts
 ```
-
-GitHub Actions 参考 JMC 的预制发布目录方式，只打包仓库中提交的
-`NuGet/package/ref/net9.0`，不会在 CI 编译 Live2D 或读取游戏程序集。
 
 ## LICENSE
 
