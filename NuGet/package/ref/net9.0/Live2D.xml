@@ -1589,6 +1589,119 @@
             Cached StringNames for the signals contained in this class, for fast lookup.
             </summary>
         </member>
+        <member name="T:Live2D.Scripts.UI.Live2DActionKeyBindingControl">
+            <summary>
+            Captures action hotkeys during the regular input phase so bare keys such as
+            1-9 cannot be consumed by the surrounding game UI before reaching the editor.
+            </summary>
+        </member>
+        <member name="T:Live2D.Scripts.UI.Live2DActionKeyBindingControl.MethodName">
+            <summary>
+            Cached StringNames for the methods contained in this class, for fast lookup.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DActionKeyBindingControl.MethodName._Input">
+            <summary>
+            Cached name for the '_Input' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DActionKeyBindingControl.MethodName._ExitTree">
+            <summary>
+            Cached name for the '_ExitTree' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DActionKeyBindingControl.MethodName.BuildBinding">
+            <summary>
+            Cached name for the 'BuildBinding' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DActionKeyBindingControl.MethodName.BeginCapture">
+            <summary>
+            Cached name for the 'BeginCapture' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DActionKeyBindingControl.MethodName.ApplyBinding">
+            <summary>
+            Cached name for the 'ApplyBinding' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DActionKeyBindingControl.MethodName.EndCapture">
+            <summary>
+            Cached name for the 'EndCapture' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DActionKeyBindingControl.MethodName.BuildModifierPrefix">
+            <summary>
+            Cached name for the 'BuildModifierPrefix' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DActionKeyBindingControl.MethodName.IsModifierKey">
+            <summary>
+            Cached name for the 'IsModifierKey' method.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DActionKeyBindingControl.MethodName.DisplayValue">
+            <summary>
+            Cached name for the 'DisplayValue' method.
+            </summary>
+        </member>
+        <member name="M:Live2D.Scripts.UI.Live2DActionKeyBindingControl.GetGodotMethodList">
+            <summary>
+            Get the method information for all the methods declared in this class.
+            This method is used by Godot to register the available methods in the editor.
+            Do not call this method.
+            </summary>
+        </member>
+        <member name="M:Live2D.Scripts.UI.Live2DActionKeyBindingControl.InvokeGodotClassMethod(Godot.NativeInterop.godot_string_name@,Godot.NativeInterop.NativeVariantPtrArgs,Godot.NativeInterop.godot_variant@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Live2D.Scripts.UI.Live2DActionKeyBindingControl.HasGodotClassMethod(Godot.NativeInterop.godot_string_name@)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Live2D.Scripts.UI.Live2DActionKeyBindingControl.PropertyName">
+            <summary>
+            Cached StringNames for the properties and fields contained in this class, for fast lookup.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DActionKeyBindingControl.PropertyName._captureButton">
+            <summary>
+            Cached name for the '_captureButton' field.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DActionKeyBindingControl.PropertyName._capturing">
+            <summary>
+            Cached name for the '_capturing' field.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DActionKeyBindingControl.PropertyName._currentValue">
+            <summary>
+            Cached name for the '_currentValue' field.
+            </summary>
+        </member>
+        <member name="M:Live2D.Scripts.UI.Live2DActionKeyBindingControl.SetGodotClassPropertyValue(Godot.NativeInterop.godot_string_name@,Godot.NativeInterop.godot_variant@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Live2D.Scripts.UI.Live2DActionKeyBindingControl.GetGodotClassPropertyValue(Godot.NativeInterop.godot_string_name@,Godot.NativeInterop.godot_variant@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Live2D.Scripts.UI.Live2DActionKeyBindingControl.GetGodotPropertyList">
+            <summary>
+            Get the property information for all the properties declared in this class.
+            This method is used by Godot to register the available properties in the editor.
+            Do not call this method.
+            </summary>
+        </member>
+        <member name="M:Live2D.Scripts.UI.Live2DActionKeyBindingControl.SaveGodotObjectData(Godot.Bridge.GodotSerializationInfo)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Live2D.Scripts.UI.Live2DActionKeyBindingControl.RestoreGodotObjectData(Godot.Bridge.GodotSerializationInfo)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Live2D.Scripts.UI.Live2DActionKeyBindingControl.SignalName">
+            <summary>
+            Cached StringNames for the signals contained in this class, for fast lookup.
+            </summary>
+        </member>
         <member name="T:Live2D.Scripts.UI.Live2DPreviewCanvas.MethodName">
             <summary>
             Cached StringNames for the methods contained in this class, for fast lookup.
@@ -1817,6 +1930,11 @@
         <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.PropertyName._canvas">
             <summary>
             Cached name for the '_canvas' field.
+            </summary>
+        </member>
+        <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.PropertyName._previewError">
+            <summary>
+            Cached name for the '_previewError' field.
             </summary>
         </member>
         <member name="F:Live2D.Scripts.UI.Live2DPreviewEditor.PropertyName._sceneChoice">

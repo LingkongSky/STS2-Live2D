@@ -23,25 +23,29 @@
 
 ## 动作或表情没有出现
 
-- 确认 model3 中声明了对应 Motion/Expression。
-- 确认引用文件已经随模型一起导入。
+- Cubism 模型：确认 model3 中声明了对应 Motion/Expression。
+- VTube Studio 模型：确认 `.vtube.json` 指向正确 model3，资源位于 `expressions` 或 `animations` 目录。
+- 重新导入模型，让受管理副本刷新动作列表。
 - 检查动作快捷键是否启用了当前场景。
 - 检查是否存在相同快捷键或循环动作冲突。
+
+## 模型显示“已丢失”
+
+本地模型请恢复受管理目录中的资源；提供方模型请启用对应 Mod。Live2D 会保留模型配置，资源可用后自动恢复实例和快捷键。
 
 ## Pack 导入失败
 
 - Pack 根目录必须直接包含 `manifest.json` 和 `settings/models.json`。
-- 当前只接受 `FormatVersion = 1` 与 `SettingsSchemaVersion = 6`。
+- 格式版本为 `FormatVersion = 1`、`SettingsSchemaVersion = 6`。
 - 所有模型资源必须位于对应 `models/<OriginalId>/` 下。
 - 绝对路径、`..`、符号链接、重复路径和异常压缩内容都会被拒绝。
 
-如果日志包含 `JSON value could not be converted to List<Live2DModelConfig>`，说明 Pack 内的
-`settings/models.json` 根节点不是数组，或者游戏仍在加载修复前的旧 PCK。检查启动日志中的实际加载路径，比较发布目录与
-`mods/<ModId>` 内 DLL/PCK 的时间和 SHA-256，并整体替换同一次发布的文件。
+如果日志包含 `JSON value could not be converted to List<Live2DModelConfig>`，请把 Pack 内的 `settings/models.json` 根节点改为数组。
+同时检查启动日志中的实际加载路径，比较发布目录与 `mods/<ModId>` 内 DLL/PCK 的 SHA-256，并部署同一次发布的完整文件集。
 
 完整规则见 [Pack 格式](../reference/pack-format)。
 
 ## 报告问题
 
 请附上游戏版本、RitsuLib 版本、Live2D 版本、相关 `[Live2D]` 日志、问题出现的场景，以及模型或 Pack
-是否可以公开。不要公开包含个人路径或其他敏感信息的完整日志。
+是否可以公开。提交前请清理日志中的个人路径和其他敏感信息。

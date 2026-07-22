@@ -1,18 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!--
-    JMC-style prepared release directory: this project only packs committed
-    assets. It never compiles Live2D or reads the game installation.
-  -->
+  <!-- Packages the committed reference assets prepared by RefreshNuGetReference. -->
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <EnableDefaultItems>false</EnableDefaultItems>
     <IsPackable>true</IsPackable>
     <IncludeBuildOutput>false</IncludeBuildOutput>
-    <!-- Ref-only packages do not use packages.config reference groups. -->
+    <!-- NU5131 applies to packages.config reference groups; this package uses ref assets. -->
     <NoWarn>$(NoWarn);NU5131</NoWarn>
     <PackageId>STS2.Live2D</PackageId>
     <!-- Keep synchronized with Live2D.csproj; the release workflow verifies the tag. -->
-    <Version>0.5.6</Version>
+    <Version>0.6.0</Version>
     <Title>STS2 Live2D API</Title>
     <Authors>LingkongSky</Authors>
     <Copyright>Copyright (c) 2026 OLC</Copyright>
@@ -30,7 +27,7 @@
     <!-- Public signatures expose Godot types, so consumers need GodotSharp. -->
     <PackageReference Include="GodotSharp" Version="4.5.1" />
 
-    <!-- Compile-only assets. The runtime Live2D.dll must never be placed here. -->
+    <!-- Compile-time API assets. -->
     <None Include="package\ref\net9.0\Live2D.dll" Pack="true" PackagePath="ref/net9.0/Live2D.dll" />
     <None Include="package\ref\net9.0\Live2D.xml" Pack="true" PackagePath="ref/net9.0/Live2D.xml" />
     <None Include="..\README.md" Pack="true" PackagePath="README.md" />

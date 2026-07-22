@@ -1,5 +1,5 @@
 using Live2D.Scripts.Configuration;
-using Live2D.Scripts.Packs;
+using Live2D.Scripts.Models;
 using STS2RitsuLib.RuntimeInput;
 
 namespace Live2D.Scripts.Runtime;
@@ -20,8 +20,7 @@ internal static class Live2DHotkeyManager
         {
             if (!model.Enabled)
                 continue;
-            if (model.IsExternalPackModel &&
-                !Live2DRegisteredPackRegistry.TryGetLibraryModelAsset(model, out _))
+            if (!Live2DModelRepository.IsModelAvailable(model, out _))
                 continue;
             foreach (var binding in model.ActionBindings.Where(value => !string.IsNullOrWhiteSpace(value.KeyBinding)))
             {

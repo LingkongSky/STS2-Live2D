@@ -31,7 +31,7 @@ model.SetExpression("smile");
 model.ClearExpression();
 ```
 
-`Actions` 在底层场景实例不可用时仍可读取。`MotionFinished` 和 `MotionEvent` 都在 Godot 主线程触发。
+`Actions` 在底层场景实例不可用时仍可读取。`MotionFinished` 和 `MotionEvent` 都在 Godot 主线程触发；各订阅者独立执行，异常会记录到日志。
 
 ## Parameter 与 Part
 

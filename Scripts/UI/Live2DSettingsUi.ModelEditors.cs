@@ -18,6 +18,7 @@ internal static partial class Live2DSettingsUi
         Action onDeleted,
         Action onEnabledChanged)
     {
+        var modelUnavailable = IsModelUnavailable(model);
         var modelRow = new HBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
         modelRow.AddThemeConstantOverride("separation", 16);
         var card = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
@@ -39,7 +40,9 @@ internal static partial class Live2DSettingsUi
             SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
         };
         name.AddThemeFontSizeOverride("font_size", 20);
-        name.Modulate = model.Enabled ? Colors.White : new Color(1f, 1f, 1f, 0.5f);
+        name.Modulate = modelUnavailable
+            ? new Color(1f, 0.68f, 0.32f)
+            : model.Enabled ? Colors.White : new Color(1f, 1f, 1f, 0.5f);
         titleRow.AddChild(name);
 
         card.AddChild(titleRow);
@@ -52,11 +55,10 @@ internal static partial class Live2DSettingsUi
             previewEditor.Disabled = true;
             previewEditor.TooltipText = L("model.disabled", "Enable this model before opening its preview.");
         }
-        else if (model.IsExternalPackModel &&
-            !Live2DRegisteredPackRegistry.TryGetLibraryModelAsset(model, out _))
+        else if (modelUnavailable)
         {
             previewEditor.Disabled = true;
-            previewEditor.TooltipText = L("model.external_unavailable", "The provider Mod is not loaded.");
+            previewEditor.TooltipText = L("model.unavailable", "The model files or provider are unavailable.");
         }
         previewEditor.Pressed += () => Live2DPreviewEditor.Show(model.Id, uiHost);
         actions.AddChild(previewEditor);
@@ -92,14 +94,15 @@ internal static partial class Live2DSettingsUi
                 ModifyModel(model.Id, target => target.Enabled = active);
                 model.Enabled = active;
                 ApplyModelEnabledToggleStyle(enabled, active);
-                name.Modulate = active ? Colors.White : new Color(1f, 1f, 1f, 0.5f);
-                previewEditor.Disabled = !active ||
-                    (model.IsExternalPackModel &&
-                     !Live2DRegisteredPackRegistry.TryGetLibraryModelAsset(model, out _));
+                var unavailableNow = IsModelUnavailable(model);
+                name.Modulate = unavailableNow
+                    ? new Color(1f, 0.68f, 0.32f)
+                    : active ? Colors.White : new Color(1f, 1f, 1f, 0.5f);
+                previewEditor.Disabled = !active || unavailableNow;
                 previewEditor.TooltipText = !active
                     ? L("model.disabled", "Enable this model before opening its preview.")
                     : previewEditor.Disabled
-                        ? L("model.external_unavailable", "The provider Mod is not loaded.")
+                        ? L("model.unavailable", "The model files or provider are unavailable.")
                         : "";
                 onEnabledChanged();
             }
@@ -143,17 +146,23 @@ internal static partial class Live2DSettingsUi
         actions.AddChild(delete);
         card.AddChild(actions);
         modelRow.AddChild(card);
-        if (model.IsExternalPackModel)
+        if (modelUnavailable || model.IsExternalPackModel)
         {
             var provider = new Label
             {
-                Text = F("model.external_provider", "Provided by {0}", model.ExternalOwnerModId),
-                TooltipText = $"{model.ExternalOwnerModId}/{model.ExternalPackId}/{model.ExternalModelKey}",
+                Text = modelUnavailable
+                    ? L("model.external_missing", "⚠ Model missing")
+                    : F("model.external_provider", "Provided by {0}", model.ExternalOwnerModId),
+                TooltipText = modelUnavailable
+                    ? L("model.unavailable", "The model files or provider are unavailable.")
+                    : $"{model.ExternalOwnerModId}/{model.ExternalPackId}/{model.ExternalModelKey}",
                 SizeFlagsHorizontal = Control.SizeFlags.ShrinkEnd,
                 SizeFlagsVertical = Control.SizeFlags.ShrinkCenter,
                 VerticalAlignment = VerticalAlignment.Center,
             };
-            provider.AddThemeColorOverride("font_color", new Color(0.55f, 0.8f, 1f));
+            provider.AddThemeColorOverride("font_color", modelUnavailable
+                ? new Color(1f, 0.5f, 0.28f)
+                : new Color(0.55f, 0.8f, 1f));
             modelRow.AddChild(provider);
         }
         modelRow.AddChild(enabled);
@@ -286,7 +295,7 @@ internal static partial class Live2DSettingsUi
             }
             if (newName == model.DisplayName)
                 return;
-            ModifyModel(model.Id, target => target.DisplayName = newName);
+            ModifyModel(model.Id, target => target.DisplayName = newName, rebuildRuntime: false);
             model.DisplayName = newName;
             nameInput.Text = newName;
             _rebuildModelList?.Invoke();
@@ -301,11 +310,22 @@ internal static partial class Live2DSettingsUi
             Text = F("model.path", "Resource: {0}", model.ModelRelativePath),
             Modulate = new Color(1f, 1f, 1f, 0.65f),
         });
+        var modelUnavailable = IsModelUnavailable(model);
+        if (modelUnavailable)
+        {
+            identity.AddChild(new Label
+            {
+                Text = L("model.unavailable", "The model files or provider are unavailable."),
+                Modulate = new Color(1f, 0.5f, 0.28f),
+            });
+        }
         header.AddChild(identity);
         var preview = new Button { Text = L("button.preview_adjust", "Preview & Adjust") };
-        preview.Disabled = !model.Enabled;
+        preview.Disabled = !model.Enabled || modelUnavailable;
         if (!model.Enabled)
             preview.TooltipText = L("model.disabled", "Enable this model before opening its preview.");
+        else if (modelUnavailable)
+            preview.TooltipText = L("model.unavailable", "The model files or provider are unavailable.");
         preview.Pressed += () => Live2DPreviewEditor.Show(model.Id, uiHost);
         header.AddChild(preview);
         details.AddChild(WrapCard(header, new Color(0.72f, 0.55f, 0.25f)));
@@ -332,6 +352,9 @@ internal static partial class Live2DSettingsUi
         details.AddChild(tabs);
         return details;
     }
+
+    private static bool IsModelUnavailable(Live2DModelConfig model)
+        => !Live2DModelRepository.IsModelAvailable(model, out _);
 
     private static void ShowDeleteModelConfirmation(
         Live2DModelConfig model,
@@ -453,15 +476,10 @@ internal static partial class Live2DSettingsUi
                     : F("action.motion", "Motion: {0} / {1}", action.MotionGroup, action.MotionIndex),
             });
 
-            var keyControl = new ModSettingsKeyBindingControl(
+            var keyControl = new Live2DActionKeyBindingControl(
                 binding?.KeyBinding ?? "",
-                allowModifierCombos: true,
-                allowModifierOnly: false,
-                distinguishModifierSides: false,
-                onChanged: value => UpdateActionBinding(model.Id, action,
-                    target => target.KeyBinding = NormalizeHotkey(value)),
-                allowActionBindings: false);
-            HideKeyBindingHint(keyControl);
+                value => UpdateActionBinding(model.Id, action,
+                    target => target.KeyBinding = NormalizeHotkey(value)));
 
             var options = new HBoxContainer
             {

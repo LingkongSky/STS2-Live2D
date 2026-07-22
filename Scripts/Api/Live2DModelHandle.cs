@@ -65,7 +65,7 @@ internal sealed class Live2DModelHandle : ILive2DModelHandle
             _instance.Apply(_runtimeOverrides);
         _snapshot = _instance.CaptureSnapshot(Scene);
         _availability.Set(true);
-        BecameAvailable?.Invoke(this);
+        InvokeSafely(BecameAvailable, nameof(BecameAvailable));
     }
 
     internal void EnsureIdentity(Live2DRuntimeModelIdentity identity)
@@ -105,7 +105,7 @@ internal sealed class Live2DModelHandle : ILive2DModelHandle
         _instance = null;
         _availability.Set(false);
         if (wasAvailable)
-            BecameUnavailable?.Invoke(this);
+            InvokeSafely(BecameUnavailable, nameof(BecameUnavailable));
     }
 
     public Task<ILive2DModelHandle> WaitUntilAvailableAsync(
@@ -300,8 +300,55 @@ internal sealed class Live2DModelHandle : ILive2DModelHandle
         _instance.MotionEventReceived -= OnMotionEvent;
     }
 
-    private void OnMotionFinished() => MotionFinished?.Invoke(this);
-    private void OnMotionEvent(string value) => MotionEvent?.Invoke(this, value);
+    private void OnMotionFinished() => InvokeSafely(MotionFinished, nameof(MotionFinished));
+    private void OnMotionEvent(string value) => InvokeSafely(MotionEvent, value, nameof(MotionEvent));
+
+    private void InvokeSafely(
+        Action<ILive2DModelHandle>? subscribers,
+        string eventName)
+    {
+        if (subscribers == null)
+            return;
+        foreach (Action<ILive2DModelHandle> subscriber in subscribers.GetInvocationList())
+        {
+            try
+            {
+                subscriber(this);
+            }
+            catch (Exception ex)
+            {
+                LogSubscriberFailure(eventName, subscriber, ex);
+            }
+        }
+    }
+
+    private void InvokeSafely(
+        Action<ILive2DModelHandle, string>? subscribers,
+        string value,
+        string eventName)
+    {
+        if (subscribers == null)
+            return;
+        foreach (Action<ILive2DModelHandle, string> subscriber in subscribers.GetInvocationList())
+        {
+            try
+            {
+                subscriber(this, value);
+            }
+            catch (Exception ex)
+            {
+                LogSubscriberFailure(eventName, subscriber, ex);
+            }
+        }
+    }
+
+    private void LogSubscriberFailure(string eventName, Delegate subscriber, Exception exception)
+    {
+        var owner = subscriber.Method.DeclaringType?.FullName ?? "unknown subscriber";
+        Entry.Logger.Error(
+            $"[{Entry.ModId}] Live2D API event '{eventName}' subscriber '{owner}.{subscriber.Method.Name}' " +
+            $"failed for model '{ModelId}': {exception}");
+    }
 
     private static Live2DModelUpdate CreateUpdate(Action<Live2DModelUpdate> configure)
     {

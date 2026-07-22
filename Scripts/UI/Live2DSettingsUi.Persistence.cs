@@ -22,7 +22,14 @@ internal static partial class Live2DSettingsUi
             {
                 try
                 {
-                    var model = Live2DConfigStore.ImportModel(path);
+                    var result = Live2DConfigStore.ImportModel(path);
+                    var model = result.Model;
+                    if (result.WasDuplicate)
+                    {
+                        Entry.Logger.Info(
+                            $"[{Entry.ModId}] Skipped duplicate model '{path}'; it matches '{model.DisplayName}' ({model.Id}).");
+                        return;
+                    }
                     Live2DHotkeyManager.Refresh();
                     Entry.Logger.Info($"[{Entry.ModId}] Imported model '{model.DisplayName}' ({model.Id}).");
                     rebuildModelList();
@@ -198,7 +205,10 @@ internal static partial class Live2DSettingsUi
         dialog.PopupCentered();
     }
 
-    private static void ModifyModel(string modelId, Action<Live2DModelConfig> mutation)
+    private static void ModifyModel(
+        string modelId,
+        Action<Live2DModelConfig> mutation,
+        bool rebuildRuntime = true)
     {
         var store = RitsuLibFramework.GetDataStore(Entry.ModId);
         store.Modify<Live2DSettings>(Live2DConfigStore.SettingsKey, settings =>
@@ -207,7 +217,10 @@ internal static partial class Live2DSettingsUi
             if (model != null)
                 mutation(model);
         });
-        Live2DConfigStore.SaveAndRefresh();
+        if (rebuildRuntime)
+            Live2DConfigStore.SaveAndRefresh();
+        else
+            store.Save(Live2DConfigStore.SettingsKey);
         Live2DHotkeyManager.Refresh();
     }
 

@@ -90,6 +90,7 @@ internal static class Live2DPackService
     {
         var staging = CreateStagingDirectory("pack-import");
         var imported = new List<Live2DModelConfig>();
+        var addedToSettings = false;
         try
         {
             var package = Live2DPackArchive.ReadToStaging(packagePath, staging);
@@ -124,6 +125,7 @@ internal static class Live2DPackService
             // 模型包只导入模型；全局配置统一由 ImportGlobal 处理。
             store.Modify<Live2DSettings>(Live2DConfigStore.SettingsKey,
                 settings => settings.Models.AddRange(imported));
+            addedToSettings = true;
             store.Save(Live2DConfigStore.SettingsKey);
             Live2DRuntimeManager.RefreshAll();
             Live2DHotkeyManager.Refresh();
@@ -131,8 +133,39 @@ internal static class Live2DPackService
         }
         catch
         {
+            if (addedToSettings)
+            {
+                try
+                {
+                    var importedIds = imported.Select(model => model.Id)
+                        .ToHashSet(StringComparer.OrdinalIgnoreCase);
+                    var store = RitsuLibFramework.GetDataStore(Entry.ModId);
+                    store.Modify<Live2DSettings>(Live2DConfigStore.SettingsKey, settings =>
+                    {
+                        settings.Models.RemoveAll(model => importedIds.Contains(model.Id));
+                        for (var index = 0; index < settings.Models.Count; index++)
+                            settings.Models[index].DisplayOrder = index;
+                    });
+                    store.Save(Live2DConfigStore.SettingsKey);
+                }
+                catch (Exception cleanupException)
+                {
+                    Entry.Logger.Error(
+                        $"[{Entry.ModId}] Failed to roll back imported package configuration: {cleanupException}");
+                }
+            }
             foreach (var model in imported)
-                Live2DModelRepository.DeleteFiles(model.Id);
+            {
+                try
+                {
+                    Live2DModelRepository.DeleteFiles(model.Id);
+                }
+                catch (Exception cleanupException)
+                {
+                    Entry.Logger.Error(
+                        $"[{Entry.ModId}] Failed to clean up package model files for {model.Id}: {cleanupException}");
+                }
+            }
             throw;
         }
         finally

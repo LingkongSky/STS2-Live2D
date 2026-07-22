@@ -1,6 +1,6 @@
 # Configuration Structure
 
-Live2D stores `settings.json` through RitsuLib under the `settings` key. The current `SchemaVersion` is `6`. Prefer the in-game UI over manual edits.
+Live2D stores `settings.json` through RitsuLib under the `settings` key. `SchemaVersion` is `6`. Prefer the in-game UI for edits.
 
 ## Resolution
 
@@ -58,7 +58,7 @@ Defaults are `Speed=1`, Physics and Pose enabled, automatic Idle enabled, and a 
 ## Models
 
 Each model stores stable ID, `Enabled` (default `true`), display name, managed model3 path, source record, content hash, import time, display order,
-overrides, discovered actions, and hotkey bindings. Action kind is currently `0` for Motion and `1` for Expression.
+overrides, discovered actions, and hotkey bindings. Action kind is `0` for Motion and `1` for Expression.
 
 `RemovedExternalModelIds` prevents provider models explicitly removed by the player from being re-added on a repeated Pack registration. The in-game restore action clears these exclusions.
 

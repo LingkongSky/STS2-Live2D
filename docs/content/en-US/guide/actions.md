@@ -1,6 +1,7 @@
 # Actions and Hotkeys
 
-The importer scans motions and expressions declared by model3 and lists them on the model's **Hotkeys** tab.
+The importer collects motions and expressions declared by model3. For VTube Studio models, it also discovers actions from `.vtube.json` and the
+`expressions` and `animations` directories, then lists the combined set on the model's **Hotkeys** tab.
 
 ## Motions and expressions
 
@@ -19,12 +20,14 @@ If the action list is empty, verify that model3 declares the files and that ever
 4. Choose a key, target scenes, and whether the motion loops.
 5. Save changes.
 
+Bindings accept standalone letters, digits `0–9`, function keys, and key combinations.
+
 Multiple actions can share one hotkey. They may run together, and the UI shows a conflict warning.
 
 ## Global visibility hotkey
 
 The global visibility binding is a temporary visibility master control. The first press hides all enabled models; the next restores each model's
-configured scene visibility. It never edits model configuration or enables a model disabled in the model list.
+configured scene visibility while preserving configuration and per-model enabled state.
 
 ## Playback settings
 

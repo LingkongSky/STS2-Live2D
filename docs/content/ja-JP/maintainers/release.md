@@ -1,6 +1,6 @@
 # テストとリリース
 
-ドキュメント、コンパイル、API コンシューマー、描画、PCK、パッケージの全チェックが必要です。
+ドキュメント、コンパイル、API コンシューマー、描画、PCK、パッケージの全チェック成功後にタグを作成します。
 
 ## ドキュメントとコンパイル
 
@@ -11,7 +11,7 @@ npm run build
 Pop-Location
 ```
 
-通常のビルドはコンパイルだけを行い、`dotnet publish` がリリース DLL を生成します。コンシューマー出力に `Live2D.dll` が含まれてはいけません。
+`dotnet build` はコンパイル確認、`dotnet publish` はリリース DLL の生成に使用します。コンシューマーは ref-only API パッケージを使用し、ランタイムを Mod 依存関係から解決します。
 
 ## 描画スモークテスト
 
@@ -40,13 +40,16 @@ git diff -- NuGet/package/ref/net9.0
 dotnet pack .\NuGet\STS2.Live2D.Package.csproj -c Release -o .\artifacts
 ```
 
-インストールまたは公開には `artifacts/Live2D` 全体を使用し、異なる publish の DLL、PCK、Cubism ネイティブファイルを混在させないでください。
+インストールまたは公開には、同じ publish で生成した `artifacts/Live2D` 全体を使用します。
 
-NuGet に含められるのは `ref/net9.0` の参照アセンブリ/XML、README、第三者ライセンス声明、`docs/content` の Markdown だけです。`lib/` ランタイム DLL は禁止です。リリースワークフローは一時コンシューマープロジェクトで出力に `Live2D.dll` が含まれないことを確認します。
+NuGet は `ref/net9.0` の参照アセンブリ/XML、README、第三者ライセンス声明、`docs/content` の Markdown を含みます。
+リリースワークフローは一時コンシューマープロジェクトで ref-only 構造を検証します。
 
-`NuGet/package/ref/net9.0` は準備済みリリースディレクトリです。ここに置く `Live2D.dll` はメタデータ専用の参照アセンブリであり、ランタイム DLL ではありません。更新した DLL と XML は、対応するソース変更と同じコミットに含めます。
+`NuGet/package/ref/net9.0` は準備済みリリースディレクトリです。ここに置く `Live2D.dll` はメタデータ専用の参照アセンブリです。
+更新した DLL と XML は、対応するソース変更と同じコミットに含めます。
 
-プロジェクトバージョンと一致する `v*` タグを push すると `publish-nuget.yml` が実行されます。ワークフローはコミット済み参照アセットのパッケージと検証だけを行い、Live2D のコンパイル、ゲームディレクトリの参照、`STS2-API-Signatures` へのアクセスは行いません。その後 NuGet Trusted Publishing (OIDC) で公開します。NuGet.org のポリシーをこのワークフローと `nuget` environment に関連付けます。
+プロジェクトバージョンと一致する `v*` タグを push すると `publish-nuget.yml` がコミット済み参照アセットをパッケージ化・検証し、
+NuGet Trusted Publishing (OIDC) で公開します。NuGet.org のポリシーをこのワークフローと `nuget` environment に関連付けます。
 
 ## リリースチェック
 

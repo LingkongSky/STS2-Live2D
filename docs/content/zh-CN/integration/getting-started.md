@@ -1,13 +1,13 @@
 # Mod 五分钟接入
 
-本页完成最小编译期引用、运行时依赖声明和模型控制。只有 `Live2D.Api` 命名空间属于第三方公共 API。
+本页完成最小编译期引用、运行时依赖声明和模型控制。`Live2D.Api` 命名空间提供第三方公共 API。
 
 ## 1. 添加编译期引用
 
 推荐使用 ref-only NuGet 包：
 
 ```xml
-<PackageReference Include="STS2.Live2D" Version="0.5.6" />
+<PackageReference Include="STS2.Live2D" Version="0.6.0" />
 ```
 
 在同一工作区开发时也可以引用源码：
@@ -18,7 +18,7 @@
                   />
 ```
 
-两种方式都不会把第二份 `Live2D.dll` 复制到使用者输出目录。
+两种方式都使用编译期引用程序集，运行时由清单中的 `Live2D` Mod 依赖提供。
 
 ## 2. 声明运行时依赖
 
@@ -27,12 +27,12 @@
 ```json
 {
   "dependencies": [
-    { "id": "Live2D", "min_version": "0.5.6" }
+    { "id": "Live2D", "min_version": "0.6.0" }
   ]
 }
 ```
 
-玩家必须实际安装 Live2D 运行时。Live2D 自身会声明 RitsuLib 依赖，使用者不需要重复声明间接依赖。
+玩家安装 Live2D 运行时。Live2D 自身声明 RitsuLib 间接依赖。
 
 ## 3. 获取模型
 
@@ -70,7 +70,7 @@ await Live2DApi.InvokeAsync(() =>
 }, cancellationToken);
 ```
 
-运行期覆盖不会写入玩家的 `settings.json`，退出游戏后消失。模型节点重建时，句柄会恢复已经保存的运行期覆盖。
+运行期覆盖属于游戏会话，玩家的 `settings.json` 保持原值。模型节点重建时，句柄会恢复会话覆盖。
 
 ## 5. 选择下一条路径
 

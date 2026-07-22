@@ -32,29 +32,30 @@ The main-thread dispatcher is a persistent child of `SceneTree.Root` and consume
 
 ## Architectural rules
 
-- Only `Live2DConfigResolver` implements inheritance.
+- `Live2DConfigResolver` centralizes inheritance for every consumer.
 - Main Menu has separate settings; Map and Combat share In Game settings.
 - Layout is stored against 1920×1080 and scaled by the shorter viewport axis.
 - Stable API handles rebind and restore session overrides after node rebuilds.
-- Only `Live2D.Api` is public surface.
-- The NuGet package contains only the `ref/net9.0` reference assembly and XML documentation.
-- Ordered playback commands never enter coalescing queues.
+- `Live2D.Api` defines the public surface.
+- The NuGet package contains the `ref/net9.0` reference assembly and XML documentation.
+- Ordered playback commands use their dedicated command path; coalescing queues carry state updates.
 - Configuration schema is fixed at `6`.
+- Missing local or provider assets preserve model configuration, surface a missing state in the UI, and pause instances and hotkeys until assets return.
 
 ## PCK and shaders
 
 gd_cubism loads ten shaders from fixed `res://addons/gd_cubism/res/shader/*` paths. They must be included in `Live2D.pck`, and
-`Live2D.json` must keep `has_pck: true`. Scene patches are not installed when shader validation fails.
+`Live2D.json` keeps `has_pck: true`. Scene patches are installed after shader validation succeeds.
 
 ## Game patches
 
-Register patches through RitsuLib `CreatePatcher`, `IPatchMethod`, and `ApplyRequiredPatcher`. Do not create Harmony instances directly.
+Register patches through RitsuLib `CreatePatcher`, `IPatchMethod`, and `ApplyRequiredPatcher`.
 
 ## Local generated files
 
 `.gitignore` excludes Godot/.NET caches, NuGet and PCK artifacts, documentation dependencies, coverage output, crash dumps, and local
-model fixtures. This project loads resources by path, so generated external `*.uid` files are not committed. The required
-`addons/gd_cubism/bin/libgd_cubism.windows.release.x86_64.dll` is explicitly kept under version control.
+model fixtures. The repository tracks the required `addons/gd_cubism/bin/libgd_cubism.windows.release.x86_64.dll`; `.gitignore` manages the
+remaining generated resources.
 
 ## Source layout
 
@@ -70,7 +71,9 @@ docs/content/zh-CN/     Simplified Chinese content
 docs/content/en-US/     English content
 docs/content/ja-JP/     Japanese content
 Tools/                  Consumers, smoke tests, and PCK verification
-examples/               Unpublished model fixtures
+examples/               Model fixtures
 ```
 
-Current releases target Windows x86_64. Large textures and masks increase GPU memory usage.
+## Platform and resources
+
+Releases target Windows x86_64. Large textures and masks increase GPU memory usage.

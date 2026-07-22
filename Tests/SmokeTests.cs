@@ -16,6 +16,84 @@ Assert(miSide.Actions.Count(action => action.Kind == Live2DActionKind.Expression
 Assert(miSide.Actions.Count(action => action.Kind == Live2DActionKind.Motion) == 4,
     "MiSide motion count was not 4.");
 
+var vtubeTestRoot = Path.Combine(Path.GetTempPath(), "Live2D-vtube-" + Guid.NewGuid().ToString("N"));
+try
+{
+    Directory.CreateDirectory(Path.Combine(vtubeTestRoot, "textures"));
+    Directory.CreateDirectory(Path.Combine(vtubeTestRoot, "expressions"));
+    Directory.CreateDirectory(Path.Combine(vtubeTestRoot, "animations"));
+    File.WriteAllBytes(Path.Combine(vtubeTestRoot, "avatar.moc3"), [1]);
+    File.WriteAllBytes(Path.Combine(vtubeTestRoot, "textures", "avatar.png"), [2]);
+    File.WriteAllText(Path.Combine(vtubeTestRoot, "expressions", "Smile.exp3.json"), "{}");
+    File.WriteAllText(Path.Combine(vtubeTestRoot, "expressions", "Angry.exp3.json"), "{}");
+    File.WriteAllText(Path.Combine(vtubeTestRoot, "animations", "Idle_2.motion3.json"), "{}");
+    File.WriteAllText(Path.Combine(vtubeTestRoot, "animations", "Wave.motion3.json"), "{}");
+    var vtubeModelPath = Path.Combine(vtubeTestRoot, "avatar.model3.json");
+    var vtubeModelSource =
+        """
+        {
+          "Version": 3,
+          "FileReferences": {
+            "Moc": "avatar.moc3",
+            "Textures": ["textures/avatar.png"],
+            "Expressions": [
+              { "Name": "Smile", "File": "expressions/Smile.exp3.json" }
+            ],
+            "Motions": {
+              "Hotkey": [
+                { "File": "animations/Wave.motion3.json" }
+              ]
+            }
+          }
+        }
+        """;
+    File.WriteAllText(vtubeModelPath, vtubeModelSource);
+    File.WriteAllText(Path.Combine(vtubeTestRoot, "000-invalid.vtube.json"), "[]");
+    File.WriteAllText(Path.Combine(vtubeTestRoot, "avatar.vtube.json"),
+        """
+        {
+          "FileReferences": {
+            "Model": "avatar.model3.json",
+            "IdleAnimation": "Idle_2.motion3.json"
+          },
+          "Hotkeys": [
+            { "Action": "ToggleExpression", "File": "Smile.exp3.json" },
+            { "Action": "TriggerAnimation", "File": "Wave.motion3.json" }
+          ]
+        }
+        """);
+
+    var vtubeModel = Live2DModelManifestParser.Parse(vtubeModelPath);
+    Assert(vtubeModel.Actions.Count(action => action.Kind == Live2DActionKind.Expression) == 2,
+        "VTube Studio fallback did not discover both expressions.");
+    Assert(vtubeModel.Actions.Count(action => action.Kind == Live2DActionKind.Motion) == 2,
+        "VTube Studio fallback did not discover both motions.");
+    Assert(vtubeModel.Actions.Any(action => action.MotionGroup == "Idle" && action.MotionIndex == 0),
+        "VTube Studio idle animation was not assigned to the Idle motion group.");
+    Assert(vtubeModel.Actions.Any(action => action.MotionGroup == "Hotkey" && action.MotionIndex == 0),
+        "VTube Studio animation hotkey was not assigned to the Hotkey motion group.");
+    Assert(vtubeModel.GeneratedEntryContents != null,
+        "VTube Studio fallback did not generate runtime model3 references.");
+    using var generatedModel = JsonDocument.Parse(vtubeModel.GeneratedEntryContents!);
+    var generatedReferences = generatedModel.RootElement.GetProperty("FileReferences");
+    Assert(generatedReferences.GetProperty("Expressions").GetArrayLength() == 2,
+        "Generated model3 expression references were incomplete.");
+    Assert(generatedReferences.GetProperty("Motions").GetProperty("Idle").GetArrayLength() == 1,
+        "Generated model3 idle references were incomplete.");
+    Assert(generatedReferences.GetProperty("Motions").GetProperty("Hotkey").GetArrayLength() == 1,
+        "Generated model3 hotkey references were incomplete.");
+    Assert(generatedReferences.GetProperty("Expressions")[0].GetProperty("Name").GetString() == "Smile",
+        "Generated model3 did not preserve the declared expression.");
+    Assert(File.ReadAllText(vtubeModelPath) == vtubeModelSource,
+        "VTube Studio fallback modified the source model3 file.");
+    Console.WriteLine("PASS VTube Studio partial declaration merge and generated model3 references");
+}
+finally
+{
+    if (Directory.Exists(vtubeTestRoot))
+        Directory.Delete(vtubeTestRoot, recursive: true);
+}
+
 var global = new GlobalLive2DConfig();
 Assert(global.MainMenu.Anchor == AnchorPreset.BottomRight, "Main-menu default anchor was not bottom-right.");
 Assert(Math.Abs(global.MainMenu.OffsetX - (-499.4565f)) < 0.0001f,
@@ -164,6 +242,22 @@ try
     Assert(roundtrip.ExtractedEntryPaths.Values.All(File.Exists),
         "Package model entry files were not extracted.");
     Console.WriteLine("PASS .live2dpack round-trip with global config, overrides and hotkeys");
+
+    var futurePackagePath = Path.Combine(testRoot, "future.live2dpack");
+    using (var archive = ZipFile.Open(futurePackagePath, ZipArchiveMode.Create))
+    {
+        using var writer = new StreamWriter(archive.CreateEntry("manifest.json").Open());
+        writer.Write("""
+                     {
+                       "FormatVersion": 1,
+                       "MinimumModVersion": "999.0.0"
+                     }
+                     """);
+    }
+    AssertThrows<InvalidDataException>(
+        () => Live2DPackArchive.ReadManifest(futurePackagePath),
+        "A package requiring a newer Mod version was not rejected.");
+    Console.WriteLine("PASS .live2dpack minimum Mod version enforcement");
 
     var maliciousPath = Path.Combine(testRoot, "malicious.live2dpack");
     using (var archive = ZipFile.Open(maliciousPath, ZipArchiveMode.Create))

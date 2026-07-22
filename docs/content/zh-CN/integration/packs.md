@@ -1,6 +1,6 @@
 # 自带模型 Pack
 
-其他 Mod 可以把 `.live2dpack` 放进自己的 PCK，再注册到 Live2D 统一模型库。`.live2dpack` 是唯一支持的资源包后缀。
+其他 Mod 可以把 `.live2dpack` 放进自己的 PCK，再注册到 Live2D 统一模型库。模型资源包使用 `.live2dpack` 后缀。
 
 ## 注册
 
@@ -11,14 +11,13 @@ var pack = Live2DApi.RegisterPack(
 ```
 
 注册后，Pack 中的模型直接出现在 Live2D“模型管理”页。显示、布局、渲染、动作、快捷键和场景实例全部由 Live2D 管理；
-提供方 Mod 不应再创建自己的模型设置页、快捷键或实例控制器。
+提供方 Mod 将模型设置页、快捷键和实例控制委托给 Live2D。
 
-资源仍归提供方 Mod 所有，只暂存在当前会话，因此不能从模型库导出。玩家可以删除模型库中的本地登记项，但该操作不会删除提供方资源，
-而且可在模型管理页恢复。Live2D 只持久保存玩家配置；提供方未加载或玩家禁用模型时，
-模型会变为不可用，但配置不会丢失。
+资源归提供方 Mod 所有并保存在会话缓存；模型库导出面向玩家导入的资源。玩家可以删除并恢复模型库中的本地登记项，
+提供方资源保持原位。Live2D 持久保存玩家配置；提供方未加载或玩家禁用模型时，模型进入不可用状态并保留配置。
 
-提供方仍可保留角色专属行为，例如开场动作、剧情反应或状态联动。实现 `ILive2DProviderLifecycleHook`，并在注册 Pack 前注册 Hook；
-不要自行创建第二套实例：
+提供方可保留角色专属行为，例如开场动作、剧情反应或状态联动。实现 `ILive2DProviderLifecycleHook`，并在注册 Pack 前注册 Hook，
+与 Live2D 的统一实例系统协作：
 
 ```csharp
 sealed class CharacterHook : ILive2DProviderLifecycleHook
@@ -40,7 +39,7 @@ var pack = Live2DApi.RegisterPack("MyMod", "res://MyMod/live2d/characters.live2d
 ```
 
 Hook 分为 `OnPackRegistered`、`OnModelAvailable`、`OnModelUnavailable`、`OnPackUnregistered` 四个阶段。
-晚注册时会按顺序立即回放已有 Pack 和当前可用模型。应长期保存返回的 `IDisposable`；不再需要时调用 `Dispose()`。
+Hook 注册时会按顺序回放已有 Pack 和可用模型。调用方保存返回的 `IDisposable`，并在自身生命周期结束时调用 `Dispose()`。
 
 ## 生命周期
 

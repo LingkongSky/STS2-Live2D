@@ -132,8 +132,7 @@ internal static class Live2DPackArchive
         if (matches.Length != 1)
             throw new InvalidDataException("Package must contain exactly one manifest.json entry.");
         var manifest = ReadJson<Live2DPackManifest>(matches[0]);
-        if (manifest.FormatVersion != Live2DPackManifest.CurrentFormatVersion)
-            throw new InvalidDataException($"Unsupported Live2D package version: {manifest.FormatVersion}");
+        ValidateManifestCompatibility(manifest, validateSettingsSchema: false);
         return manifest;
     }
 
@@ -168,12 +167,7 @@ internal static class Live2DPackArchive
         }
 
         var manifest = ReadJson<Live2DPackManifest>(GetRequired(entries, "manifest.json"));
-        if (manifest.FormatVersion != Live2DPackManifest.CurrentFormatVersion)
-            throw new InvalidDataException($"Unsupported Live2D package version: {manifest.FormatVersion}");
-        if (manifest.SettingsSchemaVersion != Live2DSettings.CurrentSchemaVersion)
-            throw new InvalidDataException(
-                $"Unsupported package settings schema: {manifest.SettingsSchemaVersion}. " +
-                $"Expected {Live2DSettings.CurrentSchemaVersion}.");
+        ValidateManifestCompatibility(manifest, validateSettingsSchema: true);
 
         var models = ReadJson<List<Live2DModelConfig>>(GetRequired(entries, "settings/models.json"));
         var modelById = models.ToDictionary(model => model.Id, StringComparer.OrdinalIgnoreCase);
@@ -246,6 +240,39 @@ internal static class Live2DPackArchive
         using var stream = entry.Open();
         return JsonSerializer.Deserialize<T>(stream, JsonOptions)
                ?? throw new InvalidDataException($"Unable to deserialize package metadata: {entry.FullName}");
+    }
+
+    private static void ValidateManifestCompatibility(
+        Live2DPackManifest manifest,
+        bool validateSettingsSchema)
+    {
+        if (manifest.FormatVersion != Live2DPackManifest.CurrentFormatVersion)
+            throw new InvalidDataException($"Unsupported Live2D package version: {manifest.FormatVersion}");
+        if (validateSettingsSchema && manifest.SettingsSchemaVersion != Live2DSettings.CurrentSchemaVersion)
+            throw new InvalidDataException(
+                $"Unsupported package settings schema: {manifest.SettingsSchemaVersion}. " +
+                $"Expected {Live2DSettings.CurrentSchemaVersion}.");
+
+        var minimum = ParseComparableVersion(manifest.MinimumModVersion, "package minimum Mod version");
+        var current = ParseComparableVersion(Entry.ModVersion, "current Mod version");
+        if (current < minimum)
+            throw new InvalidDataException(
+                $"This package requires Live2D Mod {manifest.MinimumModVersion} or newer; " +
+                $"the installed version is {Entry.ModVersion}.");
+    }
+
+    private static Version ParseComparableVersion(string value, string description)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            throw new InvalidDataException($"The {description} is missing.");
+        var core = value.Trim().TrimStart('v', 'V').Split(['-', '+'], 2)[0];
+        var segments = core.Split('.');
+        if (segments.Length is < 1 or > 4 ||
+            segments.Any(segment => !int.TryParse(segment, out var number) || number < 0))
+            throw new InvalidDataException($"The {description} is invalid: '{value}'.");
+
+        var numbers = segments.Select(int.Parse).Concat(Enumerable.Repeat(0, 4)).Take(4).ToArray();
+        return new Version(numbers[0], numbers[1], numbers[2], numbers[3]);
     }
 
     private static ZipArchiveEntry GetRequired(

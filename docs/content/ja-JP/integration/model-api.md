@@ -28,7 +28,7 @@ model.SetExpression("smile");
 model.ClearExpression();
 ```
 
-`Actions` はシーンインスタンスが利用不可でも読めます。Motion イベントは Godot メインスレッドで発生します。
+`Actions` はシーンインスタンスが利用不可でも読めます。Motion イベントは Godot メインスレッドで発生し、購読者ごとに分離して例外をログへ記録します。
 
 ## Parameter と Part
 

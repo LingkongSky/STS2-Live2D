@@ -38,14 +38,14 @@ features:
     linkText: 浏览 API
 ---
 
-## 当前状态
+## 版本与分发
 
-::: warning 发布范围
-`STS2.Live2D` NuGet 包只提供第三方 Mod 的编译期 API。玩家仍需单独安装 Live2D 运行时 Mod；请勿把 NuGet 包当作运行时文件。
+::: info 发布范围
+`STS2.Live2D` NuGet 包提供第三方 Mod 的编译期 API；玩家运行环境通过 `Live2D` 运行时 Mod 提供。
 :::
 
-- **运行时版本：** `0.5.6`
-- **公共 API：** `4`
+- **运行时版本：** `0.6.0`
+- **公共 API：** `9`
 - **Pack 格式：** `1`
 - **支持平台：** Windows x86_64
 
@@ -58,5 +58,5 @@ features:
 
 ## 范围与要求
 
-STS2 Live2D 负责加载和控制 Live2D Cubism 模型，不提供模型制作或源格式转换。模型必须包含有效的
-`.model3.json`、`.moc3`、纹理以及清单引用的全部依赖文件。
+STS2 Live2D 加载并控制可运行的 Live2D Cubism 模型。模型资源包含有效的 `.model3.json`、`.moc3`、纹理以及
+清单引用的全部依赖文件。

@@ -13,7 +13,7 @@
 - 提供动作、变换、渲染、Parameter 和 Part API。
 - 通过 RitsuLib 注册设置页面、快捷键和游戏补丁。
 
-模型制作、Cubism 文件转换和跨平台原生库不属于当前范围。
+运行时接收制作完成的 Cubism 模型；发布包提供 Windows x86_64 原生库。
 
 ## 运行时结构
 
@@ -43,7 +43,7 @@ Live2DRuntimeManager
 程序默认值 → 全局配置 → 单模型非空覆盖
 ```
 
-只有 `Live2DConfigResolver` 可以实现继承规则。运行时、设置界面、预览页和 Pack 不应复制另一套解析逻辑。
+`Live2DConfigResolver` 统一实现继承规则，供运行时、设置界面、预览页和 Pack 共用。
 配置 Schema 固定为 `6`。
 
 ## 场景与布局
@@ -56,37 +56,36 @@ Live2DRuntimeManager
 
 ## 模型仓库
 
-导入器校验并复制 `.moc3`、纹理、Motion、Expression、Physics、Pose 和其他 model3 依赖。入口缺失、
-目录失效或路径非法的配置会在启动和打开模型管理页时清理。
+导入器校验并复制 `.moc3`、纹理、Motion、Expression、Physics、Pose 和其他 model3 依赖。VTube Studio 补充资源会合并到
+受管理 model3 副本。资源暂时缺失时保留模型配置，由界面显示“模型已丢失”，运行时跳过实例和快捷键注册。
 
-测试模型位于 `examples/`，不进入 Mod 或 NuGet 发布物，也没有专用导入逻辑。
+`examples/` 保存使用通用导入逻辑的测试模型，并从 Mod 与 NuGet 发布清单中排除。
 
 ## PCK 与 Shader
 
 gd_cubism 通过固定的 `res://addons/gd_cubism/res/shader/*` 路径加载 10 个 Shader。这些资源必须进入
 `Live2D.pck`，并保持 `Live2D.json` 的 `has_pck: true`。
 
-初始化会验证全部 Shader。验证失败时不注册场景补丁，以避免创建只能显示纯白的模型节点。
+初始化会验证全部 Shader；场景补丁在验证通过后注册。
 
 ## 公共 API 约束
 
-- 只有 `Live2D.Api` 属于公共表面。
-- NuGet 只打包 `ref/net9.0` 引用程序集，不提供第二份运行时 DLL。
-- 稳定句柄不能直接暴露 Godot 节点。
+- `Live2D.Api` 定义公共表面。
+- NuGet 打包 `ref/net9.0` 引用程序集和 XML 文档。
+- 稳定句柄通过值对象封装 Godot 节点状态。
 - 队列输入必须提交时复制和校验；同字段或同 ID 使用最后值。
 - 有顺序含义的动作与表情不能进入合并队列。
 - API 变更必须同步 XML 注释、参考文档、示例和 CI 版本检查。
 
 ## 游戏补丁
 
-所有游戏方法补丁必须通过 RitsuLib 的 `CreatePatcher`、`IPatchMethod` 和 `ApplyRequiredPatcher` 注册。
-不要直接创建 Harmony 实例或调用 `PatchAll`。
+所有游戏方法补丁通过 RitsuLib 的 `CreatePatcher`、`IPatchMethod` 和 `ApplyRequiredPatcher` 注册。
 
 ## 本地生成物
 
 `.gitignore` 排除 Godot/.NET 缓存、NuGet 与 PCK 产物、文档依赖、测试覆盖率、崩溃转储和本地模型夹具。
-本项目按资源路径加载内容，因此 Godot 生成的外部 `*.uid` 文件不提交。`addons/gd_cubism/bin` 是例外：发布所需的
-`libgd_cubism.windows.release.x86_64.dll` 必须保持追踪。
+本项目按资源路径加载内容，仓库追踪发布所需的
+`addons/gd_cubism/bin/libgd_cubism.windows.release.x86_64.dll`，其余生成资源由 `.gitignore` 管理。
 
 ## 目录
 
@@ -103,11 +102,10 @@ docs/content/zh-CN/     简体中文正式文档
 docs/content/en-US/     English 正式文档
 docs/content/ja-JP/     日本語正式文档
 Tools/                  使用示例、烟雾测试和 PCK 验证
-examples/               不发布的测试模型
+examples/               测试模型
 ```
 
-## 当前限制
+## 平台与资源
 
-- 仅发布 Windows x86_64。
-- gd_cubism 上游 C# 包装可能产生可空引用警告。
+- 发布平台为 Windows x86_64。
 - 多个高分辨率纹理和大型蒙版会增加显存占用。

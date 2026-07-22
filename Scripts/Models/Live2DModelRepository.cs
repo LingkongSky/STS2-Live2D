@@ -9,8 +9,14 @@ internal static class Live2DModelRepository
     public static string ModelsDirectory => Path.Combine(OS.GetUserDataDir(), "mods", Entry.ModId, "models");
 
     public static Live2DModelConfig Import(string modelJsonPath)
+        => Import(Inspect(modelJsonPath));
+
+    public static ParsedLive2DModel Inspect(string modelJsonPath)
+        => Live2DModelManifestParser.Parse(modelJsonPath);
+
+    public static Live2DModelConfig Import(ParsedLive2DModel parsed)
     {
-        var parsed = Live2DModelManifestParser.Parse(modelJsonPath);
+        ArgumentNullException.ThrowIfNull(parsed);
         var modelId = Guid.NewGuid().ToString("N");
         var destinationRoot = Path.Combine(ModelsDirectory, modelId);
         Directory.CreateDirectory(destinationRoot);
@@ -24,7 +30,11 @@ internal static class Live2DModelRepository
                 var destination = Path.GetFullPath(Path.Combine(destinationRoot, relative));
                 EnsureContained(destinationRoot, destination);
                 Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
-                File.Copy(source, destination, overwrite: true);
+                if (parsed.GeneratedEntryContents != null
+                    && source.Equals(parsed.EntryPath, StringComparison.OrdinalIgnoreCase))
+                    File.WriteAllBytes(destination, parsed.GeneratedEntryContents);
+                else
+                    File.Copy(source, destination, overwrite: true);
             }
 
             return new Live2DModelConfig
@@ -80,6 +90,22 @@ internal static class Live2DModelRepository
             reason = $"managed path is invalid: {ex.Message}";
             return false;
         }
+    }
+
+    public static bool IsModelAvailable(Live2DModelConfig model, out string reason)
+    {
+        if (!model.IsExternalPackModel)
+            return IsManagedModelAvailable(model, out reason);
+
+        if (Live2DRegisteredPackRegistry.TryGetLibraryModelAsset(model, out _))
+        {
+            reason = "";
+            return true;
+        }
+
+        reason = $"provider model is not registered: " +
+                 $"{model.ExternalOwnerModId}/{model.ExternalPackId}/{model.ExternalModelKey}";
+        return false;
     }
 
     public static void DeleteFiles(string modelId)

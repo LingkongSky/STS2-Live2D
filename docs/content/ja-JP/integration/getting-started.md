@@ -1,13 +1,13 @@
 # Mod を 5 分で導入
 
-コンパイル参照、実行時依存、最初のモデル操作を追加します。安定した公開 API は `Live2D.Api` 名前空間だけです。
+コンパイル参照、実行時依存、最初のモデル操作を追加します。`Live2D.Api` 名前空間が安定した公開 API を提供します。
 
 ## 1. コンパイル参照を追加
 
 ref-only NuGet パッケージを推奨します。
 
 ```xml
-<PackageReference Include="STS2.Live2D" Version="0.5.6" />
+<PackageReference Include="STS2.Live2D" Version="0.6.0" />
 ```
 
 同じワークスペースで開発する場合：
@@ -18,14 +18,14 @@ ref-only NuGet パッケージを推奨します。
                   />
 ```
 
-どちらもコンシューマー出力へ 2 つ目の `Live2D.dll` をコピーしません。
+どちらもコンパイル用参照アセンブリを使用し、マニフェストの `Live2D` Mod 依存関係がランタイムを提供します。
 
 ## 2. 実行時依存を宣言
 
 ```json
 {
   "dependencies": [
-    { "id": "Live2D", "min_version": "0.5.6" }
+    { "id": "Live2D", "min_version": "0.6.0" }
   ]
 }
 ```
@@ -65,7 +65,7 @@ await Live2DApi.InvokeAsync(() =>
 }, cancellationToken);
 ```
 
-実行時上書きはプレイヤー設定へ書き込まれず、ゲーム終了時に消えます。
+実行時上書きはセッション単位で適用され、プレイヤーの永続設定は構成済みの値を維持します。
 
 ## 次に読むページ
 

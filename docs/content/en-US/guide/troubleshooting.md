@@ -23,21 +23,26 @@ modal is open.
 
 ## Motions or expressions are missing
 
-- Confirm model3 declares the action.
-- Confirm the referenced file was imported.
+- Cubism models: confirm model3 declares the action.
+- VTube Studio models: confirm `.vtube.json` points to the selected model3 and assets are under `expressions` or `animations`.
+- Re-import the model to refresh the managed action list.
 - Check that its hotkey is enabled in the current scene.
 - Check for duplicate hotkeys or conflicting looping motions.
+
+## The model shows “Model missing”
+
+Restore managed files for a local model, or enable the provider Mod for a provider model. Live2D preserves the configuration and reactivates the
+instance and hotkeys when assets become available.
 
 ## Pack import fails
 
 - The root must contain `manifest.json` and `settings/models.json`.
-- Current values are `FormatVersion = 1` and `SettingsSchemaVersion = 6`.
+- Format values are `FormatVersion = 1` and `SettingsSchemaVersion = 6`.
 - Every model resource must stay under `models/<OriginalId>/`.
 - Absolute paths, `..`, symlinks, duplicate paths, and suspicious compression are rejected.
 
-If the log says `JSON value could not be converted to List<Live2DModelConfig>`, the Pack's `settings/models.json` root is not an array, or the game
-is still loading a stale PCK. Check the actual load path in the startup log, compare timestamps and SHA-256 hashes between the publish directory and
-`mods/<ModId>`, and replace the DLL/PCK set from one publish run.
+If the log says `JSON value could not be converted to List<Live2DModelConfig>`, change the Pack's `settings/models.json` root to an array. Check the
+actual load path in the startup log, compare SHA-256 hashes between the publish directory and `mods/<ModId>`, and deploy one complete publish set.
 
 See the [Pack format](../reference/pack-format) for the complete rules.
 

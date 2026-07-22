@@ -1,13 +1,13 @@
 # Five-minute Mod Setup
 
-This guide adds a compile-time reference, declares the runtime dependency, and performs the first model update. Only `Live2D.Api` is public API.
+This guide adds a compile-time reference, declares the runtime dependency, and performs the first model update. `Live2D.Api` provides the public API.
 
 ## 1. Add a compile-time reference
 
 Use the ref-only NuGet package:
 
 ```xml
-<PackageReference Include="STS2.Live2D" Version="0.5.6" />
+<PackageReference Include="STS2.Live2D" Version="0.6.0" />
 ```
 
 For development in the same workspace:
@@ -18,14 +18,14 @@ For development in the same workspace:
                   />
 ```
 
-Neither option copies a second `Live2D.dll` to the consumer output.
+Both options use a compile-time reference assembly; the manifest's `Live2D` Mod dependency provides the runtime.
 
 ## 2. Declare the runtime dependency
 
 ```json
 {
   "dependencies": [
-    { "id": "Live2D", "min_version": "0.5.6" }
+    { "id": "Live2D", "min_version": "0.6.0" }
   ]
 }
 ```
@@ -65,7 +65,7 @@ await Live2DApi.InvokeAsync(() =>
 }, cancellationToken);
 ```
 
-Runtime overrides do not modify the player's settings and disappear when the game exits.
+Runtime overrides are session-scoped, while the player's persisted settings retain their configured values.
 
 ## Continue
 

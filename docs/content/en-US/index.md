@@ -38,14 +38,14 @@ features:
     linkText: Browse the API
 ---
 
-## Current status
+## Version and distribution
 
-::: warning Distribution scope
-The `STS2.Live2D` NuGet package provides compile-time APIs for other Mods only. Players must install the Live2D runtime Mod separately; the NuGet package is not a runtime distribution.
+::: info Distribution scope
+The `STS2.Live2D` NuGet package provides compile-time APIs for other Mods; the `Live2D` runtime Mod provides the player runtime.
 :::
 
-- **Runtime version:** `0.5.6`
-- **Public API:** `4`
+- **Runtime version:** `0.6.0`
+- **Public API:** `9`
 - **Pack format:** `1`
 - **Supported platform:** Windows x86_64
 
@@ -58,5 +58,5 @@ The `STS2.Live2D` NuGet package provides compile-time APIs for other Mods only. 
 
 ## Scope and requirements
 
-STS2 Live2D loads and controls Live2D Cubism models; it does not create models or convert source formats. A model must include a valid
-`.model3.json`, `.moc3`, its textures, and every dependency referenced by the manifest.
+STS2 Live2D loads and controls runtime-ready Live2D Cubism models. A model includes a valid `.model3.json`, `.moc3`, its textures, and every
+dependency referenced by the manifest.

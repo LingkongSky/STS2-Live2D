@@ -2,7 +2,7 @@
 
 《杀戮尖塔 2》的 Live2D 运行时 Mod，同时为其他 Mod 提供稳定的模型控制 API。
 
-> 当前为开发预览版本。运行时 Mod 版本：`0.5.6`；公共 API 版本：`9`。
+运行时 Mod 版本：`0.6.0`；公共 API 版本：`9`。
 
 ## 能力
 
@@ -32,11 +32,11 @@ npm run dev
 ## 最小引用
 
 ```xml
-<PackageReference Include="STS2.Live2D" Version="0.5.6" />
+<PackageReference Include="STS2.Live2D" Version="0.6.0" />
 ```
 
-NuGet 只提供编译期引用，不会安装或复制 `Live2D.dll`。使用者仍需在 Mod 清单中声明并要求玩家安装
-Live2D 运行时 Mod。完整示例见 [Mod 接入文档](https://lingkongsky.github.io/STS2-Live2D/integration/getting-started)。
+NuGet 提供编译期引用程序集。使用者在 Mod 清单中声明 `Live2D` 运行时依赖；完整示例见
+[Mod 接入文档](https://lingkongsky.github.io/STS2-Live2D/integration/getting-started)。
 
 
 ## 构建
@@ -55,8 +55,8 @@ $env:STS2_DIR = "D:\SteamLibrary\steamapps\common\Slay the Spire 2"
 dotnet publish .\Live2D.csproj -c Release -o .\artifacts\Live2D -p:BundleMod=true
 ```
 
-将 `artifacts/Live2D` 整个目录复制到游戏的 `mods/Live2D`。不要混用不同构建批次的 DLL、PCK 或
-`addons/gd_cubism`。普通 `dotnet build` 只编译；Mod 部署产物由 `dotnet publish` 生成。
+将同一次 `dotnet publish` 生成的 `artifacts/Live2D` 整个目录复制到游戏的 `mods/Live2D`。
+`dotnet build` 用于编译检查，`dotnet publish` 生成完整部署产物。
 
 ```powershell
 dotnet build .\Live2D.csproj -c Release -t:RefreshNuGetReference

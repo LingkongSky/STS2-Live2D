@@ -1,6 +1,6 @@
 # Bundled Model Packs
 
-Another Mod can include a `.live2dpack` in its PCK and register it in the central Live2D model library. `.live2dpack` is the only supported package extension.
+Another Mod can include a `.live2dpack` in its PCK and register it in the central Live2D model library. Model packages use the `.live2dpack` extension.
 
 ## Register
 
@@ -11,14 +11,14 @@ var pack = Live2DApi.RegisterPack(
 ```
 
 Pack models immediately appear in Live2D Model Management. Live2D owns visibility, layout, rendering, actions, hotkeys, and scene instances.
-The provider Mod should not add a second model settings page, hotkey controller, or instance controller.
+The provider Mod delegates model settings, hotkeys, and instance control to Live2D.
 
-Assets remain provider-owned and exist only in the session cache, so they cannot be exported from the library. A player may remove the local
-library entry without deleting provider assets and can restore it later. Live2D persists only the player's configuration. If the provider is absent
-or the player disables the model, it becomes unavailable while its configuration remains saved.
+Assets remain provider-owned in the session cache, while library export serves player-imported assets. A player may remove and restore the local
+library entry while provider assets remain in place. Live2D persists player configuration; an absent provider or disabled model enters the unavailable
+state with its configuration retained.
 
 Providers can keep character-specific behavior such as intro motions, story reactions, or state integration. Implement
-`ILive2DProviderLifecycleHook` and register it before the Pack; do not create a second instance system:
+`ILive2DProviderLifecycleHook` and register it before the Pack to cooperate with Live2D's unified instance system:
 
 ```csharp
 sealed class CharacterHook : ILive2DProviderLifecycleHook
@@ -39,8 +39,8 @@ var lifecycle = Live2DApi.RegisterProviderHook("MyMod", new CharacterHook());
 var pack = Live2DApi.RegisterPack("MyMod", "res://MyMod/live2d/characters.live2dpack");
 ```
 
-The four stages are `OnPackRegistered`, `OnModelAvailable`, `OnModelUnavailable`, and `OnPackUnregistered`. Late registration immediately replays
-existing packs and currently available models in order. Keep the returned `IDisposable` alive and dispose it when no longer needed.
+The four stages are `OnPackRegistered`, `OnModelAvailable`, `OnModelUnavailable`, and `OnPackUnregistered`. Hook registration replays existing packs
+and available models in order. Retain the returned `IDisposable` and dispose it at the end of the caller's lifecycle.
 
 ## Lifecycle
 

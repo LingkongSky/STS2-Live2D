@@ -2,6 +2,7 @@ using System.Reflection;
 using Godot;
 using Live2D.Api;
 using Live2D.Scripts.Configuration;
+using Live2D.Scripts.UI;
 
 public partial class Main : Node2D
 {
@@ -20,6 +21,7 @@ public partial class Main : Node2D
             TestDispatcherMainThreadFastPath();
             RenderingServer.SetDefaultClearColor(new Color(0.08f, 0.09f, 0.12f));
             TestApiValidation();
+            TestBareDigitActionHotkey();
             TestConfigSanitization();
             TestMaskGeometry();
             TestShaderVariants();
@@ -64,6 +66,18 @@ public partial class Main : Node2D
         {
             BlendMode = (Live2DBlendMode)999,
         });
+    }
+
+    private static void TestBareDigitActionHotkey()
+    {
+        var captured = Live2DActionKeyBindingControl.BuildBinding(new InputEventKey
+        {
+            Pressed = true,
+            Keycode = Key.Key1,
+        });
+        if (captured != Key.Key1.ToString())
+            throw new InvalidOperationException(
+                $"Bare digit action hotkey was not captured: captured='{captured}'.");
     }
 
     private static void ExpectArgumentOutOfRange(MethodInfo validate, Live2DModelUpdate update)

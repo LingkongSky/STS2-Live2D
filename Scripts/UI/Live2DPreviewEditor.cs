@@ -16,6 +16,7 @@ internal sealed partial class Live2DPreviewEditor : CanvasLayer
     private Live2DModelConfig _model = null!;
     private ResolvedLive2DConfig _resolved = null!;
     private Live2DPreviewCanvas _canvas = null!;
+    private Label _previewError = null!;
     private Live2DModelInstance? _preview;
     private OptionButton _sceneChoice = null!;
     private OptionButton _resolutionChoice = null!;
@@ -147,6 +148,19 @@ internal sealed partial class Live2DPreviewEditor : CanvasLayer
         content.AddThemeConstantOverride("separation", 18);
         page.AddChild(content);
 
+        var previewColumn = new VBoxContainer
+        {
+            SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+            SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+        };
+        previewColumn.AddThemeConstantOverride("separation", 10);
+        _previewError = new Label
+        {
+            Visible = false,
+            AutowrapMode = TextServer.AutowrapMode.WordSmart,
+            Modulate = new Color(1f, 0.45f, 0.35f),
+        };
+        previewColumn.AddChild(_previewError);
         var previewPanel = new PanelContainer
         {
             SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
@@ -165,7 +179,8 @@ internal sealed partial class Live2DPreviewEditor : CanvasLayer
         _canvas.RotateRequested += delta => ChangeRotation(CurrentDraft.RotationDegrees + delta);
         _canvas.Resized += ApplyPreviewTransform;
         previewPanel.AddChild(_canvas);
-        content.AddChild(previewPanel);
+        previewColumn.AddChild(previewPanel);
+        content.AddChild(previewColumn);
 
         var inspectorPanel = new PanelContainer
         {
@@ -250,41 +265,54 @@ internal sealed partial class Live2DPreviewEditor : CanvasLayer
 
         if (_preview != null && GodotObject.IsInstanceValid(_preview.Root))
             _preview.Root.QueueFree();
-
-        var source = Live2DConfigResolver.ForScene(_resolved, _currentScene);
-        var draft = CurrentDraft;
-        var config = new SceneDisplayConfig
-        {
-            Visible = true,
-            Anchor = draft.Anchor,
-            OffsetX = draft.OffsetX,
-            OffsetY = draft.OffsetY,
-            Scale = draft.Scale,
-            RotationDegrees = draft.RotationDegrees,
-            Opacity = source.Opacity,
-            Layer = 0,
-            MouseInteraction = false,
-        };
-        _canvas.SetSimulationSize(_previewViewportSize);
-        var definition = new Live2DRuntimeModelDefinition(
-            new Live2DRuntimeModelIdentity(
-                _model.Id,
-                Entry.ModId,
-                null,
-                _model.Id,
-                _model.Id,
-                _currentScene == Live2DSceneKind.MainMenu
-                    ? Live2DScene.MainMenu
-                    : Live2DScene.InGame),
-            _model,
-            Live2DModelRepository.GetAbsoluteModelPath(_model));
-        _preview = Live2DModelInstance.Create(definition, _resolved, config, _previewViewportSize);
-        _canvas.AddPreview(_preview.Root);
-        Entry.Logger.Info(
-            $"[{Entry.ModId}] Opened preview for model {_model.Id} in {_currentScene} " +
-            $"({_previewViewportSize.X:0}x{_previewViewportSize.Y:0}).");
+        _preview = null;
+        _previewError.Visible = false;
+        _previewError.Text = "";
         UpdateControls();
-        ApplyPreviewTransform();
+
+        try
+        {
+            var source = Live2DConfigResolver.ForScene(_resolved, _currentScene);
+            var draft = CurrentDraft;
+            var config = new SceneDisplayConfig
+            {
+                Visible = true,
+                Anchor = draft.Anchor,
+                OffsetX = draft.OffsetX,
+                OffsetY = draft.OffsetY,
+                Scale = draft.Scale,
+                RotationDegrees = draft.RotationDegrees,
+                Opacity = source.Opacity,
+                Layer = 0,
+                MouseInteraction = false,
+            };
+            _canvas.SetSimulationSize(_previewViewportSize);
+            var definition = new Live2DRuntimeModelDefinition(
+                new Live2DRuntimeModelIdentity(
+                    _model.Id,
+                    Entry.ModId,
+                    null,
+                    _model.Id,
+                    _model.Id,
+                    _currentScene == Live2DSceneKind.MainMenu
+                        ? Live2DScene.MainMenu
+                        : Live2DScene.InGame),
+                _model,
+                Live2DModelRepository.GetAbsoluteModelPath(_model));
+            _preview = Live2DModelInstance.Create(definition, _resolved, config, _previewViewportSize);
+            _canvas.AddPreview(_preview.Root);
+            Entry.Logger.Info(
+                $"[{Entry.ModId}] Opened preview for model {_model.Id} in {_currentScene} " +
+                $"({_previewViewportSize.X:0}x{_previewViewportSize.Y:0}).");
+            ApplyPreviewTransform();
+        }
+        catch (Exception ex)
+        {
+            _previewError.Text = F("preview.load_error", "Unable to load preview: {0}", ex.Message);
+            _previewError.Visible = true;
+            Entry.Logger.Error(
+                $"[{Entry.ModId}] Failed to open preview for model {_model.Id} in {_currentScene}: {ex}");
+        }
     }
 
     private void ApplyPreviewTransform()

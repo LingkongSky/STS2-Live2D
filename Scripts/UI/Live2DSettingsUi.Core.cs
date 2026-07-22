@@ -114,12 +114,6 @@ internal static partial class Live2DSettingsUi
 
     private static Control CreateModelManager(IModSettingsUiActionHost uiHost)
     {
-        var removedMissingModels = Live2DConfigStore.PruneMissingModels();
-        if (removedMissingModels > 0)
-        {
-            Live2DRuntimeManager.RefreshAll();
-            Live2DHotkeyManager.Refresh();
-        }
         var root = new VBoxContainer
         {
             SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
@@ -130,8 +124,7 @@ internal static partial class Live2DSettingsUi
         var summary = new HBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
         var summaryText = new Label
         {
-            Text = F("models.summary_status", "{0} models · {1} enabled",
-                settings.Models.Count, settings.Models.Count(model => model.Enabled)),
+            Text = CreateModelSummaryText(settings),
             SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
         };
         summaryText.AddThemeFontSizeOverride("font_size", 20);
@@ -147,8 +140,7 @@ internal static partial class Live2DSettingsUi
             if (!GodotObject.IsInstanceValid(summaryText))
                 return;
             var latestSettings = Live2DConfigStore.Get();
-            summaryText.Text = F("models.summary_status", "{0} models · {1} enabled",
-                latestSettings.Models.Count, latestSettings.Models.Count(model => model.Enabled));
+            summaryText.Text = CreateModelSummaryText(latestSettings);
         };
         Action rebuildModelList = null!;
         rebuildModelList = () =>
@@ -218,6 +210,16 @@ internal static partial class Live2DSettingsUi
         root.AddChild(modelList);
         rebuildModelList();
         return root;
+    }
+
+    private static string CreateModelSummaryText(Live2DSettings settings)
+    {
+        var missing = settings.Models.Count(IsModelUnavailable);
+        var enabled = settings.Models.Count(model => model.Enabled && !IsModelUnavailable(model));
+        return missing > 0
+            ? F("models.summary_status_missing", "{0} models · {1} enabled · {2} missing",
+                settings.Models.Count, enabled, missing)
+            : F("models.summary_status", "{0} models · {1} enabled", settings.Models.Count, enabled);
     }
 
     private static Control CreateEmptyModelCard() => WrapCard(new Label

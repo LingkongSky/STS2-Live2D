@@ -15,6 +15,7 @@ internal static class Live2DRuntimeManager
     private const string ViewportWatcherNodeName = "Live2DViewportWatcher";
     private static readonly Dictionary<Live2DSceneKind, WeakReference<Node>> Hosts = new();
     private static readonly Dictionary<Live2DSceneKind, List<Live2DModelInstance>> Instances = new();
+    private static readonly HashSet<Live2DSceneKind> PendingRebuilds = [];
     private static bool? _mainMenuModelsVisible;
     private static bool _globalVisibilitySuppressed;
 
@@ -87,7 +88,7 @@ internal static class Live2DRuntimeManager
         foreach (var (scene, weakHost) in Hosts.ToArray())
         {
             if (weakHost.TryGetTarget(out var host) && GodotObject.IsInstanceValid(host) && host.IsInsideTree())
-                Callable.From(() => Rebuild(scene, host)).CallDeferred();
+                QueueRebuild(scene);
             else
                 Hosts.Remove(scene);
         }
@@ -99,7 +100,7 @@ internal static class Live2DRuntimeManager
             return;
         Entry.Logger.Info(
             $"[{Entry.ModId}] Viewport changed for {scene}: {viewportSize.X:0}x{viewportSize.Y:0}; rebuilding models.");
-        Callable.From(() => Rebuild(scene, host)).CallDeferred();
+        QueueRebuild(scene);
     }
 
     public static void Play(
@@ -163,8 +164,7 @@ internal static class Live2DRuntimeManager
             {
                 if (!model.Enabled)
                     continue;
-                if (model.IsExternalPackModel &&
-                    !Live2DRegisteredPackRegistry.TryGetLibraryModelAsset(model, out _))
+                if (!Live2DModelRepository.IsModelAvailable(model, out _))
                     continue;
                 definitions.Add(new Live2DRuntimeModelDefinition(
                     new Live2DRuntimeModelIdentity(
@@ -209,6 +209,27 @@ internal static class Live2DRuntimeManager
             RefreshMainMenuVisibility();
         else
             container.Visible = !_globalVisibilitySuppressed;
+    }
+
+    private static void QueueRebuild(Live2DSceneKind scene)
+    {
+        if (!PendingRebuilds.Add(scene))
+            return;
+
+        Callable.From(() =>
+        {
+            PendingRebuilds.Remove(scene);
+            if (!Hosts.TryGetValue(scene, out var weakHost) ||
+                !weakHost.TryGetTarget(out var currentHost) ||
+                !GodotObject.IsInstanceValid(currentHost) ||
+                !currentHost.IsInsideTree())
+            {
+                Hosts.Remove(scene);
+                return;
+            }
+
+            Rebuild(scene, currentHost);
+        }).CallDeferred();
     }
 
     private static void EnsureViewportWatcher(Live2DSceneKind scene, Node host)

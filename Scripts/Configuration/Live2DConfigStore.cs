@@ -29,23 +29,41 @@ internal static class Live2DConfigStore
             autoCreateIfMissing: true);
         _initialized = true;
         Normalize();
-        PruneMissingModels();
     }
 
     public static Live2DSettings Get() => RitsuLibFramework.GetDataStore(Entry.ModId).Get<Live2DSettings>(SettingsKey);
 
-    public static Live2DModelConfig ImportModel(string modelJsonPath)
+    public static Live2DModelImportResult ImportModel(string modelJsonPath)
     {
-        var model = Live2DModelRepository.Import(modelJsonPath);
+        var parsed = Live2DModelRepository.Inspect(modelJsonPath);
         var store = RitsuLibFramework.GetDataStore(Entry.ModId);
-        store.Modify<Live2DSettings>(SettingsKey, settings =>
+        var existing = Get().Models.FirstOrDefault(model =>
+            !string.IsNullOrWhiteSpace(model.ContentHash) &&
+            string.Equals(model.ContentHash, parsed.ContentHash, StringComparison.OrdinalIgnoreCase));
+        if (existing != null)
+            return new Live2DModelImportResult(existing, WasDuplicate: true);
+
+        var model = Live2DModelRepository.Import(parsed);
+        var addedToSettings = false;
+        try
         {
-            model.DisplayOrder = settings.Models.Count;
-            settings.Models.Add(model);
-        });
-        store.Save(SettingsKey);
-        Live2D.Scripts.Runtime.Live2DRuntimeManager.RefreshAll();
-        return model;
+            store.Modify<Live2DSettings>(SettingsKey, settings =>
+            {
+                model.DisplayOrder = settings.Models.Count;
+                settings.Models.Add(model);
+            });
+            addedToSettings = true;
+            store.Save(SettingsKey);
+            Live2D.Scripts.Runtime.Live2DRuntimeManager.RefreshAll();
+            return new Live2DModelImportResult(model, WasDuplicate: false);
+        }
+        catch
+        {
+            if (addedToSettings)
+                RollBackImportedModels([model.Id]);
+            TryDeleteImportedModelFiles(model);
+            throw;
+        }
     }
 
     public static void SaveAndRefresh()
@@ -117,39 +135,43 @@ internal static class Live2DConfigStore
         return restoredCount;
     }
 
-    public static int PruneMissingModels()
-    {
-        var store = RitsuLibFramework.GetDataStore(Entry.ModId);
-        List<(Live2DModelConfig Model, string Reason)> unavailable = [];
-        store.Modify<Live2DSettings>(SettingsKey, settings =>
-        {
-            var reasons = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            var removed = Live2DConfigNormalizer.RemoveUnavailableModels(settings, model =>
-            {
-                if (model.IsExternalPackModel)
-                    return true;
-                var available = Live2DModelRepository.IsManagedModelAvailable(model, out var reason);
-                if (!available)
-                    reasons[model.Id] = reason;
-                return available;
-            });
-            unavailable = removed.Select(model =>
-                (model, reasons.GetValueOrDefault(model.Id, "managed model files are unavailable"))).ToList();
-        });
-
-        if (unavailable.Count == 0)
-            return 0;
-        store.Save(SettingsKey);
-        foreach (var (model, reason) in unavailable)
-            Entry.Logger.Warn($"[{Entry.ModId}] Removed stale model configuration '{model.DisplayName}' ({model.Id}): {reason}.");
-        return unavailable.Count;
-    }
-
     private static void Normalize()
     {
         var store = RitsuLibFramework.GetDataStore(Entry.ModId);
         store.Modify<Live2DSettings>(SettingsKey, Live2DConfigNormalizer.NormalizeInPlace);
         store.Save(SettingsKey);
+    }
+
+    private static void RollBackImportedModels(IReadOnlyCollection<string> modelIds)
+    {
+        try
+        {
+            var store = RitsuLibFramework.GetDataStore(Entry.ModId);
+            var ids = modelIds.ToHashSet(StringComparer.OrdinalIgnoreCase);
+            store.Modify<Live2DSettings>(SettingsKey, settings =>
+            {
+                settings.Models.RemoveAll(model => ids.Contains(model.Id));
+                for (var index = 0; index < settings.Models.Count; index++)
+                    settings.Models[index].DisplayOrder = index;
+            });
+            store.Save(SettingsKey);
+        }
+        catch (Exception cleanupException)
+        {
+            Entry.Logger.Error($"[{Entry.ModId}] Failed to roll back imported model configuration: {cleanupException}");
+        }
+    }
+
+    private static void TryDeleteImportedModelFiles(Live2DModelConfig model)
+    {
+        try
+        {
+            Live2DModelRepository.DeleteFiles(model.Id);
+        }
+        catch (Exception cleanupException)
+        {
+            Entry.Logger.Error($"[{Entry.ModId}] Failed to clean up imported model files for {model.Id}: {cleanupException}");
+        }
     }
 
     private static string CreateExternalModelId(string ownerModId, string packId, string modelKey)
@@ -163,3 +185,5 @@ internal static class Live2DConfigStore
         => JsonSerializer.Deserialize<T>(JsonSerializer.Serialize(value))
            ?? throw new InvalidDataException("Unable to clone Live2D pack configuration.");
 }
+
+internal sealed record Live2DModelImportResult(Live2DModelConfig Model, bool WasDuplicate);

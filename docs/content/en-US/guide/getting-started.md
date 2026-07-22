@@ -2,8 +2,8 @@
 
 This guide covers runtime requirements, development-build installation, and importing your first model.
 
-::: warning Installation scope
-The NuGet package is compile-time only and does not contain the player runtime. Build the current runtime from this repository and avoid files from unknown sources.
+::: info Installation scope
+Players install the `Live2D` runtime Mod; third-party Mod authors use the `STS2.Live2D` compile-time NuGet API.
 :::
 
 ## Requirements
@@ -35,7 +35,7 @@ Live2D.pck
 addons/gd_cubism/
 ```
 
-A normal `dotnet build` only compiles and does not install the Mod. Replace the DLL, PCK, and native files as one build set, then fully exit and restart the game.
+Use `dotnet build` for compilation checks. Install or update from one complete `dotnet publish` directory, then fully exit and restart the game.
 
 ## Import your first model
 

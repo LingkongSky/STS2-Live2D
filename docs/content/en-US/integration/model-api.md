@@ -28,7 +28,7 @@ model.SetExpression("smile");
 model.ClearExpression();
 ```
 
-`Actions` remains readable while the scene instance is unavailable. Motion events are raised on the Godot main thread.
+`Actions` remains readable while the scene instance is unavailable. Motion events are raised on the Godot main thread; subscribers are isolated and failures are logged.
 
 ## Parameters and parts
 

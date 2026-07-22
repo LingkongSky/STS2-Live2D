@@ -1,6 +1,6 @@
 # Testing and Release
 
-A release must pass documentation, compilation, API consumption, rendering, PCK, and package checks.
+A release passes documentation, compilation, API consumption, rendering, PCK, and package checks before tagging.
 
 ## Documentation and compilation
 
@@ -11,7 +11,7 @@ npm run build
 Pop-Location
 ```
 
-A normal build compiles only; `dotnet publish` produces release binaries. Consumer output must not contain `Live2D.dll`.
+`dotnet build` performs compilation checks; `dotnet publish` produces release binaries. Consumer builds use the ref-only API package and resolve the runtime through the Mod dependency.
 
 ## Rendering smoke test
 
@@ -40,14 +40,15 @@ git diff -- NuGet/package/ref/net9.0
 dotnet pack .\NuGet\STS2.Live2D.Package.csproj -c Release -o .\artifacts
 ```
 
-Install or publish the complete `artifacts/Live2D` directory. Do not mix the DLL, PCK, or Cubism native files from different publish runs.
+Install or publish the complete `artifacts/Live2D` directory from one publish run.
 
-NuGet may contain only the `ref/net9.0` reference assembly/XML documentation, README, third-party notices, and `docs/content` Markdown. It must not contain a `lib/`
-runtime assembly. The release workflow creates a disposable consumer project and confirms that its output omits `Live2D.dll`.
+NuGet contains the `ref/net9.0` reference assembly/XML documentation, README, third-party notices, and `docs/content` Markdown. The release workflow
+validates the ref-only structure with a disposable consumer project.
 
-`NuGet/package/ref/net9.0` is the prepared release directory. Its `Live2D.dll` must be a metadata-only reference assembly, never the runtime DLL. Commit the refreshed DLL and XML together with the corresponding source changes.
+`NuGet/package/ref/net9.0` is the prepared release directory. Its `Live2D.dll` is the metadata-only reference assembly. Commit the refreshed DLL and XML together with the corresponding source changes.
 
-Pushing a `v*` tag that matches the project version runs `publish-nuget.yml`. It only packages and validates the committed reference assets; it does not compile Live2D, read a game installation, or access `STS2-API-Signatures`. It then publishes through NuGet Trusted Publishing (OIDC). Bind the NuGet.org policy to this workflow and the `nuget` environment.
+Pushing a `v*` tag that matches the project version runs `publish-nuget.yml`, which packages and validates the committed reference assets and publishes
+through NuGet Trusted Publishing (OIDC). Bind the NuGet.org policy to this workflow and the `nuget` environment.
 
 ## Release checklist
 

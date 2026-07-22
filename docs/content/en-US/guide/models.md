@@ -8,7 +8,8 @@ The Model Management page handles player-owned models and centrally configures M
 - Configuration pack: select `.live2dpack`.
 - Global configuration: import a pack that contains global settings.
 
-The importer validates every texture, motion, expression, physics, and pose reference. Missing dependencies and unsafe paths are rejected.
+The importer validates every texture, motion, expression, physics, and pose reference. For VTube Studio models, it also reads `.vtube.json`,
+scans the `expressions` and `animations` directories, and merges assets omitted from model3 into the managed copy.
 
 ## Global defaults and overrides
 
@@ -21,18 +22,21 @@ canvas masks are inherited as whole objects rather than merged field by field.
 
 ## Main Menu and In Game
 
-- The list's **Enabled** checkbox is a persistent per-model master switch. A disabled model creates no scene instance, runs no physics, accepts no input, registers no action hotkeys, and cannot be previewed.
-- **Main Menu** affects only the Main Menu host.
+- The list's **Enabled** checkbox is a persistent per-model master switch. Enabled models participate in scene rendering, physics, input, action hotkeys, and previews.
+- **Main Menu** controls the Main Menu host.
 - **In Game** is shared by Map and Combat.
-- The global visibility hotkey temporarily hides or restores every model without rewriting model settings.
+- The global visibility hotkey temporarily hides or restores every model while preserving model settings.
 
 ## Rename and delete
 
-Renaming changes only the display name, not the stable model ID. Every delete requires confirmation. Deleting a player-imported model removes
-its configuration and managed files. A `RegisterPack` model can also be removed from the library, but this removes only Live2D's local entry and
-never touches provider-owned assets; **Restore Provider Models** adds it again. Provider assets cannot be exported here.
+Renaming updates the display name and preserves the stable model ID. Every delete requires confirmation. Deleting a player-imported model removes
+its configuration and managed files. Removing a `RegisterPack` model clears Live2D's local entry while its provider Mod retains asset ownership;
+**Restore Provider Models** adds it again.
+
+When local files are missing or a provider Mod is absent, the model card shows **Model missing** and preserves layout, rendering, and hotkey settings.
+Restoring the assets reactivates the model with the same configuration.
 
 ## Configuration packs
 
-Exporting from a model card includes only that model and its overrides. Import skips duplicate content by hash. Only persistent import changes
-assets into the player model directory. Managed Packs persist only user choices such as layout, rendering, and hotkeys here.
+Exporting from a model card includes that model and its overrides. Persistent import skips duplicate content by hash and copies assets into the
+player model directory. Managed Packs persist user choices such as layout, rendering, and hotkeys here.

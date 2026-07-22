@@ -23,21 +23,26 @@
 
 ## Motion / Expression が見つからない
 
-- model3 に宣言されているか確認します。
-- 参照ファイルがインポートされているか確認します。
+- Cubism モデル：model3 にアクションが宣言されているか確認します。
+- VTube Studio モデル：`.vtube.json` が対象 model3 を参照し、資源が `expressions` または `animations` にあるか確認します。
+- モデルを再インポートして管理アクション一覧を更新します。
 - ホットキーが現在のシーンで有効か確認します。
 - 同一ホットキーやループ Motion の競合を確認します。
+
+## 「モデルが見つかりません」と表示される
+
+ローカルモデルは管理ファイルを復元し、提供モデルは提供元 Mod を有効にします。Live2D は設定を保持し、資源が利用可能になると
+インスタンスとホットキーを再開します。
 
 ## Pack のインポートに失敗する
 
 - ルート直下に `manifest.json` と `settings/models.json` が必要です。
-- 現在は `FormatVersion = 1`、`SettingsSchemaVersion = 6` です。
+- 形式は `FormatVersion = 1`、`SettingsSchemaVersion = 6` です。
 - モデル資源は `models/<OriginalId>/` 配下に置きます。
 - 絶対パス、`..`、シンボリックリンク、重複パス、異常な圧縮は拒否されます。
 
-ログに `JSON value could not be converted to List<Live2DModelConfig>` がある場合、Pack 内の `settings/models.json` のルートが配列ではないか、
-ゲームが古い PCK を読み込んでいます。起動ログの実際の読み込みパスを確認し、publish ディレクトリと `mods/<ModId>` のタイムスタンプと
-SHA-256 を比較して、同じ publish の DLL/PCK 一式を置換してください。
+ログに `JSON value could not be converted to List<Live2DModelConfig>` がある場合、Pack 内の `settings/models.json` のルートを配列にします。
+起動ログの実際の読み込みパスを確認し、publish ディレクトリと `mods/<ModId>` の SHA-256 を比較して、同じ publish の完全な一式を配置してください。
 
 完全な規則は [Pack 形式](../reference/pack-format) を参照してください。
 
